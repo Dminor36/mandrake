@@ -1,0 +1,534 @@
+/* ========== 曼德拉草項目 ========== */
+.mandrake-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.plant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.plant-row:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.plant-row.locked {
+    opacity: 0.6;
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+    border-left-color: #6c757d;
+}
+
+.plant-row.normal {
+    border-left-color: #28a745;
+}
+
+.plant-row.element {
+    border-left-color: #dc3545;
+}
+
+.plant-row.animal {
+    border-left-color: #ffc107;
+}
+
+.plant-info {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.plant-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plant-icon {
+    font-size: 1.3em;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.plant-production {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+.plant-buy-btn {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* ========== 農場格子 ========== */
+.farm-slot {
+    background: rgba(139, 69, 19, 0.3);
+    border: 2px dashed rgba(139, 69, 19, 0.5);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 50px;
+}
+
+.farm-slot.empty {
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.farm-slot.empty:hover {
+    opacity: 0.8;
+    background: rgba(139, 69, 19, 0.4);
+}
+
+.farm-slot.occupied {
+    background: rgba(34, 139, 34, 0.4);
+    border: 2px solid rgba(34, 139, 34, 0.8);
+    animation: plantGrow 0.6s ease-out;
+}
+
+@keyframes plantGrow {
+    0% { 
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.mandrake-visual {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 28px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.mandrake-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.mandrake-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ========== 重生系統 ========== */
+.rebirth-section {
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.rebirth-section h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.rebirth-section p {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+.rebirth-info {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.rebirth-points {
+    color: #d63031;
+    font-size: 1.2em;
+}
+
+.rebirth-btn {
+    background: linear-gradient(45deg, #e17055, #d63031);
+    font-size: 1em;
+    padding: 12px 30px;
+}
+
+/* ========== 彈窗系統 ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-overlay.show {
+    display: flex;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from { 
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    margin-bottom: 25px;
+}
+
+.modal-header h3 {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin: 0;
+}
+/* 獎勵狀態區域 */
+.reward-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    padding: 15px 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+    margin-bottom: 20px;
+}
+
+.reward-info {
+    flex-grow: 1;
+}
+
+.reward-count {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.pending-count {
+    color: #d63031;
+    font-size: 1.2em;
+}
+
+.reward-timer {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.claim-reward-btn {
+    background: linear-gradient(45deg, #00b894, #00a085);
+    padding: 10px 20px;
+    font-size: 1em;
+    min-width: 120px;
+    position: relative;
+}
+
+.claim-reward-btn:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.claim-reward-btn.has-rewards {
+    animation: rewardPulse 2s infinite;
+}
+
+@keyframes rewardPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* 獎勵數量徽章 */
+.reward-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* ========== 獎勵選項 ========== */
+.reward-options {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.reward-option {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    padding: 20px;
+    border: 3px solid #ddd;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,249,250,0.9));
+    position: relative;
+    overflow: hidden;
+}
+
+.reward-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.reward-option:hover::before {
+    left: 100%;
+}
+
+.reward-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.reward-rarity {
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.reward-rarity.common { color: #9e9e9e; }
+.reward-rarity.rare { color: #2196f3; }
+.reward-rarity.epic { color: #9c27b0; }
+.reward-rarity.legendary { color: #ff9800; }
+
+.reward-option h4 {
+    margin: 10px 0;
+    color: #2c3e50;
+    font-size: 1.1em;
+}
+
+.reward-option p {
+    color: #666;
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* ========== 通知系統 ========== */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+    pointer-events: none;
+}
+
+.notification {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: notificationSlideIn 0.3s ease-out, notificationFadeOut 0.3s ease-in 2.7s;
+    pointer-events: auto;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+@keyframes notificationSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes notificationFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.notification.success {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+}
+
+.notification.info {
+    background: linear-gradient(45deg, #2196F3, #1976D2);
+}
+
+.notification.warning {
+    background: linear-gradient(45deg, #ff9800, #f57c00);
+}
+
+.notification.error {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+}
+
+/* ========== 滾動條樣式 ========== */
+.mandrake-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mandrake-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.mandrake-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
+
+.mandrake-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+/* ========== 載入動畫 ========== */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 數字更新動畫 */
+@keyframes numberUpdate {
+    0% {
+        transform: scale(1);
+        color: inherit;
+    }
+    50% {
+        transform: scale(1.1);
+        color: #4CAF50;
+        text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        color: inherit;
+        text-shadow: none;
+    }
+}
+
+/* 資源數值樣式增強 */
+.resource-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    font-family: 'Courier New', monospace; /* 等寬字體，數字對齊更好看 */
+}
+
+/* 產量/秒的特殊樣式 */
+#production-rate {
+    color: #27ae60;
+}
+
+/* 天賦點的特殊樣式 */
+#talent-points {
+    color: #d63031;
+}
+
+/* 果實數量的特殊樣式 */
+#fruit {
+    color: #e67e22;
+}

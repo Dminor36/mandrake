@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>曼德拉草農場</title>
+    
+    <!-- CSS 檔案 -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🌱 曼德拉草農場 🌱</h1>
+        </div>
+
+        <!-- 資源顯示區 -->
+        <div class="resources">
+            <div class="resource-item">
+                <div class="resource-label">🍎 果實</div>
+                <div class="resource-value" id="fruit">100</div>
+            </div>
+            <div class="resource-item">
+                <div class="resource-label">🌱 曼德拉草總數</div>
+                <div class="resource-value" id="total-mandrakes">0</div>
+            </div>
+            <div class="resource-item">
+                <div class="resource-label">⚡ 產量/秒</div>
+                <div class="resource-value" id="production-rate">0</div>
+            </div>
+            <div class="resource-item">
+                <div class="resource-label">⭐ 天賦點</div>
+                <div class="resource-value talent-points" id="talent-points">0</div>
+            </div>
+        </div>
+
+        <!-- 天氣系統 -->
+        <div class="weather-section">
+            <div class="weather-info">
+                <span class="weather-icon" id="weather-icon">🌤️</span>
+                <div class="weather-details">
+                    <div>當前天氣：<span id="current-weather">晴天</span></div>
+                    <div>效果：<span id="weather-effect">所有產量 +10%</span></div>
+                </div>
+            </div>
+            <button class="weather-reroll-btn" onclick="rerollWeather()">
+                重骰天氣 (<span id="weather-cost">100</span>果實)
+            </button>
+        </div>
+
+        <!-- 主要內容區 -->
+        <div class="main-content">
+            <!-- 左側：曼德拉草管理 -->
+            <div class="mandrake-section">
+                <div class="section-header">
+                    <h3>🌱 曼德拉草種植區</h3>
+                </div>
+                
+                <div class="mandrake-list" id="mandrake-list">
+                    <!-- 曼德拉草項目會動態生成 -->
+                </div>
+                
+                <!-- 重生系統 -->
+                <div class="rebirth-section">
+                    <h4>🔄 重生系統</h4>
+                    <p>重生可獲得天賦點，用於永久提升！</p>
+                    <div class="rebirth-info">
+                        預計獲得：<span class="rebirth-points" id="rebirth-points">0</span> 天賦點
+                    </div>
+                    <button class="rebirth-btn" onclick="rebirth()">重生</button>
+                </div>
+            </div>
+
+            <!-- 右側：農場區域 -->
+            <div class="farm-container">
+                <div class="farm-header">
+                    <h3>🚜 農場</h3>
+                    <div class="farm-stats">
+                        <span>已使用：<span id="farm-used">0</span>/48</span>
+                    </div>
+                </div>
+                
+                <div class="farm-area" id="farm-area">
+                    <!-- 農場格子會動態生成 -->
+                </div>
+            </div>
+        </div>
+
+       <!-- 獎勵狀態顯示 -->
+<div class="reward-status">
+    <div class="reward-info">
+        <div class="reward-count">
+            🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
+        </div>
+        <div class="reward-timer">
+            下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
+        </div>
+    </div>
+    <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
+        領取獎勵
+    </button>
+</div>
+
+    <!-- 獎勵選擇彈窗 -->
+    <div class="modal-overlay" id="reward-modal">
+        <div class="modal-content reward-modal-content">
+            <div class="modal-header">
+                <h3>🎁 選擇你的獎勵！</h3>
+            </div>
+            <div class="reward-options" id="reward-options">
+                <!-- 獎勵選項會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知訊息容器 -->
+    <div class="notification-container" id="notification-container">
+        <!-- 通知訊息會動態生成 -->
+    </div>
+
+    <!-- JavaScript 檔案 -->
+    <script src="js/config.js"></script>
+    <script src="js/imageManager.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/rewards.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+console.log('HTML 已載入');
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM 載入完成');
+    
+    // 檢查各個 JS 文件是否載入
+    console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
+    console.log('game 物件存在:', typeof game !== 'undefined');
+    console.log('UI 類存在:', typeof UI !== 'undefined');
+    
+    // 檢查 HTML 元素
+    console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
+});
+</script>
+</body>
+</html>

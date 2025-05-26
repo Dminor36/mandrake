@@ -1,0 +1,326 @@
+/* ==========  基礎樣式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ========== 遊戲容器 ========== */
+.game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* ========== 標題區 ========== */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ========== 資源顯示區 ========== */
+.resources {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.resource-item {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.resource-item:hover {
+    transform: translateY(-2px);
+}
+
+.resource-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.resource-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.talent-points {
+    color: #d63031 !important;
+}
+
+/* ========== 天氣系統 ========== */
+.weather-section {
+    background: linear-gradient(90deg, #74b9ff, #0984e3);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.weather-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weather-icon {
+    font-size: 2em;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.weather-details div {
+    margin: 5px 0;
+}
+
+.weather-reroll-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.weather-reroll-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+/* ========== 主要內容區 ========== */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* ========== 曼德拉草管理區 ========== */
+.mandrake-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.section-header h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+}
+
+/* ========== 農場區域 ========== */
+.farm-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.farm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+}
+
+.farm-header h3 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.farm-stats {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.farm-area {
+    background: linear-gradient(to bottom, #87CEEB, #98FB98);
+    border-radius: 15px;
+    padding: 15px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 8px;
+    min-height: 400px;
+    border: 3px solid #8B4513;
+    position: relative;
+    overflow: hidden;
+}
+
+.farm-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(255,255,255,0.1) 10px,
+            rgba(255,255,255,0.1) 20px
+        );
+    pointer-events: none;
+}
+
+/* ========== 獎勵倒數計時 ========== */
+.reward-timer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+    margin-bottom: 20px;
+}
+
+.timer-icon {
+    font-size: 1.5em;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.timer-text {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.countdown {
+    color: #d63031;
+    font-size: 1.2em;
+}
+
+/* ========== 按鈕樣式 ========== */
+button {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ========== 響應式設計 ========== */
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .farm-area {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .game-container {
+        padding: 15px;
+    }
+    
+    .resources {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .farm-area {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(12, 1fr);
+        min-height: 300px;
+    }
+    
+    .weather-section {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header h1 {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .resources {
+        grid-template-columns: 1fr;
+    }
+    
+    .resource-value {
+        font-size: 1.5em;
+    }
+}
