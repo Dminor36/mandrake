@@ -35,18 +35,36 @@
             </div>
         </div>
 
-        <!-- 天氣系統 -->
-        <div class="weather-section">
-            <div class="weather-info">
-                <span class="weather-icon" id="weather-icon">🌤️</span>
-                <div class="weather-details">
-                    <div>當前天氣：<span id="current-weather">晴天</span></div>
-                    <div>效果：<span id="weather-effect">所有產量 +10%</span></div>
+        <!-- 天氣與獎勵系統 -->
+        <div class="weather-reward-section">
+            <!-- 天氣系統 -->
+            <div class="weather-info-container">
+                <div class="weather-info">
+                    <span class="weather-icon" id="weather-icon">🌤️</span>
+                    <div class="weather-details">
+                        <div>當前天氣：<span id="current-weather">晴天</span></div>
+                        <div>效果：<span id="weather-effect">所有產量 +10%</span></div>
+                    </div>
                 </div>
+                <button class="weather-reroll-btn" onclick="rerollWeather()">
+                    重骰天氣 (<span id="weather-cost">100</span>果實)
+                </button>
             </div>
-            <button class="weather-reroll-btn" onclick="rerollWeather()">
-                重骰天氣 (<span id="weather-cost">100</span>果實)
-            </button>
+
+            <!-- 獎勵系統 -->
+            <div class="reward-info-container">
+                <div class="reward-info">
+                    <div class="reward-count">
+                        🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
+                    </div>
+                    <div class="reward-timer">
+                        下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
+                    </div>
+                </div>
+                <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
+                    領取獎勵
+                </button>
+            </div>
         </div>
 
         <!-- 主要內容區 -->
@@ -55,6 +73,15 @@
             <div class="mandrake-section">
                 <div class="section-header">
                     <h3>🌱 曼德拉草種植區</h3>
+                    <!-- 批量購買切換 -->
+                    <div class="bulk-buy-controls">
+                        <span class="bulk-label">批量購買：</span>
+                        <div class="bulk-buttons">
+                            <button class="bulk-btn active" data-amount="1">1個</button>
+                            <button class="bulk-btn" data-amount="10">10個</button>
+                            <button class="bulk-btn" data-amount="100">100個</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="mandrake-list" id="mandrake-list">
@@ -87,20 +114,7 @@
             </div>
         </div>
 
-       <!-- 獎勵狀態顯示 -->
-<div class="reward-status">
-    <div class="reward-info">
-        <div class="reward-count">
-            🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
-        </div>
-        <div class="reward-timer">
-            下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
-        </div>
-    </div>
-    <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
-        領取獎勵
-    </button>
-</div>
+      
 
     <!-- 獎勵選擇彈窗 -->
     <div class="modal-overlay" id="reward-modal">

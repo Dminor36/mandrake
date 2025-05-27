@@ -2,12 +2,14 @@
 
 class UI {
     static notificationContainer = null;
+    static currentBulkAmount = 1;
 
     /**
      * 初始化UI系統
      */
     static init() {
         this.notificationContainer = document.getElementById('notification-container');
+        this.setupBulkBuyControls(); 
         console.log('UI系統初始化完成');
     }
 
@@ -165,18 +167,35 @@ static updateRewardStatus() {
         // 創建圖標元素
         const iconElement = imageManager.createImageElement(config.icon, config.name, 'plant-icon');
 
+        // 計算批量購買的成本和收益
+        const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
+        const nextProduction = this.calculateMandrakeProduction(id, count + this.currentBulkAmount);
+        const productionIncrease = nextProduction - production;
+        
+        const formattedIncrease = this.formatNumber(productionIncrease);
+        const formattedCost = this.formatNumber(bulkCost);
+        
+        // 檢查是否能負擔完整批量
+        const canAfford = game.data.fruit >= bulkCost;
+        const buttonText = this.currentBulkAmount > 1 ? 
+            `種植 ${this.currentBulkAmount}個 (${formattedCost})` : 
+            `種植 (${formattedCost})`;
+
         row.innerHTML = `
-        <div class="plant-info">
-            <div class="plant-name">
-                <span class="plant-icon-container"></span>
-                ${config.name}：${count} 株
+            <div class="plant-info">
+                <div class="plant-name">
+                    <span class="plant-icon-container"></span>
+                    ${config.name}：${count} 株
+                </div>
+                <div class="plant-production">產量：${this.formatNumber(production)}/秒</div>
             </div>
-            <div class="plant-production">產量：${this.formatNumber(production)}/秒</div>
-        </div>
-        <button class="plant-buy-btn" onclick="buyMandrake('${id}')" ${game.data.fruit < cost ? 'disabled' : ''}>
-            種植 (${this.formatNumber(cost)})  
-        </button>
-    `;
+            <div class="plant-upgrade-info">
+                <div class="upgrade-benefit">+${formattedIncrease}/秒</div>
+                <button class="plant-buy-btn" onclick="buyMandrakesBulk('${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
+                    ${buttonText}
+                </button>
+            </div>
+        `;
 
         // 插入圖標
         const iconContainer = row.querySelector('.plant-icon-container');
@@ -528,7 +547,56 @@ static updateRewardStatus() {
             weatherBtn.disabled = !canAfford;
         }
     }
+
+        /**
+     * 設置批量購買控制
+     */
+    static setupBulkBuyControls() {
+        const bulkButtons = document.querySelectorAll('.bulk-btn');
+        bulkButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const amount = parseInt(e.target.dataset.amount);
+                this.setBulkAmount(amount);
+            });
+        });
+    }
+
+    /**
+     * 設置批量購買數量
+     */
+    static setBulkAmount(amount) {
+        this.currentBulkAmount = amount;
+        
+        // 更新按鈕狀態
+        document.querySelectorAll('.bulk-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (parseInt(btn.dataset.amount) === amount) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // 更新所有購買按鈕的顯示
+        this.updateMandrakeList();
+    }
+
+    /**
+     * 計算批量購買成本
+     */
+    static calculateBulkCost(id, amount) {
+        const config = MANDRAKE_CONFIG[id];
+        const currentCount = game.data.ownedMandrakes[id] || 0;
+        let totalCost = 0;
+        
+        for (let i = 0; i < amount; i++) {
+            const cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, currentCount + i));
+            totalCost += cost;
+        }
+        
+        return totalCost;
+    }
 }
+
+
 
 // 全局函數（供HTML onclick調用）
 window.buyMandrake = function(id) {
@@ -546,6 +614,37 @@ window.rerollWeather = function() {
 
 window.rebirth = function() {
     game.rebirth();
+};
+
+// 批量購買函數
+window.buyMandrakesBulk = function(id, amount) {
+    // 先檢查是否能買得起完整批量
+    const totalCost = UI.calculateBulkCost(id, amount);
+    
+    if (game.data.fruit < totalCost) {
+        UI.showNotification('果實不足，無法購買完整批量！', 'warning');
+        return;
+    }
+    
+    // 只有在能買得起完整批量時才執行購買
+    let successCount = 0;
+    for (let i = 0; i < amount; i++) {
+        if (game.buyMandrake(id)) {
+            successCount++;
+        } else {
+            console.warn('批量購買中斷，已購買:', successCount);
+            break;
+        }
+    }
+    
+    if (successCount === amount) {
+        UI.showNotification(`成功種植 ${amount} 個！`, 'success');
+    } else {
+        UI.showNotification(`只成功種植 ${successCount} 個`, 'warning');
+    }
+    
+    UI.addVisualEffect(event.target, 'bounce');
+    setTimeout(() => UI.updateButtonStates(), 100);
 };
 
 // 暴露UI類供其他模組使用
