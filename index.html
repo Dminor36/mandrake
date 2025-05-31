@@ -66,6 +66,24 @@
                 </button>
             </div>
         </div>
+        
+        <!-- 統計模態框 -->
+        <button onclick="showStats()" class="action-btn">📊 統計</button>
+
+        <!-- 統計模態框 -->
+        <div id="stats-modal" class="modal-overlay">
+            <div class="modal-content stats-modal">
+                <div class="modal-header">
+                    <h3>📊 遊戲統計</h3>
+                    <button onclick="hideStats()" style="position: absolute; top: 15px; right: 15px; background: none; color: #666; font-size: 20px; padding: 5px; border: none; cursor: pointer;">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="stats-content">
+                        <!-- 統計內容將由 JavaScript 生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 主要內容區 -->
         <div class="main-content">
@@ -99,20 +117,45 @@
                 </div>
             </div>
 
-            <!-- 右側：農場區域 -->
-            <div class="farm-container">
-                <div class="farm-header">
-                    <h3>🚜 農場</h3>
-                    <div class="farm-stats">
-                        <span>已使用：<span id="farm-used">0</span>/48</span>
+            <!-- 新的中央象徵區域 -->
+        <div class="symbolic-area">
+            <div class="symbolic-mandrake">
+                <div class="mandrake-visual">
+                    <!-- 象徵性的曼德拉草圖像 -->
+                    <div class="mandrake-root"></div>
+                    <div class="mandrake-leaves">
+                        <div class="leaf leaf-1"></div>
+                        <div class="leaf leaf-2"></div>
+                    </div>
+                    <div class="mandrake-eyes">
+                        <div class="eye eye-left"></div>
+                        <div class="eye eye-right"></div>
                     </div>
                 </div>
-                
-                <div class="farm-area" id="farm-area">
-                    <!-- 農場格子會動態生成 -->
-                </div>
             </div>
+            
+            <!-- 可選：添加點擊效果的提示 -->
+            <div class="click-hint">點擊曼德拉草！</div>
         </div>
+    </div>
+
+            <!-- 右側：天賦與強化 -->
+            <div class="talent-enhancement-section">
+                <div class="section-header">
+                    <h3>🌟 天賦與強化</h3>
+                </div>
+                
+                <!-- 天賦樹 -->
+                <div class="talent-tree" id="talent-tree">
+                    <!-- 天賦選項會動態生成 -->
+                </div>
+                
+                <!-- 強化選項 -->
+                <div class="enhancement-options" id="enhancement-options">
+                    <h4>🔮 強化選項</h4>
+                    <p>達成特定里程碑後可選擇強化！</p>
+                    <button class="enhancement-btn" onclick="openEnhancementSelection()">選擇強化</button>
+                </div>
 
       
 
@@ -128,6 +171,19 @@
         </div>
     </div>
 
+    <!-- 強化選擇彈窗 -->
+    <div class="modal-overlay" id="enhancement-modal">
+        <div class="modal-content enhancement-modal-content">
+            <div class="modal-header">
+                <h3>🔮 選擇你的強化！</h3>
+                <p class="enhancement-milestone" id="enhancement-milestone">達成里程碑：任意曼德拉草達到 100 株</p>
+            </div>
+            <div class="enhancement-options" id="enhancement-options">
+                <!-- 強化選項會動態生成 -->
+            </div>
+        </div>
+    </div>
+
     <!-- 通知訊息容器 -->
     <div class="notification-container" id="notification-container">
         <!-- 通知訊息會動態生成 -->
@@ -139,6 +195,7 @@
     <script src="js/game.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/rewards.js"></script>
+    <script src="js/enhancement.js"></script>
     <script src="js/main.js"></script>
     <script>
 console.log('HTML 已載入');

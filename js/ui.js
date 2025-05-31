@@ -133,6 +133,7 @@ static updateRewardStatus() {
             const count = game.data.ownedMandrakes[id] || 0;
             const cost = game.getCurrentCost(id);
             const production = this.calculateMandrakeProduction(id, count);
+            // 同時顯示升級後的產量提升
 
             const row = this.createMandrakeRow(id, config, count, cost, production);
             container.appendChild(row);
@@ -146,15 +147,8 @@ static updateRewardStatus() {
      * 計算曼德拉草產量
      */
     static calculateMandrakeProduction(id, count) {
-        if (count === 0) return 0;
-
-        const config = MANDRAKE_CONFIG[id];
-        const singleProduction = config.baseProduction * Math.pow(config.prodGrowth, count);
-        const weatherMultiplier = game.getWeatherMultiplier(config.type);
-        const tempBoost = game.getTempBoostMultiplier('production');
-        const typeBoost = game.getTempBoostMultiplier(config.type);
-
-        return count * singleProduction * weatherMultiplier * tempBoost * typeBoost;
+        // 直接從遊戲的計算結果取得
+        return game.individualProductions?.[id] || 0;
     }
 
     /**
@@ -169,7 +163,7 @@ static updateRewardStatus() {
 
         // 計算批量購買的成本和收益
         const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
-        const nextProduction = this.calculateMandrakeProduction(id, count + this.currentBulkAmount);
+        const nextProduction = game.calculateSingleMandrakeProduction(id, count + this.currentBulkAmount);
         const productionIncrease = nextProduction - production;
         
         const formattedIncrease = this.formatNumber(productionIncrease);
@@ -429,7 +423,7 @@ static updateRewardStatus() {
         
         // 小於1000直接顯示
          if (number < 1000) {
-            return Math.floor(number).toString();
+            return number.toFixed(1);
         }   
     
         // 定義單位
@@ -458,6 +452,11 @@ static updateRewardStatus() {
         const element = document.getElementById(elementId);
         if (!element) return;
         
+        // 🔥 添加 null/undefined 檢查
+        if (newValue === null || newValue === undefined || isNaN(newValue)) {
+                console.warn(`updateNumberWithAnimation: ${elementId} 收到無效數值:`, newValue);
+                newValue = 0; // 設為默認值
+            }
         const displayValue = formatNumber ? this.formatNumber(newValue) : newValue.toString();
         
         // 如果數值有變化，添加動畫效果
@@ -513,31 +512,38 @@ static updateRewardStatus() {
      * 更新按鈕狀態
      */
     static updateButtonStates() {
-        // 更新所有購買按鈕的可用性
         const buyButtons = document.querySelectorAll('.plant-buy-btn');
         buyButtons.forEach(button => {
             const onclick = button.getAttribute('onclick');
             if (onclick) {
-                const match = onclick.match(/buyMandrake\('(.+)'\)/);
+                const match = onclick.match(/buyMandrakesBulk\('(.+?)',\s*(\d+)\)/);
                 if (match) {
                     const id = match[1];
-                    const cost = game.getCurrentCost(id);
-                    const canAfford = game.data.fruit >= cost;
+                    const amount = parseInt(match[2]);
                     
-                    // 更新按鈕狀態
+                    // 🔥 直接使用遊戲的成本計算，不要用 calculateBulkCost
+                    let totalCost = 0;
+                    for (let i = 0; i < amount; i++) {
+                        // 模擬購買第 i 個的成本
+                        const currentCount = game.data.ownedMandrakes[id] || 0;
+                        const tempOriginal = game.data.ownedMandrakes[id];
+                        game.data.ownedMandrakes[id] = currentCount + i;
+                        totalCost += game.getCurrentCost(id);
+                        game.data.ownedMandrakes[id] = tempOriginal;
+                    }
+                    
+                    const canAfford = game.data.fruit >= totalCost;
                     button.disabled = !canAfford;
                     
-                    // 更新按鈕文字中的價格（確保價格是最新的）
-                    const formattedCost = this.formatNumber(cost);
-                    const newButtonText = `種植 (${formattedCost})`;
-                    
-                    // 只有在文字需要更新時才更新，避免不必要的DOM操作
-                    if (button.textContent !== newButtonText) {
-                        button.textContent = newButtonText;
-                    }
+                    const formattedCost = this.formatNumber(totalCost);
+                    const buttonText = amount > 1 ? 
+                        `種植 ${amount}個 (${formattedCost})` : 
+                        `種植 (${formattedCost})`;
+                    button.textContent = buttonText;
                 }
             }
         });
+        
 
         // 更新重骰天氣按鈕
         const weatherBtn = document.querySelector('.weather-reroll-btn');
@@ -585,14 +591,117 @@ static updateRewardStatus() {
     static calculateBulkCost(id, amount) {
         const config = MANDRAKE_CONFIG[id];
         const currentCount = game.data.ownedMandrakes[id] || 0;
+        const effects = game.data.enhancementEffects;
         let totalCost = 0;
         
         for (let i = 0; i < amount; i++) {
-            const cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, currentCount + i));
-            totalCost += cost;
+            // 計算基礎成本
+            let cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, currentCount + i));
+            
+            // 🔥 應用所有強化效果（複製 getCurrentCost 的邏輯）
+            cost *= effects.globalCostMultiplier;
+            cost *= effects.typeCostMultipliers[config.type] || 1.0;
+            
+            // 運氣效果：成本波動（如果有的話）
+            if (effects.hasCostVariance) {
+                const min = ENHANCEMENT_VALUES.luck.cost_variance_min;
+                const max = ENHANCEMENT_VALUES.luck.cost_variance_max;
+                const randomFactor = 1 + (Math.random() * (max - min) + min);
+                cost *= Math.max(0.1, randomFactor);
+            }
+            
+            totalCost += Math.floor(Math.max(1, cost));
         }
         
         return totalCost;
+    }
+
+        /**
+     * 顯示強化選擇界面
+     */
+    static showEnhancementChoice() {
+        const modal = document.getElementById('enhancement-modal');
+        const optionsContainer = document.getElementById('enhancement-options');
+        const milestoneElement = document.getElementById('enhancement-milestone');
+        
+        if (!modal || !optionsContainer) {
+            console.error('找不到強化模態框元素');
+            return;
+        }
+
+        // 顯示當前里程碑信息
+        const currentMilestone = game.data.enhancements.nextMilestone;
+        if (milestoneElement && currentMilestone < ENHANCEMENT_UNLOCK_CONDITIONS.length) {
+            const condition = ENHANCEMENT_UNLOCK_CONDITIONS[currentMilestone];
+            milestoneElement.textContent = `達成里程碑：${condition.description}`;
+        }
+
+        // 清空之前的選項
+        optionsContainer.innerHTML = '';
+
+        // 顯示當前的三選一選項
+        const choices = game.data.enhancements.currentChoices;
+        choices.forEach((enhancementId, index) => {
+            const enhancement = ENHANCEMENTS[enhancementId];
+            if (enhancement) {
+                const optionElement = this.createEnhancementOption(enhancement, enhancementId, index);
+                optionsContainer.appendChild(optionElement);
+            }
+        });
+
+        // 顯示模態框
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+    }
+
+    /**
+     * 創建強化選項元素
+     */
+    static createEnhancementOption(enhancement, enhancementId, index) {
+        const optionElement = document.createElement('div');
+        optionElement.className = `enhancement-option ${enhancement.category}`;
+
+        // 獲取類別顯示名稱
+        const categoryNames = {
+            stable: '穩穩強化',
+            luck: '運氣強化', 
+            reward: '獎勵強化',
+            combo: 'Combo強化'
+        };
+
+        optionElement.innerHTML = `
+            <div class="enhancement-category ${enhancement.category}">
+                ${categoryNames[enhancement.category]}
+            </div>
+            <div class="enhancement-icon">${enhancement.icon}</div>
+            <h4>${enhancement.name}</h4>
+            <p>${enhancement.description()}</p>
+        `;
+
+        // 點擊事件
+        optionElement.onclick = () => this.selectEnhancement(enhancementId);
+
+        return optionElement;
+    }
+
+    /**
+     * 選擇強化
+     */
+    static selectEnhancement(enhancementId) {
+        if (typeof EnhancementSystem !== 'undefined') {
+            EnhancementSystem.selectEnhancement(enhancementId);
+        }
+    }
+
+    /**
+     * 隱藏強化選擇界面
+     */
+    static hideEnhancementChoice() {
+        const modal = document.getElementById('enhancement-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
     }
 }
 
@@ -646,6 +755,540 @@ window.buyMandrakesBulk = function(id, amount) {
     UI.addVisualEffect(event.target, 'bounce');
     setTimeout(() => UI.updateButtonStates(), 100);
 };
+
+// ========== 統計系統 ==========
+
+/**
+ * 顯示統計界面
+ */
+window.showStats = function() {
+    const modal = document.getElementById('stats-modal');
+    const content = document.getElementById('stats-content');
+    
+    if (!modal || !content) return;
+    
+    // 生成統計內容
+    content.innerHTML = generateStatsContent();
+    
+    // 顯示模態框
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+};
+
+/**
+ * 隱藏統計界面
+ */
+window.hideStats = function() {
+    const modal = document.getElementById('stats-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+};
+
+/**
+ * 生成統計內容 - 專注於曼德拉草詳細計算
+ */
+function generateStatsContent() {
+    return `
+        <div class="mandrake-details-container">
+            ${generateMandrakeDetailsCards()}
+        </div>
+    `;
+}
+
+/**
+ * 創建統計區段
+ */
+function createStatsSection(title, items) {
+    const itemsHtml = items.map(([label, value]) => 
+        `<div class="stats-item">
+            <span>${label}</span>
+            <span class="stats-value">${value}</span>
+        </div>`
+    ).join('');
+    
+    return `
+        <div class="stats-section">
+            <h4>${title}</h4>
+            <div class="stats-grid">
+                ${itemsHtml}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * 獲取強化統計
+ */
+function getEnhancementStats() {
+    const obtained = game.data.enhancements.obtained;
+    const effects = game.data.enhancementEffects;
+    
+    return {
+        totalEnhancements: Object.keys(obtained).length,
+        totalLevels: Object.values(obtained).reduce((sum, level) => sum + level, 0),
+        categoryBreakdown: getCategoryBreakdown(obtained)
+    };
+}
+
+/**
+ * 獲取類別分解
+ */
+function getCategoryBreakdown(obtained) {
+    const breakdown = { stable: 0, luck: 0, reward: 0, combo: 0 };
+    
+    for (const [enhancementId, level] of Object.entries(obtained)) {
+        const enhancement = ENHANCEMENTS[enhancementId];
+        if (enhancement) {
+            breakdown[enhancement.category] += level;
+        }
+    }
+    
+    return breakdown;
+}
+
+/**
+ * 創建強化詳情
+ */
+function createEnhancementDetails() {
+    const obtained = game.data.enhancements.obtained;
+    
+    if (Object.keys(obtained).length === 0) {
+        return `
+            <div class="stats-section">
+                <h4>強化詳情</h4>
+                <p style="text-align: center; color: #666;">尚未獲得任何強化</p>
+            </div>
+        `;
+    }
+    
+    const enhancementItems = Object.entries(obtained)
+        .map(([enhancementId, level]) => {
+            const enhancement = ENHANCEMENTS[enhancementId];
+            if (!enhancement) return '';
+            
+            return `
+                <div class="enhancement-item">
+                    <span>
+                        <span class="enhancement-category ${enhancement.category}">
+                            ${enhancement.icon}
+                        </span>
+                        ${enhancement.name}
+                    </span>
+                    <span class="stats-value">Lv.${level}</span>
+                </div>
+            `;
+        })
+        .filter(item => item !== '')
+        .join('');
+    
+    return `
+        <div class="stats-section">
+            <h4>已獲得強化</h4>
+            <div class="enhancement-list">
+                ${enhancementItems}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * 獲取產量統計
+ */
+function getProductionStats() {
+    const productions = {};
+    
+    for (const [id, count] of Object.entries(game.data.ownedMandrakes)) {
+        if (count > 0) {
+            productions[id] = game.calculateSingleMandrakeProduction(id, count);
+        }
+    }
+    
+    return productions;
+}
+
+/**
+ * 創建產量分解
+ */
+function createProductionBreakdown() {
+    const productions = getProductionStats();
+    
+    if (Object.keys(productions).length === 0) {
+        return `
+            <div class="stats-section">
+                <h4>產量分解</h4>
+                <p style="text-align: center; color: #666;">尚未種植任何曼德拉草</p>
+            </div>
+        `;
+    }
+    
+    const productionItems = Object.entries(productions)
+        .filter(([id, production]) => production > 0)
+        .sort(([, a], [, b]) => b - a) // 按產量排序
+        .map(([id, production]) => {
+            const config = MANDRAKE_CONFIG[id];
+            const count = game.data.ownedMandrakes[id];
+            
+            return `
+                <div class="stats-item">
+                    <span>
+                        <span style="margin-right: 8px;">${config.icon}</span>
+                        ${config.name} (${count}株)
+                    </span>
+                    <span class="stats-value">${UI.formatNumber(production)}/秒</span>
+                </div>
+            `;
+        })
+        .join('');
+    
+    return `
+        <div class="stats-section">
+            <h4>產量分解</h4>
+            <div class="stats-grid">
+                ${productionItems}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * 生成所有曼德拉草的詳細計算卡片
+ */
+function generateMandrakeDetailsCards() {
+    const cards = [];
+    
+    for (const [id, config] of Object.entries(MANDRAKE_CONFIG)) {
+        // 檢查是否已解鎖
+        const isUnlocked = game.data.unlockedMandrakes.includes(id);
+        if (!isUnlocked) continue;
+        
+        const owned = game.data.ownedMandrakes[id] || 0;
+        const calculations = calculateDetailedProduction(id, owned);
+        
+        cards.push(createMandrakeDetailCard(id, config, owned, calculations));
+    }
+    
+    return cards.join('');
+}
+
+/**
+ * 計算詳細產量數據
+ */
+function calculateDetailedProduction(mandrakeId, currentCount) {
+    const config = MANDRAKE_CONFIG[mandrakeId];
+    const baseProduction = config.baseProduction;
+    
+    // 獲取所有影響因子
+    const factors = getProductionFactors(mandrakeId, currentCount);
+    
+    // 計算當前產量
+    const currentProduction = currentCount > 0 ? 
+        game.calculateSingleMandrakeProduction(mandrakeId, currentCount) : 0;
+    
+    // 計算下一株的產量增益
+    const nextProduction = game.calculateSingleMandrakeProduction(mandrakeId, currentCount + 1);
+    const nextIncrease = nextProduction - currentProduction;
+    
+    // 計算投資回報
+    const cost = game.getCurrentCost(mandrakeId);
+    const paybackTime = nextIncrease > 0 ? cost / nextIncrease : Infinity;
+    
+    // 計算性價比
+    const efficiency = nextIncrease / cost;
+    
+    return {
+        baseProduction,
+        factors,
+        currentProduction,
+        nextProduction,
+        nextIncrease,
+        cost,
+        paybackTime,
+        efficiency,
+        totalMultiplier: factors.total
+    };
+}
+
+/**
+ * 獲取所有產量影響因子 - 完全匹配遊戲邏輯
+ */
+function getProductionFactors(mandrakeId, currentCount) {
+    const config = MANDRAKE_CONFIG[mandrakeId];
+    const effects = game.data.enhancementEffects;
+    const factors = {
+        base: config.baseProduction,
+        details: []
+    };
+    
+    // 1. 全體產量加成
+    if (effects.globalProductionMultiplier !== 1.0) {
+        factors.details.push({
+            name: '全面發展',
+            value: effects.globalProductionMultiplier,
+            display: `×${effects.globalProductionMultiplier.toFixed(2)}`,
+            category: 'enhancement',
+            level: game.data.enhancements.obtained['stable_global_production'] || 0
+        });
+    }
+    
+    // 2. 類型特定加成
+    const typeMultiplier = effects.typeProductionMultipliers[config.type] || 1.0;
+    if (typeMultiplier !== 1.0) {
+        const typeName = {normal: '普通', element: '元素', animal: '動物'}[config.type];
+        const enhancementKey = `stable_${config.type}_production`;
+        factors.details.push({
+            name: `${typeName}專精`,
+            value: typeMultiplier,
+            display: `×${typeMultiplier.toFixed(2)}`,
+            category: 'enhancement',
+            level: game.data.enhancements.obtained[enhancementKey] || 0
+        });
+    }
+    
+    // 3. 多元發展加成
+    if (effects.hasDiversityBonus) {
+        const hasNormal = Object.entries(game.data.ownedMandrakes).some(([id, count]) => 
+            count > 0 && MANDRAKE_CONFIG[id]?.type === 'normal'
+        );
+        const hasElement = Object.entries(game.data.ownedMandrakes).some(([id, count]) => 
+            count > 0 && MANDRAKE_CONFIG[id]?.type === 'element'
+        );
+        const hasAnimal = Object.entries(game.data.ownedMandrakes).some(([id, count]) => 
+            count > 0 && MANDRAKE_CONFIG[id]?.type === 'animal'
+        );
+        
+        if (hasNormal && hasElement && hasAnimal) {
+            const bonus = 1 + ENHANCEMENT_VALUES.combo.three_type_bonus;
+            factors.details.push({
+                name: '多元發展',
+                value: bonus,
+                display: `×${bonus.toFixed(2)}`,
+                category: 'enhancement',
+                level: game.data.enhancements.obtained['combo_diversity_bonus'] || 0
+            });
+        }
+    }
+    
+    // 4. 規模效應加成
+    if (effects.hasQuantityBonus) {
+        const totalMandrakes = Game.getTotalMandrakeCount();
+        const bonusLevels = Math.floor(totalMandrakes / 10);
+        if (bonusLevels > 0) {
+            const bonus = 1 + (bonusLevels * ENHANCEMENT_VALUES.combo.per_10_bonus);
+            factors.details.push({
+                name: '規模效應',
+                value: bonus,
+                display: `×${bonus.toFixed(2)}`,
+                category: 'enhancement',
+                level: game.data.enhancements.obtained['combo_quantity_bonus'] || 0,
+                detail: `${totalMandrakes}株 → ${bonusLevels}×10株`
+            });
+        }
+    }
+    
+    // 5. 同系協同加成
+    if (effects.hasTypeSynergy) {
+        const sameTypeCount = Object.entries(game.data.ownedMandrakes)
+            .filter(([id, count]) => count > 0 && MANDRAKE_CONFIG[id]?.type === config.type)
+            .reduce((sum, [, count]) => sum + count, 0);
+        
+        if (sameTypeCount > 1) {
+            const bonus = 1 + ((sameTypeCount - 1) * ENHANCEMENT_VALUES.combo.same_type_bonus);
+            const typeName = {normal: '普通', element: '元素', animal: '動物'}[config.type];
+            factors.details.push({
+                name: '同系協同',
+                value: bonus,
+                display: `×${bonus.toFixed(2)}`,
+                category: 'enhancement',
+                level: game.data.enhancements.obtained['combo_type_synergy'] || 0,
+                detail: `${typeName}系${sameTypeCount}株`
+            });
+        }
+    }
+    
+    // 6. 產量波動
+    if (effects.globalProductionVariance !== 1.0) {
+        factors.details.push({
+            name: '產量波動',
+            value: effects.globalProductionVariance,
+            display: `×${effects.globalProductionVariance.toFixed(2)}`,
+            category: 'enhancement',
+            level: game.data.enhancements.obtained['luck_production_variance'] || 0,
+            detail: `固定波動 ${((effects.globalProductionVariance - 1) * 100).toFixed(1)}%`
+        });
+    }
+    
+    // 7. 天氣效果
+    const weatherMultiplier = game.getWeatherMultiplier(config.type);
+    if (weatherMultiplier !== 1.0) {
+        const weatherConfig = WEATHER_CONFIG[game.data.weather];
+        factors.details.push({
+            name: `天氣效果`,
+            value: weatherMultiplier,
+            display: `×${weatherMultiplier.toFixed(2)}`,
+            category: 'weather',
+            detail: `${weatherConfig.name} (${weatherConfig.effect})`
+        });
+    }
+    
+    // 8. 臨時加成
+    const tempBoost = game.getTempBoostMultiplier('production');
+    const typeBoost = game.getTempBoostMultiplier(config.type);
+    const totalTempBoost = tempBoost * typeBoost;
+    if (totalTempBoost !== 1.0) {
+        factors.details.push({
+            name: '臨時加成',
+            value: totalTempBoost,
+            display: `×${totalTempBoost.toFixed(2)}`,
+            category: 'temp',
+            detail: '獎勵效果'
+        });
+    }
+    
+    // 計算總倍數 - 按照遊戲邏輯順序相乘
+    factors.total = factors.details.reduce((total, factor) => total * factor.value, 1);
+    
+    return factors;
+}
+
+/**
+ * 創建曼德拉草詳細計算卡片
+ */
+function createMandrakeDetailCard(id, config, owned, calculations) {
+    const { baseProduction, factors, currentProduction, nextIncrease, cost, paybackTime, efficiency } = calculations;
+    
+    return `
+        <div class="mandrake-detail-card ${config.type}">
+            <div class="card-header">
+                <div class="mandrake-info">
+                    <span class="mandrake-icon">${config.icon}</span>
+                    <div class="mandrake-title">
+                        <h4>${config.name}</h4>
+                        <span class="mandrake-type">${getTypeName(config.type)} · 擁有 ${owned} 株</span>
+                    </div>
+                </div>
+                <div class="current-production">
+                    <span class="production-label">總產量</span>
+                    <span class="production-value">${UI.formatNumber(currentProduction)}/秒</span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="calculation-section">
+                    <h5>📊 產量計算公式</h5>
+                    <div class="formula-breakdown">
+                        <div class="formula-line base">
+                            <span class="factor-name">基礎產量</span>
+                            <span class="factor-value">${UI.formatNumber(baseProduction)}</span>
+                        </div>
+                        ${generateFactorLines(factors)}
+                        <div class="formula-line total">
+                            <span class="factor-name">單株產量</span>
+                            <span class="factor-value">${UI.formatNumber(baseProduction * factors.total)}/秒</span>
+                        </div>
+                        <div class="formula-line final">
+                            <span class="factor-name">總產量 (${owned}株)</span>
+                            <span class="factor-value">${UI.formatNumber(currentProduction)}/秒</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="investment-section">
+                    <h5>💰 投資分析</h5>
+                    <div class="investment-grid">
+                        <div class="investment-item">
+                            <span class="item-label">下一株成本</span>
+                            <span class="item-value">${UI.formatNumber(cost)} 果實</span>
+                        </div>
+                        <div class="investment-item">
+                            <span class="item-label">產量增益</span>
+                            <span class="item-value">${UI.formatNumber(nextIncrease)}/秒</span>
+                        </div>
+                        <div class="investment-item">
+                            <span class="item-label">回本時間</span>
+                            <span class="item-value">${formatPaybackTime(paybackTime)}</span>
+                        </div>
+                        <div class="investment-item">
+                            <span class="item-label">性價比</span>
+                            <span class="item-value efficiency-${getEfficiencyLevel(efficiency)}">${UI.formatNumber(efficiency * 1000)}‰</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * 生成影響因子行
+ */
+function generateFactorLines(factors) {
+    return factors.details.map(factor => `
+        <div class="formula-line factor">
+            <span class="factor-name">${factor.name}</span>
+            <span class="factor-value">${factor.display}</span>
+        </div>
+    `).join('');
+}
+
+/**
+ * 獲取類型名稱
+ */
+function getTypeName(type) {
+    const typeNames = {
+        normal: '普通',
+        element: '元素',
+        animal: '動物',
+        rare: '稀有',
+        legendary: '傳說'
+    };
+    return typeNames[type] || type;
+}
+
+/**
+ * 格式化回本時間
+ */
+function formatPaybackTime(seconds) {
+    if (seconds === Infinity) return '無法回本';
+    if (seconds < 60) return `${seconds.toFixed(1)} 秒`;
+    if (seconds < 3600) return `${(seconds / 60).toFixed(1)} 分鐘`;
+    if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} 小時`;
+    return `${(seconds / 86400).toFixed(1)} 天`;
+}
+
+/**
+ * 獲取效率等級
+ */
+function getEfficiencyLevel(efficiency) {
+    if (efficiency > 0.01) return 'excellent';
+    if (efficiency > 0.005) return 'good';
+    if (efficiency > 0.001) return 'average';
+    return 'poor';
+}
+
+// 擴展函數（預留給未來使用）
+/**
+ * 計算數量加成（預留）
+ */
+function calculateQuantityBonus(count) {
+    // 例如：每10株增加5%產量
+    // return 1 + Math.floor(count / 10) * 0.05;
+    return 1;
+}
+
+/**
+ * 計算其他加成（預留）
+ */
+function calculateOtherBonuses(mandrakeId) {
+    // 未來可以添加：
+    // - 特殊建築加成
+    // - 時間加成
+    // - 成就加成
+    // - 季節加成等
+    return 1;
+}
+
 
 // 暴露UI類供其他模組使用
 window.UI = UI;

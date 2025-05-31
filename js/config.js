@@ -34,49 +34,49 @@ const MANDRAKE_CONFIG = {
     // 第1階
     original: { 
         tier: 1, type: 'normal', name: '原始曼德拉草', icon: '🌱',
-        baseCost: 10, baseProduction: 0.1, costGrowth: 1.15, prodGrowth: 1.05 
+        baseCost: 10, baseProduction: 0.1, costGrowth: 1.15, prodGrowth: 1 
     },
     
     // 第2階
     fat: { 
         tier: 2, type: 'normal', name: '胖曼德拉草', icon: '🟢',
-        baseCost: 50, baseProduction: 0.5, costGrowth: 1.20, prodGrowth: 1.07 
+        baseCost: 50, baseProduction: 1, costGrowth: 1.20, prodGrowth: 1 
     },
     fire: { 
         tier: 2, type: 'element', name: '火曼德拉草', icon: '🔥',
-        baseCost: 60, baseProduction: 0.6, costGrowth: 1.22, prodGrowth: 1.08 
+        baseCost: 60, baseProduction: 1, costGrowth: 1.22, prodGrowth: 1 
     },
     cat: { 
         tier: 2, type: 'animal', name: '貓曼德拉草', icon: '🐱',
-        baseCost: 55, baseProduction: 0.4, costGrowth: 1.18, prodGrowth: 1.09 
+        baseCost: 55, baseProduction: 1, costGrowth: 1.18, prodGrowth: 1 
     },
     
     // 第3階
     thin: { 
         tier: 3, type: 'normal', name: '瘦曼德拉草', icon: '🟡',
-        baseCost: 200, baseProduction: 2.0, costGrowth: 1.25, prodGrowth: 1.10 
+        baseCost: 200, baseProduction: 10, costGrowth: 1.25, prodGrowth: 1 
     },
     water: { 
         tier: 3, type: 'element', name: '水曼德拉草', icon: '💧',
-        baseCost: 250, baseProduction: 2.5, costGrowth: 1.28, prodGrowth: 1.12 
+        baseCost: 250, baseProduction: 10, costGrowth: 1.28, prodGrowth: 1 
     },
     bird: { 
         tier: 3, type: 'animal', name: '鳥曼德拉草', icon: '🐦',
-        baseCost: 220, baseProduction: 1.8, costGrowth: 1.23, prodGrowth: 1.11 
+        baseCost: 220, baseProduction: 10, costGrowth: 1.23, prodGrowth: 1 
     },
     
     // 第4階 (未來擴展)
     giant: { 
         tier: 4, type: 'normal', name: '巨型曼德拉草', icon: '🟤',
-        baseCost: 1000, baseProduction: 10.0, costGrowth: 1.30, prodGrowth: 1.15 
+        baseCost: 1000, baseProduction: 100, costGrowth: 1.30, prodGrowth: 1
     },
     lightning: { 
         tier: 4, type: 'element', name: '雷曼德拉草', icon: '⚡',
-        baseCost: 1200, baseProduction: 12.0, costGrowth: 1.32, prodGrowth: 1.17 
+        baseCost: 1200, baseProduction: 12.0, costGrowth: 1.32, prodGrowth: 1
     },
     dragon: { 
         tier: 4, type: 'animal', name: '龍曼德拉草', icon: '🐲',
-        baseCost: 1100, baseProduction: 11.0, costGrowth: 1.31, prodGrowth: 1.16 
+        baseCost: 1100, baseProduction: 100, costGrowth: 1.31, prodGrowth: 1
     }
 };
 
@@ -276,3 +276,47 @@ console.log('✅ REWARD_TEMPLATES 載入:', typeof REWARD_TEMPLATES !== 'undefin
 console.log('✅ REWARD_TEMPLATES 內容:', Object.keys(REWARD_TEMPLATES));
 
 console.log('📋 config.js 載入完成！');
+
+// ========== 強化系統配置 ==========
+
+// 強化數值配置
+const ENHANCEMENT_VALUES = {
+    stable: {
+        global_production: 0.10,    // 全體生產 +10%
+        global_cost: 0.08,          // 全體成本 -8%
+        type_production: 0.20,      // 特定系生產 +20%
+        type_cost: 0.15             // 特定系成本 -15%
+    },
+    luck: {
+        production_variance: 0.30,   // 產量波動 ±30%
+        production_boost: 0.15,      // 期望值 +15%
+        perfect_weather_chance: 0.30, // 完美天氣機率 30%
+        lucky_moment_chance: 0.05,   // 幸運時刻機率 5%
+        purchase_crit_chance: 0.10,  // 購買暴擊機率 10%
+        cost_variance_min: -0.20,    // 成本波動最小 -20%
+        cost_variance_max: 0.10      // 成本波動最大 +10%
+    },
+    reward: {
+        cd_reduction: 0.25,         // CD減少 -25%
+        capacity_increase: 1,       // 累積上限 +1
+        rarity_boost: 0.50         // 稀有度提升 +50%
+    },
+    combo: {
+        per_10_bonus: 0.03,        // 每10株 +3%
+        same_type_bonus: 0.05,     // 同類型每株額外 +5%
+        three_type_bonus: 0.25,    // 三系全有 +25%
+        first_type_bonus: 0.50     // 每系第1株 +50%
+    }
+};
+
+// 強化解鎖條件
+const ENHANCEMENT_UNLOCK_CONDITIONS = [
+    { threshold: 1, description: '任意曼德拉草達到 1 株' },
+    { threshold: 10, description: '任意曼德拉草達到 10 株' },
+    { threshold: 50, description: '任意曼德拉草達到 50 株' },
+    { threshold: 100, description: '任意曼德拉草達到 100 株' },
+    { threshold: 200, description: '任意曼德拉草達到 200 株' }
+];
+
+console.log('✅ ENHANCEMENT_VALUES 載入完成');
+console.log('✅ ENHANCEMENT_UNLOCK_CONDITIONS 載入完成');

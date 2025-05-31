@@ -5,6 +5,7 @@ class Game {
         this.data = this.getDefaultGameData();
         this.intervals = {};
         this.isInitialized = false;
+        this.lastFruitCount = 0; 
     }
 
     /**
@@ -42,6 +43,63 @@ class Game {
             maxPendingRewards: 2,        // 最大累計數量（可通過天賦擴展）
             generatedRewards: [], // 預生成的獎勵列表 
             tempBoosts: {},
+
+            // 強化系統數據
+            enhancements: {
+            obtained: {},
+            mandrakeProgress: {},  // 新增：記錄每個品種的里程碑進度
+            pendingEnhancement: false,
+            currentChoices: [],
+            pendingCount: 0 
+
+       
+
+
+        },
+        
+            // 強化效果數據
+            enhancementEffects: {
+            // 產量加成
+            globalProductionMultiplier: 1.0,
+            typeProductionMultipliers: {
+                normal: 1.0,
+                element: 1.0,
+                animal: 1.0
+            },
+            
+            // 成本減免
+            globalCostMultiplier: 1.0,
+            typeCostMultipliers: {
+                normal: 1.0,
+                element: 1.0,
+                animal: 1.0
+            },
+            
+            // 運氣效果標記
+            hasProductionVariance: false,
+            hasPurchaseCrit: false,
+            hasCostVariance: false,
+            
+            // 獎勵效果
+            rewardCdMultiplier: 1.0,
+            bonusRewardCapacity: 0,
+            rewardRarityBoost: 0,
+            
+            // Combo效果標記
+            hasQuantityBonus: false,
+            hasTypeSynergy: false,
+            hasDiversityBonus: false,
+
+                // 保存的運氣因子
+            savedProductionVariance: null,
+            savedCostVariance: null,
+
+            globalProductionVariance: 1.0  // 預設1.0（無波動）
+
+     
+        },
+
+            
             
             // 版本控制
             version: GAME_CONFIG.VERSION,
@@ -122,13 +180,20 @@ class Game {
 
         // 清理過期的臨時效果
         this.cleanupExpiredBoosts();
+        
 
         // 更新UI
         if (typeof UI !== 'undefined') {
             UI.updateResources();
             UI.updateRewardTimer();
             UI.updateRewardStatus();  
+            UI.updateButtonStates();
         }
+
+        //  定期檢查強化條件 - 在清理過期效果後添加
+        if (typeof EnhancementSystem !== 'undefined') {
+        EnhancementSystem.checkUnlockConditions();
+    }
     }
 
     /**
@@ -138,24 +203,239 @@ class Game {
         return Object.values(window.game.data.ownedMandrakes).reduce((sum, count) => sum + count, 0);
     }
 
+        /**
+     * 計算單一品種的產量（包含所有效果和詳細分解）
+     */
+    calculateSingleMandrakeProduction(id, count, showDetails = false) {
+        if (count === 0) return showDetails ? {total: 0, breakdown: [], effects: []} : 0;
+        
+        const config = MANDRAKE_CONFIG[id];
+        if (!config) return showDetails ? {total: 0, breakdown: [], effects: []} : 0;
+        
+        let production = count * config.baseProduction;
+        const breakdown = [];
+        const effects = [];
+        
+        if (showDetails) {
+            breakdown.push({
+                name: '基礎產量',
+                value: production,
+                detail: `${count}株 × ${config.baseProduction}`
+            });
+        }
+        
+        const gameEffects = this.data.enhancementEffects;
+        
+        // 全體產量加成
+        if (gameEffects.globalProductionMultiplier !== 1.0) {
+            const oldProduction = production;
+            production *= gameEffects.globalProductionMultiplier;
+            const increase = production - oldProduction;
+            if (showDetails) {
+                breakdown.push({
+                    name: '全體產量加成',
+                    value: increase,
+                    detail: `×${gameEffects.globalProductionMultiplier.toFixed(2)} (+${((gameEffects.globalProductionMultiplier - 1) * 100).toFixed(1)}%)`
+                });
+                effects.push({
+                    source: '全面發展',
+                    level: this.data.enhancements.obtained['stable_global_production'] || 0,
+                    effect: `全體產量 +${((gameEffects.globalProductionMultiplier - 1) * 100).toFixed(1)}%`
+                });
+            }
+        }
+        
+        // 類型特定加成
+        const typeMultiplier = gameEffects.typeProductionMultipliers[config.type] || 1.0;
+        if (typeMultiplier !== 1.0) {
+            const oldProduction = production;
+            production *= typeMultiplier;
+            const increase = production - oldProduction;
+            if (showDetails) {
+                const typeName = {normal: '普通', element: '元素', animal: '動物'}[config.type];
+                breakdown.push({
+                    name: `${typeName}系加成`,
+                    value: increase,
+                    detail: `×${typeMultiplier.toFixed(2)} (+${((typeMultiplier - 1) * 100).toFixed(1)}%)`
+                });
+                
+                // 記錄對應的強化來源
+                const enhancementKey = `stable_${config.type}_production`;
+                if (this.data.enhancements.obtained[enhancementKey]) {
+                    effects.push({
+                        source: ENHANCEMENTS[enhancementKey]?.name || `${typeName}專精`,
+                        level: this.data.enhancements.obtained[enhancementKey],
+                        effect: `${typeName}系產量 +${((typeMultiplier - 1) * 100).toFixed(1)}%`
+                    });
+                }
+            }
+        }
+        
+        // 多元發展加成
+        if (gameEffects.hasDiversityBonus) {
+            const hasNormal = Object.entries(this.data.ownedMandrakes).some(([mandrakeId, mandrakeCount]) => 
+                mandrakeCount > 0 && MANDRAKE_CONFIG[mandrakeId]?.type === 'normal'
+            );
+            const hasElement = Object.entries(this.data.ownedMandrakes).some(([mandrakeId, mandrakeCount]) => 
+                mandrakeCount > 0 && MANDRAKE_CONFIG[mandrakeId]?.type === 'element'
+            );
+            const hasAnimal = Object.entries(this.data.ownedMandrakes).some(([mandrakeId, mandrakeCount]) => 
+                mandrakeCount > 0 && MANDRAKE_CONFIG[mandrakeId]?.type === 'animal'
+            );
+            
+            if (hasNormal && hasElement && hasAnimal) {
+                const oldProduction = production;
+                production *= (1 + ENHANCEMENT_VALUES.combo.three_type_bonus);
+                const increase = production - oldProduction;
+                if (showDetails) {
+                    breakdown.push({
+                        name: '多元發展',
+                        value: increase,
+                        detail: `三系齊全 +${(ENHANCEMENT_VALUES.combo.three_type_bonus * 100).toFixed(1)}%`
+                    });
+                    effects.push({
+                        source: '多元發展',
+                        level: this.data.enhancements.obtained['combo_diversity_bonus'] || 0,
+                        effect: `三系齊全時全體 +${(ENHANCEMENT_VALUES.combo.three_type_bonus * 100).toFixed(1)}%`
+                    });
+                }
+            }
+        }
+
+        // 規模效應加成
+        if (gameEffects.hasQuantityBonus) {
+            const totalMandrakes = Game.getTotalMandrakeCount();
+            const bonusMultiplier = Math.floor(totalMandrakes / 10) * ENHANCEMENT_VALUES.combo.per_10_bonus;
+            
+            if (bonusMultiplier > 0) {
+                const oldProduction = production;
+                production *= (1 + bonusMultiplier);
+                const increase = production - oldProduction;
+                
+                if (showDetails) {
+                    breakdown.push({
+                        name: '規模效應',
+                        value: increase,
+                        detail: `${totalMandrakes}株 → ${Math.floor(totalMandrakes / 10)}×10株 +${(bonusMultiplier * 100).toFixed(1)}%`
+                    });
+                    effects.push({
+                        source: '規模效應',
+                        level: this.data.enhancements.obtained['combo_quantity_bonus'] || 0,
+                        effect: `每10株全體產量 +${(ENHANCEMENT_VALUES.combo.per_10_bonus * 100).toFixed(1)}%`
+                    });
+                }
+            }
+        }
+
+        // 同系協同加成
+        if (gameEffects.hasTypeSynergy) {
+            // 計算同類型的總數量
+            const sameTypeCount = Object.entries(this.data.ownedMandrakes)
+                .filter(([mandrakeId, mandrakeCount]) => 
+                    mandrakeCount > 0 && MANDRAKE_CONFIG[mandrakeId]?.type === config.type
+                )
+                .reduce((sum, [, mandrakeCount]) => sum + mandrakeCount, 0);
+            
+            if (sameTypeCount > 1) {
+                const bonusMultiplier = (sameTypeCount - 1) * ENHANCEMENT_VALUES.combo.same_type_bonus;
+                const oldProduction = production;
+                production *= (1 + bonusMultiplier);
+                const increase = production - oldProduction;
+                
+                if (showDetails) {
+                    const typeName = {normal: '普通', element: '元素', animal: '動物'}[config.type];
+                    breakdown.push({
+                        name: '同系協同',
+                        value: increase,
+                        detail: `${typeName}系${sameTypeCount}株 +${(bonusMultiplier * 100).toFixed(1)}%`
+                    });
+                    effects.push({
+                        source: '同系協同',
+                        level: this.data.enhancements.obtained['combo_type_synergy'] || 0,
+                        effect: `同類型每額外1株 +${(ENHANCEMENT_VALUES.combo.same_type_bonus * 100).toFixed(1)}%`
+                    });
+                }
+            }
+        }
+        
+        // 產量波動
+        if (gameEffects.globalProductionVariance !== 1.0) {
+            const oldProduction = production;
+            production *= gameEffects.globalProductionVariance;
+            const change = production - oldProduction;
+            if (showDetails) {
+                const percentage = ((gameEffects.globalProductionVariance - 1) * 100).toFixed(1);
+                breakdown.push({
+                    name: '產量波動',
+                    value: change,
+                    detail: `累積波動 ${percentage >= 0 ? '+' : ''}${percentage}%`
+                });
+            }
+        }
+        
+        // 天氣效果
+        const weatherMultiplier = this.getWeatherMultiplier(config.type);
+        if (weatherMultiplier !== 1.0) {
+            const oldProduction = production;
+            production *= weatherMultiplier;
+            const change = production - oldProduction;
+            if (showDetails) {
+                const weatherName = WEATHER_CONFIG[this.data.weather]?.name || '未知';
+                breakdown.push({
+                    name: '天氣效果',
+                    value: change,
+                    detail: `${weatherName} ${((weatherMultiplier - 1) * 100).toFixed(1)}%`
+                });
+            }
+        }
+        
+        // 臨時加成
+        const tempBoost = this.getTempBoostMultiplier('production');
+        const typeBoost = this.getTempBoostMultiplier(config.type);
+        const totalTempBoost = tempBoost * typeBoost;
+        if (totalTempBoost !== 1.0) {
+            const oldProduction = production;
+            production *= totalTempBoost;
+            const change = production - oldProduction;
+            if (showDetails) {
+                breakdown.push({
+                    name: '臨時加成',
+                    value: change,
+                    detail: `獎勵效果 +${((totalTempBoost - 1) * 100).toFixed(1)}%`
+                });
+            }
+        }
+        
+        return showDetails ? {
+            total: production,
+            breakdown: breakdown,
+            effects: effects
+        } : production;
+    }
+
+ 
     /**
      * 獲取總產量
      */
     getTotalProduction() {
+        // 🔥 確保對象已初始化
+        if (!this.individualProductions) {
+            this.individualProductions = {};
+        }
+        
         let total = 0;
         
+        // 🔥 檢查數據完整性
+        if (!this.data || !this.data.ownedMandrakes || !this.data.enhancementEffects) {
+            console.warn('getTotalProduction: 遊戲數據不完整');
+            return 0;
+        }
+        this.individualProductions = {}; // 儲存每個品種的產量
+        
         for (const [id, count] of Object.entries(this.data.ownedMandrakes)) {
-            if (count > 0) {
-                const config = MANDRAKE_CONFIG[id];
-                if (config) {
-                    const production = config.baseProduction * Math.pow(config.prodGrowth, count);
-                    const weatherMultiplier = this.getWeatherMultiplier(config.type);
-                    const tempBoost = this.getTempBoostMultiplier('production');
-                    const typeBoost = this.getTempBoostMultiplier(config.type);
-                    
-                    total += count * production * weatherMultiplier * tempBoost * typeBoost;
-                }
-            }
+            const production = this.calculateSingleMandrakeProduction(id, count);
+            this.individualProductions[id] = production;
+            total += production;
         }
         
         return total;
@@ -197,7 +477,7 @@ class Game {
         }
     }
 
-    /**
+        /**
      * 獲取當前成本
      */
     getCurrentCost(id) {
@@ -205,7 +485,19 @@ class Game {
         const config = MANDRAKE_CONFIG[id];
         if (!config) return 0;
         
-        return Math.floor(config.baseCost * Math.pow(config.costGrowth, count));
+        // 基礎成本計算
+        let cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, count));
+        
+        // ✅ 應用強化效果
+        const effects = this.data.enhancementEffects;
+        
+        // 全體成本減免
+        cost *= effects.globalCostMultiplier;
+        
+        // 類型特定成本減免
+        cost *= effects.typeCostMultipliers[config.type] || 1.0;
+                
+        return Math.floor(Math.max(1, cost)); // 最低成本為1
     }
 
     /**
@@ -216,11 +508,35 @@ class Game {
         
         if (this.data.fruit >= cost) {
             this.data.fruit -= cost;
-            this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + 1;
+
+            // 🔥 基礎購買數量
+            let purchaseAmount = 1;
             
-            // 在農場中種植
-            this.plantInFarm(id);
-            
+            // 🔥 檢查購買暴擊
+            if (this.data.enhancementEffects.hasPurchaseCrit) {
+                const critChance = ENHANCEMENT_VALUES.luck.purchase_crit_chance;
+                if (Math.random() < critChance) {
+                    purchaseAmount = 2; // 暴擊獲得雙倍
+                    
+                    // 顯示暴擊通知
+                    if (typeof UI !== 'undefined') {
+                        const config = MANDRAKE_CONFIG[id];
+                        UI.showNotification(`💥 購買暴擊！獲得 2 個 ${config.name}！`, 'success');
+                    }
+                    
+                    console.log(`購買暴擊！獲得 ${purchaseAmount} 個 ${id}`);
+                }
+            }
+
+
+            // 應用購買數量
+            this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + purchaseAmount;
+
+            // 在農場中種植（根據實際獲得數量）
+            for (let i = 0; i < purchaseAmount; i++) {
+                this.plantInFarm(id);
+            }
+
             // 檢查階層解鎖
             this.checkTierUnlock();
             
@@ -378,6 +694,12 @@ class Game {
                 UI.showNotification(message, 'info');
             }
         }
+        const adjustedInterval = GAME_CONFIG.REWARD_INTERVAL * this.data.enhancementEffects.rewardCdMultiplier;
+        
+        if (this.data.enhancementEffects.rewardRarityBoost > 0 && rarityName !== 'common') {
+        weight *= (1 + this.data.enhancementEffects.rewardRarityBoost);
+    }
+
     }
 }
 
@@ -719,6 +1041,17 @@ selectRewardTemplate() {
         if (typeof this.data.tempBoosts !== 'object') {
             this.data.tempBoosts = {};
         }
+
+        // 驗證強化系統數據
+        if (!this.data.enhancements || typeof this.data.enhancements !== 'object') {
+            const defaultData = this.getDefaultGameData();
+            this.data.enhancements = defaultData.enhancements;
+        }
+
+        // 確保 mandrakeProgress 存在
+        if (!this.data.enhancements.mandrakeProgress) {
+            this.data.enhancements.mandrakeProgress = {};
+        }
         
         // 清理過期的臨時加成
         this.cleanupExpiredBoosts();
@@ -776,7 +1109,31 @@ selectRewardTemplate() {
         });
         return reward;
         });
+
+        this.rebuildEnhancementEffects();
     }
+        rebuildEnhancementEffects() {
+            // 🔥 先保存運氣因子的固定值
+            const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
+            const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
+            
+            // 重置所有效果到默認值
+            const defaultEffects = this.getDefaultGameData().enhancementEffects;
+            this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
+            
+            // 🔥 恢復運氣因子的固定值
+            this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
+            this.data.enhancementEffects.savedCostVariance = savedCostVariance;
+            
+            // 重新應用所有已獲得的強化
+            for (const [enhancementId, level] of Object.entries(this.data.enhancements.obtained)) {
+                for (let i = 0; i < level; i++) {
+                    if (typeof EnhancementSystem !== 'undefined') {
+                        EnhancementSystem.applyEnhancement(enhancementId);
+                    }
+                }
+            }
+        }
 
     /**
      * 重置遊戲（調試用）
