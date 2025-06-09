@@ -22,6 +22,7 @@ const GAME_CONFIG = {
     
     // UI 設定
     NOTIFICATION_DURATION: 3000,   // 通知顯示時間
+    ENABLE_NOTIFICATIONS: false,   // 是否啟用通知彈窗
     ANIMATION_SPEED: 300,          // 動畫速度
     
     // 版本信息

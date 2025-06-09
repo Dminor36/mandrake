@@ -359,6 +359,9 @@ static updateRewardStatus() {
      * 顯示通知
      */
     static showNotification(message, type = 'info', duration = GAME_CONFIG.NOTIFICATION_DURATION) {
+        if (!GAME_CONFIG.ENABLE_NOTIFICATIONS) {
+            return;
+        }
         if (!this.notificationContainer) {
             this.notificationContainer = document.getElementById('notification-container');
         }
@@ -678,6 +681,8 @@ static updateRewardStatus() {
      */
     static selectEnhancement(enhancementId) {
         if (typeof EnhancementSystem !== 'undefined') {
+            // 先隱藏彈窗，避免因錯誤導致畫面停留
+            this.hideEnhancementChoice();
             EnhancementSystem.selectEnhancement(enhancementId);
         }
     }
