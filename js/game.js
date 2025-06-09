@@ -30,7 +30,6 @@ class Game {
             weather: 'sunny',
             weatherLocked: null,
             
-            
             // 特殊效果
             freeWeatherReroll: false,
             forceNextType: null,
@@ -43,62 +42,52 @@ class Game {
             generatedRewards: [], // 預生成的獎勵列表 
             tempBoosts: {},
 
-            // 強化系統數據
+            // 🔧 修復：強化系統數據結構
             enhancements: {
-            obtained: {},
-            mandrakeProgress: {},  // 新增：記錄每個品種的里程碑進度
-            pendingEnhancement: false,
-            currentChoices: [],
-            pendingCount: 0 
+                obtained: {},
+                mandrakeProgress: {},  // 記錄每個品種的里程碑進度
+                lastChecked: {},       // 記錄每個品種上次檢查的最高里程碑
+                pendingEnhancement: false,
+                currentChoices: [],
+                pendingCount: 0        // 待處理的強化數量
+            },
 
-       
-
-
-        },
-        
-            // 強化效果數據
+            // 🔧 修復：強化效果數據結構 - 初始化所有必要字段
             enhancementEffects: {
-            // 產量加成
-            globalProductionMultiplier: 1.0,
-            typeProductionMultipliers: {
-                normal: 1.0,
-                element: 1.0,
-                animal: 1.0
+                // 基礎倍率
+                globalProductionMultiplier: 1.0,
+                globalCostMultiplier: 1.0,
+                rewardCdMultiplier: 1.0,
+                globalProductionVariance: 1.0,
+                
+                // 類型特定倍率
+                typeProductionMultipliers: {
+                    normal: 1.0,
+                    element: 1.0,
+                    animal: 1.0
+                },
+                typeCostMultipliers: {
+                    normal: 1.0,
+                    element: 1.0,
+                    animal: 1.0
+                },
+                
+                // 布林標記
+                hasProductionVariance: false,
+                hasPurchaseCrit: false,
+                hasCostVariance: false,
+                hasQuantityBonus: false,
+                hasTypeSynergy: false,
+                hasDiversityBonus: false,
+                
+                // 獎勵相關
+                bonusRewardCapacity: 0,
+                rewardRarityBoost: 0,
+                
+                // 保存的隨機值
+                savedProductionVariance: null,
+                savedCostVariance: null
             },
-            
-            // 成本減免
-            globalCostMultiplier: 1.0,
-            typeCostMultipliers: {
-                normal: 1.0,
-                element: 1.0,
-                animal: 1.0
-            },
-            
-            // 運氣效果標記
-            hasProductionVariance: false,
-            hasPurchaseCrit: false,
-            hasCostVariance: false,
-            
-            // 獎勵效果
-            rewardCdMultiplier: 1.0,
-            bonusRewardCapacity: 0,
-            rewardRarityBoost: 0,
-            
-            // Combo效果標記
-            hasQuantityBonus: false,
-            hasTypeSynergy: false,
-            hasDiversityBonus: false,
-
-                // 保存的運氣因子
-            savedProductionVariance: null,
-            savedCostVariance: null,
-
-            globalProductionVariance: 1.0  // 預設1.0（無波動）
-
-     
-        },
-
-            
             
             // 版本控制
             version: GAME_CONFIG.VERSION,
@@ -115,6 +104,9 @@ class Game {
         try {
             // 載入存檔
             this.loadGame();
+            
+            // 🔧 確保數據完整性
+            this.validateGameData();
             
             // 預載入圖片
             if (typeof imageManager !== 'undefined') {
@@ -169,10 +161,18 @@ class Game {
      * 主遊戲循環
      */
     gameLoop() {
+        // 🔧 添加安全檢查
+        if (!this.data || !this.data.enhancementEffects) {
+            console.warn('遊戲數據未完全初始化，跳過此次循環');
+            return;
+        }
+
         // 計算並增加果實產量
         const production = this.getTotalProduction()/10; // 每100毫秒計算一次產量
-        this.data.fruit += production;
-        this.data.totalFruitEarned += production;
+        if (!isNaN(production) && production > 0) {
+            this.data.fruit += production;
+            this.data.totalFruitEarned += production;
+        }
 
         // 檢查獎勵時間
         this.checkRewardTime();
@@ -180,7 +180,6 @@ class Game {
         // 清理過期的臨時效果
         this.cleanupExpiredBoosts();
         
-
         // 更新UI
         if (typeof UI !== 'undefined') {
             UI.updateResources();
@@ -189,20 +188,23 @@ class Game {
             UI.updateButtonStates();
         }
 
-        //  定期檢查強化條件 - 在清理過期效果後添加
+        // 定期檢查強化條件
         if (typeof EnhancementSystem !== 'undefined') {
-        EnhancementSystem.checkUnlockConditions();
-    }
+            EnhancementSystem.checkUnlockConditions();
+        }
     }
 
     /**
      * 獲取總曼德拉草數量
      */
     static getTotalMandrakeCount() {
+        if (!window.game || !window.game.data || !window.game.data.ownedMandrakes) {
+            return 0;
+        }
         return Object.values(window.game.data.ownedMandrakes).reduce((sum, count) => sum + count, 0);
     }
 
-        /**
+    /**
      * 計算單一品種的產量（包含所有效果和詳細分解）
      */
     calculateSingleMandrakeProduction(id, count, showDetails = false) {
@@ -210,6 +212,12 @@ class Game {
         
         const config = MANDRAKE_CONFIG[id];
         if (!config) return showDetails ? {total: 0, breakdown: [], effects: []} : 0;
+        
+        // 🔧 添加安全檢查
+        if (!this.data.enhancementEffects) {
+            console.warn('enhancementEffects 未初始化');
+            return showDetails ? {total: 0, breakdown: [], effects: []} : 0;
+        }
         
         let production = count * config.baseProduction;
         const breakdown = [];
@@ -226,7 +234,7 @@ class Game {
         const gameEffects = this.data.enhancementEffects;
         
         // 全體產量加成
-        if (gameEffects.globalProductionMultiplier !== 1.0) {
+        if (gameEffects.globalProductionMultiplier && gameEffects.globalProductionMultiplier !== 1.0) {
             const oldProduction = production;
             production *= gameEffects.globalProductionMultiplier;
             const increase = production - oldProduction;
@@ -358,7 +366,7 @@ class Game {
         }
         
         // 產量波動
-        if (gameEffects.globalProductionVariance !== 1.0) {
+        if (gameEffects.globalProductionVariance && gameEffects.globalProductionVariance !== 1.0) {
             const oldProduction = production;
             production *= gameEffects.globalProductionVariance;
             const change = production - oldProduction;
@@ -412,21 +420,21 @@ class Game {
         } : production;
     }
 
- 
     /**
      * 獲取總產量
      */
     getTotalProduction() {
+        // 🔧 添加安全檢查
+        if (!this.data || !this.data.ownedMandrakes || !this.data.enhancementEffects) {
+            console.warn('getTotalProduction: 遊戲數據不完整');
+            return 0;
+        }
+
         if (!this.individualProductions) {
             this.individualProductions = {};
         }
         
         let total = 0;
-        
-        if (!this.data || !this.data.ownedMandrakes || !this.data.enhancementEffects) {
-            console.warn('getTotalProduction: 遊戲數據不完整');
-            return 0;
-        }
         this.individualProductions = {}; // 儲存每個品種的產量
         
         for (const [id, count] of Object.entries(this.data.ownedMandrakes)) {
@@ -474,7 +482,7 @@ class Game {
         }
     }
 
-        /**
+    /**
      * 獲取當前成本
      */
     getCurrentCost(id) {
@@ -486,13 +494,19 @@ class Game {
         let cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, count));
         
         // ✅ 應用強化效果
-        const effects = this.data.enhancementEffects;
-        
-        // 全體成本減免
-        cost *= effects.globalCostMultiplier;
-        
-        // 類型特定成本減免
-        cost *= effects.typeCostMultipliers[config.type] || 1.0;
+        if (this.data.enhancementEffects) {
+            const effects = this.data.enhancementEffects;
+            
+            // 全體成本減免
+            if (effects.globalCostMultiplier) {
+                cost *= effects.globalCostMultiplier;
+            }
+            
+            // 類型特定成本減免
+            if (effects.typeCostMultipliers && effects.typeCostMultipliers[config.type]) {
+                cost *= effects.typeCostMultipliers[config.type];
+            }
+        }
                 
         return Math.floor(Math.max(1, cost)); // 最低成本為1
     }
@@ -522,7 +536,6 @@ class Game {
                     console.log(`購買暴擊！獲得 ${purchaseAmount} 個 ${id}`);
                 }
             }
-
 
             // 應用購買數量
             this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + purchaseAmount;
@@ -638,6 +651,17 @@ class Game {
      * 檢查獎勵時間
      */
     checkRewardTime() {
+        // 🔧 修復：確保enhancementEffects存在且有必要屬性
+        if (!this.data || !this.data.enhancementEffects) {
+            console.warn('遊戲數據未完全初始化，跳過獎勵檢查');
+            return;
+        }
+        
+        // 🔧 修復：確保 rewardCdMultiplier 有預設值
+        if (typeof this.data.enhancementEffects.rewardCdMultiplier !== 'number') {
+            this.data.enhancementEffects.rewardCdMultiplier = 1.0;
+        }
+
         // 如果獎勵已滿，重置計時並停止檢查
         if (this.data.pendingRewards >= this.data.maxPendingRewards) {
             this.data.lastRewardTime = Date.now();
@@ -691,126 +715,126 @@ class Game {
                     ? Date.now()
                     : Date.now() - remainder;
         }
-}
+    }
 
     // 生成單個獎勵的函數
-generateNewReward() {
-
-   const rewardOptions = [];
-    
-    // 生成3個不同的獎勵選項
-    for (let i = 0; i < 3; i++) {
-        // 先決定稀有度
-        let rarity = this.selectRarity();
+    generateNewReward() {
+        const rewardOptions = [];
         
-        // 再選擇獎勵類型
-        let template = this.selectRewardTemplate();
+        // 生成3個不同的獎勵選項
+        for (let i = 0; i < 3; i++) {
+            // 先決定稀有度
+            let rarity = this.selectRarity();
+            
+            // 再選擇獎勵類型
+            let template = this.selectRewardTemplate();
 
-        // 添加安全檢查
-    if (!template) {
-        console.error('無法獲取獎勵模板！');
-        // 嘗試手動選擇一個模板
-        const templateKeys = Object.keys(REWARD_TEMPLATES);
-        if (templateKeys.length > 0) {
-            const fallbackTemplate = REWARD_TEMPLATES[templateKeys[0]];
-            template = fallbackTemplate;
-            console.log('使用備用模板:', template.name);
-        } else {
-            continue;
-        }
-    }
-    
-        // 獲取對應稀有度的配置
-        let tier = template.tiers[rarity];
+            // 添加安全檢查
+            if (!template) {
+                console.error('無法獲取獎勵模板！');
+                // 嘗試手動選擇一個模板
+                const templateKeys = Object.keys(REWARD_TEMPLATES);
+                if (templateKeys.length > 0) {
+                    const fallbackTemplate = REWARD_TEMPLATES[templateKeys[0]];
+                    template = fallbackTemplate;
+                    console.log('使用備用模板:', template.name);
+                } else {
+                    continue;
+                }
+            }
+        
+            // 獲取對應稀有度的配置
+            let tier = template.tiers[rarity];
 
-        // 檢查 tier 是否存在
-        if (!tier) {
-        console.error(`獎勵模板 ${template.name} 沒有 ${rarity} 稀有度配置！`);
-        // 使用 common 稀有度作為備用
-        const fallbackTier = template.tiers['common'];
-        if (!fallbackTier) {
-            console.error(`獎勵模板 ${template.name} 連 common 稀有度都沒有！`);
-            continue;
-        }
-        tier = fallbackTier;
-        rarity = 'common';
+            // 檢查 tier 是否存在
+            if (!tier) {
+                console.error(`獎勵模板 ${template.name} 沒有 ${rarity} 稀有度配置！`);
+                // 使用 common 稀有度作為備用
+                const fallbackTier = template.tiers['common'];
+                if (!fallbackTier) {
+                    console.error(`獎勵模板 ${template.name} 連 common 稀有度都沒有！`);
+                    continue;
+                }
+                tier = fallbackTier;
+                rarity = 'common';
+            }
+            
+            const option = {
+                template: template,
+                rarity: rarity,
+                tier: tier,
+                rarityInfo: RARITY_CONFIG[rarity]
+            };
+            
+            rewardOptions.push(option);
+            console.log(`獎勵選項 ${i+1}:`, option.template.name, option.rarity);
         }
         
-        const option = {
-            template: template,
-            rarity: rarity,
-            tier: tier,
-            rarityInfo: RARITY_CONFIG[rarity]
-        };
-        
-        rewardOptions.push(option);
-        console.log(`獎勵選項 ${i+1}:`, option.template.name, option.rarity);
-    }
-    
-    // 確保至少有一個有效選項
+        // 確保至少有一個有效選項
         if (rewardOptions.length === 0) {
             console.error('沒有生成任何有效的獎勵選項！');
             return;
         }
 
-    const reward = {
-        id: Date.now() + Math.random(), // 唯一ID
-        options: rewardOptions,         // 3個選項
-        generatedAt: Date.now()
-    };
-    
-    // 添加到預生成獎勵列表
-    this.data.generatedRewards.push(reward);
-    console.log('成功生成獎勵組:', reward);
-}
-// 稀有度選擇邏輯
-selectRarity() {
-    const weights = {};
-    let totalWeight = 0;
+        const reward = {
+            id: Date.now() + Math.random(), // 唯一ID
+            options: rewardOptions,         // 3個選項
+            generatedAt: Date.now()
+        };
+        
+        // 添加到預生成獎勵列表
+        this.data.generatedRewards.push(reward);
+        console.log('成功生成獎勵組:', reward);
+    }
 
-    for (const [rarityName, rarity] of Object.entries(RARITY_CONFIG)) {
-        let weight = rarity.weight;
+    // 稀有度選擇邏輯
+    selectRarity() {
+        const weights = {};
+        let totalWeight = 0;
 
-        if (this.data.weather === 'misty' && rarityName !== 'common') {
-            weight *= WEATHER_CONFIG.misty.bonusRarity || 1;
+        for (const [rarityName, rarity] of Object.entries(RARITY_CONFIG)) {
+            let weight = rarity.weight;
+
+            if (this.data.weather === 'misty' && rarityName !== 'common') {
+                weight *= WEATHER_CONFIG.misty.bonusRarity || 1;
+            }
+
+            // 強化：提升非普通稀有度的機率
+            if (this.data.enhancementEffects && this.data.enhancementEffects.rewardRarityBoost > 0 && rarityName !== 'common') {
+                weight *= 1 + this.data.enhancementEffects.rewardRarityBoost;
+            }
+
+            weights[rarityName] = weight;
+            totalWeight += weight;
         }
 
-        // 強化：提升非普通稀有度的機率
-        if (this.data.enhancementEffects.rewardRarityBoost > 0 && rarityName !== 'common') {
-            weight *= 1 + this.data.enhancementEffects.rewardRarityBoost;
+        let random = Math.random() * totalWeight;
+        for (const [rarityName, weight] of Object.entries(weights)) {
+            random -= weight;
+            if (random <= 0) {
+                return rarityName;
+            }
         }
 
-        weights[rarityName] = weight;
-        totalWeight += weight;
+        return 'common';
     }
 
-    let random = Math.random() * totalWeight;
-    for (const [rarityName, weight] of Object.entries(weights)) {
-        random -= weight;
-        if (random <= 0) {
-            return rarityName;
+    // 獎勵模板選擇邏輯
+    selectRewardTemplate() {
+        // 檢查 REWARD_TEMPLATES 是否存在
+        if (typeof REWARD_TEMPLATES === 'undefined') {
+            console.error('REWARD_TEMPLATES 未定義！');
+            return null;
         }
+        
+        const templates = Object.values(REWARD_TEMPLATES);
+        if (templates.length === 0) {
+            console.error('REWARD_TEMPLATES 是空的！');
+            return null;
+        }
+        
+        return templates[Math.floor(Math.random() * templates.length)];
     }
-
-    return 'common';
-}
-
-// 獎勵模板選擇邏輯
-selectRewardTemplate() {
-    // 檢查 REWARD_TEMPLATES 是否存在
-    if (typeof REWARD_TEMPLATES === 'undefined') {
-        console.error('REWARD_TEMPLATES 未定義！');
-        return null;
-    }
-    
-    const templates = Object.values(REWARD_TEMPLATES);
-    if (templates.length === 0) {
-        console.error('REWARD_TEMPLATES 是空的！');
-        return null;
-    }
-    
-    return templates[Math.floor(Math.random() * templates.length)];
-}
 
     /**
      * 改變天氣
@@ -1002,11 +1026,51 @@ selectRewardTemplate() {
     }
 
     /**
-     * 驗證遊戲數據完整性
+     * 🔧 修復：驗證遊戲數據完整性
      */
     validateGameData() {
         const defaultData = this.getDefaultGameData();
+
+        // 🔧 修復：優先確保核心數據結構存在
+        if (!this.data) {
+            this.data = defaultData;
+            return;
+        }
         
+        // 🔧 修復：確保 enhancementEffects 優先初始化
+        if (!this.data.enhancementEffects || typeof this.data.enhancementEffects !== 'object') {
+            console.log('重建 enhancementEffects');
+            this.data.enhancementEffects = defaultData.enhancementEffects;
+        }
+        
+        // 🔧 修復：確保所有必要的 enhancementEffects 屬性存在
+        const requiredEffects = {
+            'rewardCdMultiplier': 1.0,
+            'globalProductionMultiplier': 1.0, 
+            'globalCostMultiplier': 1.0,
+            'globalProductionVariance': 1.0,
+            'typeProductionMultipliers': { normal: 1.0, element: 1.0, animal: 1.0 },
+            'typeCostMultipliers': { normal: 1.0, element: 1.0, animal: 1.0 },
+            'hasProductionVariance': false,
+            'hasPurchaseCrit': false,
+            'hasCostVariance': false,
+            'hasQuantityBonus': false,
+            'hasTypeSynergy': false,
+            'hasDiversityBonus': false,
+            'bonusRewardCapacity': 0,
+            'rewardRarityBoost': 0,
+            'savedProductionVariance': null,
+            'savedCostVariance': null
+        };
+        
+        for (const [effect, defaultValue] of Object.entries(requiredEffects)) {
+            if (this.data.enhancementEffects[effect] === undefined || this.data.enhancementEffects[effect] === null) {
+                this.data.enhancementEffects[effect] = defaultValue;
+                console.log(`修復 enhancementEffects.${effect}`);
+            }
+        }
+        
+        // 確保基本數據結構
         for (const [key, defaultValue] of Object.entries(defaultData)) {
             if (this.data[key] === undefined) {
                 this.data[key] = defaultValue;
@@ -1035,8 +1099,62 @@ selectRewardTemplate() {
 
         // 驗證強化系統數據
         if (!this.data.enhancements || typeof this.data.enhancements !== 'object') {
-            const defaultData = this.getDefaultGameData();
             this.data.enhancements = defaultData.enhancements;
+        }
+
+        // 🔧 新增：確保強化系統必要字段存在
+        if (!this.data.enhancements.obtained) {
+            this.data.enhancements.obtained = {};
+        }
+
+        if (!this.data.enhancements.mandrakeProgress) {
+            this.data.enhancements.mandrakeProgress = {};
+        }
+
+        // 🔧 新增：確保lastChecked字段存在
+        if (!this.data.enhancements.lastChecked) {
+            this.data.enhancements.lastChecked = {};
+        }
+
+        // 🔧 新增：確保計數字段正確
+        if (typeof this.data.enhancements.pendingCount !== 'number') {
+            this.data.enhancements.pendingCount = 0;
+        }
+
+        if (typeof this.data.enhancements.pendingEnhancement !== 'boolean') {
+            this.data.enhancements.pendingEnhancement = false;
+        }
+
+        if (!Array.isArray(this.data.enhancements.currentChoices)) {
+            this.data.enhancements.currentChoices = [];
+        }
+
+        // 🔧 新增：清理無效的強化狀態
+        // 如果有待處理的強化但沒有選項，重置狀態
+        if (this.data.enhancements.pendingEnhancement && 
+            (!this.data.enhancements.currentChoices || this.data.enhancements.currentChoices.length === 0)) {
+            this.data.enhancements.pendingEnhancement = false;
+            this.data.enhancements.pendingCount = 0;
+        }
+
+        // 🔧 新增：檢查並修復lastChecked數據
+        // 如果lastChecked為空，但已經有曼德拉草，需要初始化
+        for (const [mandrakeId, count] of Object.entries(this.data.ownedMandrakes)) {
+            if (count > 0 && !this.data.enhancements.lastChecked[mandrakeId]) {
+                // 根據當前數量推算應該已經達到的里程碑
+                const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
+                let lastMilestone = 0;
+                
+                for (const milestone of milestones) {
+                    if (count >= milestone) {
+                        lastMilestone = milestone;
+                    } else {
+                        break;
+                    }
+                }
+                
+                this.data.enhancements.lastChecked[mandrakeId] = lastMilestone;
+            }
         }
 
         // 確保 mandrakeProgress 存在
@@ -1077,52 +1195,59 @@ selectRewardTemplate() {
 
         // ✅ 重建獎勵模板引用
         this.data.generatedRewards = this.data.generatedRewards.map(reward => {
-        reward.options = reward.options.map(option => {
-            // 重新從 REWARD_TEMPLATES 中獲取完整的模板
-            const templateName = option.template.name;
-            let fullTemplate = null;
-            
-            // 尋找對應的模板
-            for (const [key, template] of Object.entries(REWARD_TEMPLATES)) {
-                if (template.name === templateName) {
-                    fullTemplate = template;
-                    break;
+            reward.options = reward.options.map(option => {
+                // 重新從 REWARD_TEMPLATES 中獲取完整的模板
+                const templateName = option.template.name;
+                let fullTemplate = null;
+                
+                // 尋找對應的模板
+                for (const [key, template] of Object.entries(REWARD_TEMPLATES)) {
+                    if (template.name === templateName) {
+                        fullTemplate = template;
+                        break;
+                    }
                 }
-            }
-            
-            if (fullTemplate) {
-                option.template = fullTemplate;
-            } else {
-                console.warn('找不到對應的獎勵模板:', templateName);
-            }
-            
-            return option;
-        });
-        return reward;
+                
+                if (fullTemplate) {
+                    option.template = fullTemplate;
+                } else {
+                    console.warn('找不到對應的獎勵模板:', templateName);
+                }
+                
+                return option;
+            });
+            return reward;
         });
 
+        // 🔧 修復：在驗證完成後重建強化效果
         this.rebuildEnhancementEffects();
     }
-        rebuildEnhancementEffects() {
-            const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
-            const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
-            
-            // 重置所有效果到默認值
-            const defaultEffects = this.getDefaultGameData().enhancementEffects;
-            this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
-            
-            this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
-            this.data.enhancementEffects.savedCostVariance = savedCostVariance;
-            
-            // 重新應用所有已獲得的強化
-            for (const [enhancementId, level] of Object.entries(this.data.enhancements.obtained)) {
-                for (let i = 0; i < level; i++) {
-                    if (typeof EnhancementSystem !== 'undefined') {
-                        EnhancementSystem.applyEnhancement(enhancementId);
-                    }
+
+    /**
+     * 🔧 修復：重建強化效果
+     */
+    rebuildEnhancementEffects() {
+        // 保存隨機值
+        const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
+        const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
+        
+        // 重置所有效果到默認值
+        const defaultEffects = this.getDefaultGameData().enhancementEffects;
+        this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
+        
+        // 恢復保存的隨機值
+        this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
+        this.data.enhancementEffects.savedCostVariance = savedCostVariance;
+        
+        // 重新應用所有已獲得的強化
+        for (const [enhancementId, level] of Object.entries(this.data.enhancements.obtained)) {
+            for (let i = 0; i < level; i++) {
+                if (typeof EnhancementSystem !== 'undefined') {
+                    EnhancementSystem.applyEnhancement(enhancementId);
                 }
             }
         }
+    }
 
     /**
      * 重置遊戲（調試用）
@@ -1194,4 +1319,3 @@ console.log('✅ Game 實例創建完成:', window.game);
 window.Game = Game;
 
 console.log('🎮 game.js 載入完成');
-

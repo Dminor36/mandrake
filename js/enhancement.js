@@ -1,8 +1,8 @@
-// ========== 強化系統核心 ==========
+// ========== 強化系統 ==========
 
 console.log('🔮 enhancement.js 開始載入...');
 
-// 強化定義
+// 強化定義保持不變
 const ENHANCEMENTS = {
     // 穩穩強化類
     stable_global_production: {
@@ -113,73 +113,89 @@ const ENHANCEMENTS = {
 
 class EnhancementSystem {
     /**
-     * 檢查是否達到強化解鎖條件
+     * 🔧 修復：檢查是否達到強化解鎖條件
+     * 主要改進：只在真正跨越里程碑時觸發，避免重複觸發
      */
     static checkUnlockConditions() {
-        // 降低日誌頻率
-        const shouldLog = Math.random() < 0.001;
-        
-        if (shouldLog) {
-            console.log('=== 強化檢查開始 ===');
+        // 確保數據結構存在
+        if (!game.data.enhancements.lastChecked) {
+            game.data.enhancements.lastChecked = {};
         }
         
-        let triggeredCount = 0; // 記錄這次檢查觸發了幾次
+        let hasNewMilestone = false;
         const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
         
         for (const [mandrakeId, currentCount] of Object.entries(game.data.ownedMandrakes)) {
             if (currentCount === 0) continue;
             
-            const lastMilestone = game.data.enhancements.mandrakeProgress[mandrakeId] || 0;
+            // 🔧 修復：記錄每個品種上次檢查的最高里程碑
+            const lastMilestone = game.data.enhancements.lastChecked[mandrakeId] || 0;
             
-            // 找出這個品種跨越了哪些里程碑
+            // 🔧 修復：找出這次新跨越的里程碑
             for (const milestone of milestones) {
                 if (milestone > lastMilestone && currentCount >= milestone) {
-                    // 記錄進度
-                    game.data.enhancements.mandrakeProgress[mandrakeId] = milestone;
-                    triggeredCount++;
+                    // 真正的新里程碑！
+                    game.data.enhancements.lastChecked[mandrakeId] = milestone;
+                    hasNewMilestone = true;
                     
-                    console.log(`${mandrakeId} 達到 ${milestone} 株，觸發升級！`);
+                    console.log(`🎉 ${mandrakeId} 達到 ${milestone} 株里程碑！`);
+                    
+                    // 🔧 修復：每個里程碑只觸發一次強化
+                    this.addPendingEnhancement();
+                    break; // 一次只處理一個里程碑
                 }
             }
         }
         
-        if (triggeredCount > 0) {
-            if (!game.data.enhancements.pendingCount) {
-                game.data.enhancements.pendingCount = 0;
-            }
-            game.data.enhancements.pendingCount += triggeredCount;
-            
-            console.log(`累積 ${triggeredCount} 次強化，總待處理：${game.data.enhancements.pendingCount}`);
-            
-            // 如果目前沒有強化窗口在顯示，就顯示一個
-            if (!game.data.enhancements.pendingEnhancement) {
-                this.triggerEnhancementChoice();
-            }
-            
-            game.saveGame();
-            return true;
-        }
-        
-        return false;
-    }
-        
-            /**
-         * 觸發強化選擇
-         */
-        static triggerEnhancementChoice() {
-            game.data.enhancements.pendingEnhancement = true;
-            game.data.enhancements.currentChoices = this.generateChoices();
-            
-            console.log('觸發強化選擇！', game.data.enhancements.currentChoices);
-            
-            // 顯示強化選擇UI
-            if (typeof UI !== 'undefined') {
-                UI.showEnhancementChoice();
-            }
+        return hasNewMilestone;
     }
     
     /**
-     * 生成三個強化選項
+     * 🔧 新增：添加待處理的強化
+     */
+    static addPendingEnhancement() {
+        // 增加待處理強化計數
+        if (!game.data.enhancements.pendingCount) {
+            game.data.enhancements.pendingCount = 0;
+        }
+        game.data.enhancements.pendingCount++;
+        
+        console.log(`📈 新增強化機會，總計待處理：${game.data.enhancements.pendingCount}`);
+        
+        // 🔧 修復：只有在沒有強化窗口時才顯示
+        if (!game.data.enhancements.pendingEnhancement) {
+            this.triggerEnhancementChoice();
+        }
+        
+        // 🔧 修復：更新UI顯示強化可用狀態
+        if (typeof UI !== 'undefined') {
+            UI.updateEnhancementStatus();
+        }
+    }
+    
+    /**
+     * 🔧 修復：觸發強化選擇
+     */
+    static triggerEnhancementChoice() {
+        // 🔧 修復：檢查是否真的有待處理的強化
+        if (game.data.enhancements.pendingCount <= 0) {
+            console.warn('沒有待處理的強化，不應該觸發選擇');
+            return;
+        }
+        
+        game.data.enhancements.pendingEnhancement = true;
+        game.data.enhancements.currentChoices = this.generateChoices();
+        
+        console.log('🔮 觸發強化選擇！選項：', game.data.enhancements.currentChoices);
+        
+        // 顯示強化選擇UI
+        if (typeof UI !== 'undefined') {
+            UI.showEnhancementChoice();
+        }
+    }
+    
+    /**
+     * 生成三個強化選項（保持原邏輯）
      */
     static generateChoices() {
         const allEnhancements = Object.keys(ENHANCEMENTS);
@@ -217,9 +233,15 @@ class EnhancementSystem {
     }
 
     /**
-     * 選擇強化
+     * 🔧 修復：選擇強化
      */
     static selectEnhancement(enhancementId) {
+        // 🔧 修復：檢查是否有有效的強化選擇狀態
+        if (!game.data.enhancements.pendingEnhancement || game.data.enhancements.pendingCount <= 0) {
+            console.error('無效的強化選擇狀態');
+            return;
+        }
+        
         // 記錄強化
         if (!game.data.enhancements.obtained[enhancementId]) {
             game.data.enhancements.obtained[enhancementId] = 0;
@@ -229,17 +251,19 @@ class EnhancementSystem {
         // 應用強化效果
         this.applyEnhancement(enhancementId);
         
-        // 清理狀態
+        // 🔧 修復：正確清理狀態
         game.data.enhancements.pendingEnhancement = false;
         game.data.enhancements.currentChoices = [];
-        if (game.data.enhancements.pendingCount > 1) {
-            game.data.enhancements.pendingCount--;
-            console.log(`還有 ${game.data.enhancements.pendingCount - 1} 個強化待處理`);
-            
-            // 短暫延遲後觸發下一個強化選擇
-            setTimeout(() => this.triggerEnhancementChoice(), 500);
-        } else {
-            game.data.enhancements.pendingCount = 0;
+        game.data.enhancements.pendingCount--;
+        
+        console.log(`✅ 選擇強化：${ENHANCEMENTS[enhancementId].name}，剩餘：${game.data.enhancements.pendingCount}`);
+        
+        // 🔧 修復：如果還有待處理的強化，延遲觸發下一個
+        if (game.data.enhancements.pendingCount > 0) {
+            console.log(`⏰ 還有 ${game.data.enhancements.pendingCount} 個強化待處理，將在1秒後顯示`);
+            setTimeout(() => {
+                this.triggerEnhancementChoice();
+            }, 1000);
         }
         
         // 保存遊戲
@@ -249,12 +273,13 @@ class EnhancementSystem {
         if (typeof UI !== 'undefined') {
             UI.hideEnhancementChoice();
             UI.updateAll();
+            UI.updateEnhancementStatus(); // 🔧 新增：更新強化狀態顯示
             UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
         }
     }
     
     /**
-     * 應用強化效果
+     * 應用強化效果（保持原邏輯）
      */
     static applyEnhancement(enhancementId) {
         const enhancement = ENHANCEMENTS[enhancementId];
@@ -282,12 +307,10 @@ class EnhancementSystem {
                 effects.typeProductionMultipliers.animal += ENHANCEMENT_VALUES.stable.type_production;
                 break;
                 
-           case 'production_variance':
+            case 'production_variance':
                 effects.hasProductionVariance = true;
                 
-                // 檢查是否已經有固定的波動值
                 if (!effects.savedProductionVariance) {
-                    // 第一次獲得，隨機生成並保存
                     const prodVariance = ENHANCEMENT_VALUES.luck.production_variance;
                     const prodBoost = ENHANCEMENT_VALUES.luck.production_boost;
                     const prodRandomFactor = 1 + (Math.random() * 2 - 1) * prodVariance + prodBoost;
@@ -297,7 +320,6 @@ class EnhancementSystem {
                     console.log('🎲 第一次生成產量波動因子:', prodFinalFactor);
                 }
                 
-                // 使用保存的固定值
                 effects.globalProductionVariance *= effects.savedProductionVariance;
                 break;
                 
@@ -305,12 +327,10 @@ class EnhancementSystem {
                 effects.hasPurchaseCrit = true;
                 break;
                 
-           case 'cost_variance':
+            case 'cost_variance':
                 effects.hasCostVariance = true;
                 
-                // 檢查是否已經有固定的波動值
                 if (!effects.savedCostVariance) {
-                    // 第一次獲得，隨機生成並保存
                     const costMin = ENHANCEMENT_VALUES.luck.cost_variance_min;
                     const costMax = ENHANCEMENT_VALUES.luck.cost_variance_max;
                     const costRandomFactor = 1 + (Math.random() * (costMax - costMin) + costMin);
@@ -320,7 +340,6 @@ class EnhancementSystem {
                     console.log('🎲 第一次生成成本波動因子:', costFinalFactor);
                 }
                 
-                // 使用保存的固定值
                 effects.globalCostMultiplier *= effects.savedCostVariance;
                 break;
                             
@@ -352,6 +371,49 @@ class EnhancementSystem {
         }
     }
 
+    /**
+     * 🔧 新增：獲取下個里程碑信息
+     */
+    static getNextMilestone() {
+        const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
+        
+        for (const [mandrakeId, currentCount] of Object.entries(game.data.ownedMandrakes)) {
+            const config = MANDRAKE_CONFIG[mandrakeId];
+            if (!config) continue;
+            
+            const lastMilestone = game.data.enhancements.lastChecked[mandrakeId] || 0;
+            
+            // 找到下一個里程碑
+            for (const milestone of milestones) {
+                if (milestone > lastMilestone) {
+                    return {
+                        mandrakeId: mandrakeId,
+                        mandrakeName: config.name,
+                        currentCount: currentCount,
+                        targetMilestone: milestone,
+                        progress: currentCount / milestone,
+                        remaining: milestone - currentCount
+                    };
+                }
+            }
+        }
+        
+        return null; // 已達到所有里程碑
+    }
+
+    /**
+     * 🔧 新增：獲取強化系統狀態
+     */
+    static getEnhancementStatus() {
+        return {
+            pendingCount: game.data.enhancements.pendingCount || 0,
+            isChoosing: game.data.enhancements.pendingEnhancement || false,
+            nextMilestone: this.getNextMilestone(),
+            totalEnhancements: Object.keys(game.data.enhancements.obtained || {}).length,
+            totalLevels: Object.values(game.data.enhancements.obtained || {}).reduce((sum, level) => sum + level, 0)
+        };
+    }
+
     // 在統計或UI中顯示波動情況
     static getProductionVarianceDisplay() {
         const variance = game.data.enhancementEffects.globalProductionVariance;
@@ -360,9 +422,30 @@ class EnhancementSystem {
         const percentage = ((variance - 1) * 100).toFixed(1);
         const sign = percentage >= 0 ? '+' : '';
         return `${sign}${percentage}%`;
+    }
 }
 
+// 🔧 修復：在game.js中需要修改數據驗證
+// 確保在validateGameData()函數中添加lastChecked初始化
+function enhanceValidateGameData() {
+    // 在現有的validateGameData函數中添加這些檢查
     
+    // 確保強化系統數據完整
+    if (!game.data.enhancements.lastChecked) {
+        game.data.enhancements.lastChecked = {};
+    }
+    
+    if (typeof game.data.enhancements.pendingCount !== 'number') {
+        game.data.enhancements.pendingCount = 0;
+    }
+    
+    if (typeof game.data.enhancements.pendingEnhancement !== 'boolean') {
+        game.data.enhancements.pendingEnhancement = false;
+    }
+    
+    if (!Array.isArray(game.data.enhancements.currentChoices)) {
+        game.data.enhancements.currentChoices = [];
+    }
 }
 
 // 暴露到全局
@@ -370,6 +453,5 @@ window.EnhancementSystem = EnhancementSystem;
 window.ENHANCEMENTS = ENHANCEMENTS;
 
 console.log('✅ ENHANCEMENTS 載入:', Object.keys(ENHANCEMENTS).length, '個強化');
-console.log('✅ EnhancementSystem 載入完成');
+console.log('✅ EnhancementSystem 修復版載入完成');
 console.log('🔮 enhancement.js 載入完成！');
-

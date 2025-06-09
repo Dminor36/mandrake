@@ -9,25 +9,23 @@ async function initGame() {
     console.log('🌱 曼德拉草農場啟動中...');
 
     // ✅ 檢查必要的配置是否載入
-   const configChecks = [
-    { name: 'GAME_CONFIG', exists: typeof GAME_CONFIG !== 'undefined' },
-    { name: 'MANDRAKE_CONFIG', exists: typeof MANDRAKE_CONFIG !== 'undefined' },
-    { name: 'WEATHER_CONFIG', exists: typeof WEATHER_CONFIG !== 'undefined' },
-    { name: 'RARITY_CONFIG', exists: typeof RARITY_CONFIG !== 'undefined' },
-    { name: 'REWARD_TEMPLATES', exists: typeof REWARD_TEMPLATES !== 'undefined' }
-];
+    const configChecks = [
+        { name: 'GAME_CONFIG', exists: typeof GAME_CONFIG !== 'undefined' },
+        { name: 'MANDRAKE_CONFIG', exists: typeof MANDRAKE_CONFIG !== 'undefined' },
+        { name: 'WEATHER_CONFIG', exists: typeof WEATHER_CONFIG !== 'undefined' },
+        { name: 'RARITY_CONFIG', exists: typeof RARITY_CONFIG !== 'undefined' },
+        { name: 'REWARD_TEMPLATES', exists: typeof REWARD_TEMPLATES !== 'undefined' }
+    ];
 
-for (const config of configChecks) {
-    if (!config.exists) {
-        console.error(`❌ ${config.name} 未載入！請檢查 config.js`);
-        if (typeof UI !== 'undefined') {
-            UI.showNotification(`配置載入失敗：${config.name}`, 'error');
+    for (const config of configChecks) {
+        if (!config.exists) {
+            console.error(`❌ ${config.name} 未載入！請檢查 config.js`);
+            handleInitError(`配置載入失敗：${config.name}`);
+            return;
+        } else {
+            console.log(`✅ ${config.name} 載入成功`);
         }
-        return;
-    } else {
-        console.log(`✅ ${config.name} 載入成功`);
     }
-}
     
     try {
         // 1. 初始化UI系統
@@ -46,6 +44,7 @@ for (const config of configChecks) {
             console.log('✅ 遊戲核心初始化完成');
         } else {
             console.error('❌ game 物件不存在！');
+            handleInitError('遊戲核心物件不存在');
             return;
         }
         
@@ -68,15 +67,28 @@ for (const config of configChecks) {
         
     } catch (error) {
         console.error('❌ 遊戲初始化失敗:', error);
-        
-        // 顯示錯誤訊息
-        if (typeof UI !== 'undefined') {
-            UI.showNotification('遊戲啟動失敗，請重新整理頁面', 'error');
-        }
-        
-        // 嘗試緊急恢復
-        attemptEmergencyRecovery();
+        handleInitError('遊戲啟動失敗：' + error.message);
     }
+}
+
+/**
+ * 🔧 新增：統一的初始化錯誤處理
+ */
+function handleInitError(message) {
+    console.error('初始化錯誤:', message);
+    
+    // 顯示錯誤訊息
+    if (typeof UI !== 'undefined') {
+        UI.showNotification(message + '，請重新整理頁面', 'error');
+    } else {
+        // 如果UI還沒初始化，直接顯示alert
+        alert(message + '，請重新整理頁面');
+    }
+    
+    // 嘗試緊急恢復
+    setTimeout(() => {
+        attemptEmergencyRecovery();
+    }, 3000);
 }
 
 /**
@@ -114,7 +126,7 @@ function setupEventListeners() {
     // 點擊外部關閉模態框
     document.addEventListener('click', handleModalOutsideClick);
     
-    // 錯誤處理
+    // 🔧 修復：改進的錯誤處理
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 }
@@ -143,8 +155,12 @@ function handleVisibilityChange() {
  */
 function handleBeforeUnload(event) {
     // 自動保存遊戲
-    if (game) {
-        game.saveGame();
+    if (game && game.saveGame) {
+        try {
+            game.saveGame();
+        } catch (error) {
+            console.error('保存遊戲失敗:', error);
+        }
     }
     
     // 可選：顯示確認對話框（僅在有未保存數據時）
@@ -159,10 +175,17 @@ function handleKeydown(event) {
     // Ctrl/Cmd + S: 手動保存
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
-        if (game) {
-            game.saveGame();
-            if (typeof UI !== 'undefined') {
-                UI.showNotification('遊戲已保存', 'info', 1000);
+        if (game && game.saveGame) {
+            try {
+                game.saveGame();
+                if (typeof UI !== 'undefined') {
+                    UI.showNotification('遊戲已保存', 'info', 1000);
+                }
+            } catch (error) {
+                console.error('手動保存失敗:', error);
+                if (typeof UI !== 'undefined') {
+                    UI.showNotification('保存失敗', 'error', 1000);
+                }
             }
         }
     }
@@ -194,18 +217,26 @@ function handleKeydown(event) {
         if (event.key === 'F1') {
             event.preventDefault();
             if (typeof Rewards !== 'undefined') {
-                Rewards.debugTriggerReward();
+                try {
+                    Rewards.debugTriggerReward();
+                } catch (error) {
+                    console.error('觸發獎勵失敗:', error);
+                }
             }
         }
         
         // F2: 添加1000果實
         if (event.key === 'F2') {
             event.preventDefault();
-            if (game) {
-                game.data.fruit += 1000;
-                if (typeof UI !== 'undefined') {
-                    UI.updateResources();
-                    UI.showNotification('添加了1000果實（調試）', 'info');
+            if (game && game.data) {
+                try {
+                    game.data.fruit += 1000;
+                    if (typeof UI !== 'undefined') {
+                        UI.updateResources();
+                        UI.showNotification('添加了1000果實（調試）', 'info');
+                    }
+                } catch (error) {
+                    console.error('添加果實失敗:', error);
                 }
             }
         }
@@ -213,8 +244,12 @@ function handleKeydown(event) {
         // F3: 顯示遊戲統計
         if (event.key === 'F3') {
             event.preventDefault();
-            if (game) {
-                console.table(game.getGameStats());
+            if (game && game.getGameStats) {
+                try {
+                    console.table(game.getGameStats());
+                } catch (error) {
+                    console.error('獲取統計失敗:', error);
+                }
             }
         }
     }
@@ -234,13 +269,26 @@ function handleModalOutsideClick(event) {
 }
 
 /**
- * 處理全局錯誤
+ * 🔧 修復：處理全局錯誤
  */
 function handleGlobalError(event) {
-    console.error('全局錯誤:', event.error);
+    const error = event.error;
+    console.error('全局錯誤:', error);
+    
+    // 🔧 修復：安全的錯誤訊息提取
+    let message = '發生了一個錯誤';
+    try {
+        if (error && error.message) {
+            message = error.message;
+        } else if (typeof error === 'string') {
+            message = error;
+        }
+    } catch (e) {
+        console.error('提取錯誤訊息失敗:', e);
+    }
     
     // 記錄錯誤（可以發送到服務器）
-    logError('Global Error', event.error);
+    logError('Global Error', { message, stack: error?.stack });
     
     // 顯示用戶友好的錯誤訊息
     if (typeof UI !== 'undefined') {
@@ -249,13 +297,26 @@ function handleGlobalError(event) {
 }
 
 /**
- * 處理未捕獲的Promise拒絕
+ * 🔧 修復：處理未捕獲的Promise拒絕
  */
 function handleUnhandledRejection(event) {
-    console.error('未捕獲的Promise拒絕:', event.reason);
+    const reason = event.reason;
+    console.error('未捕獲的Promise拒絕:', reason);
+    
+    // 🔧 修復：安全的理由提取
+    let message = '異步操作失敗';
+    try {
+        if (reason && reason.message) {
+            message = reason.message;
+        } else if (typeof reason === 'string') {
+            message = reason;
+        }
+    } catch (e) {
+        console.error('提取拒絕理由失敗:', e);
+    }
     
     // 記錄錯誤
-    logError('Unhandled Promise Rejection', event.reason);
+    logError('Unhandled Promise Rejection', { message, stack: reason?.stack });
     
     // 防止錯誤顯示在控制台
     event.preventDefault();
@@ -284,35 +345,55 @@ function setupDebugFeatures() {
         rewards: typeof Rewards !== 'undefined' ? Rewards : null,
         imageManager: typeof imageManager !== 'undefined' ? imageManager : null,
         addFruit: (amount) => {
-            if (game) {
-                game.data.fruit += amount;
-                if (typeof UI !== 'undefined') {
-                    UI.updateResources();
+            if (game && game.data) {
+                try {
+                    game.data.fruit += amount;
+                    if (typeof UI !== 'undefined') {
+                        UI.updateResources();
+                    }
+                } catch (error) {
+                    console.error('添加果實失敗:', error);
                 }
             }
         },
         triggerReward: () => {
             if (typeof Rewards !== 'undefined') {
-                Rewards.debugTriggerReward();
+                try {
+                    Rewards.debugTriggerReward();
+                } catch (error) {
+                    console.error('觸發獎勵失敗:', error);
+                }
             }
         },
         resetGame: () => {
-            if (game) {
-                game.resetGame();
+            if (game && game.resetGame) {
+                try {
+                    game.resetGame();
+                } catch (error) {
+                    console.error('重置遊戲失敗:', error);
+                }
             }
         },
         showStats: () => {
-            if (game) {
-                console.table(game.getGameStats());
+            if (game && game.getGameStats) {
+                try {
+                    console.table(game.getGameStats());
+                } catch (error) {
+                    console.error('獲取統計失敗:', error);
+                }
             }
         },
         simulateTime: (hours) => {
-            if (game) {
-                const production = game.getTotalProduction() * 3600 * hours;
-                game.data.totalFruitEarned += production;
-                game.data.fruit += production;
-                if (typeof UI !== 'undefined') {
-                    UI.updateAll();
+            if (game && game.data && game.getTotalProduction) {
+                try {
+                    const production = game.getTotalProduction() * 3600 * hours;
+                    game.data.totalFruitEarned += production;
+                    game.data.fruit += production;
+                    if (typeof UI !== 'undefined') {
+                        UI.updateAll();
+                    }
+                } catch (error) {
+                    console.error('模擬時間失敗:', error);
                 }
             }
         }
@@ -398,35 +479,32 @@ function startDebugInfo() {
     window.debugInfoInterval = setInterval(() => {
         if (!game) return;
         
-        const stats = game.getGameStats();
-        const imageStats = typeof imageManager !== 'undefined' ? imageManager.getCacheStats() : { cached: 0, loading: 0 };
-        
-        debugInfo.innerHTML = `
-            <strong>遊戲狀態:</strong><br>
-            FPS: ${Math.round(1000 / 16.67)}<br>
-            果實: ${stats.totalFruit}<br>
-            產量: ${stats.productionPerSecond.toFixed(2)}/s<br>
-            農場使用: ${stats.farmUsage}<br>
-            當前階層: ${stats.currentTier}<br>
-            天氣: ${stats.currentWeather}<br>
-            活躍效果: ${stats.activeBoosts}<br>
-            <br>
-            <strong>圖片快取:</strong><br>
-            已快取: ${imageStats.cached}<br>
-            載入中: ${imageStats.loading}<br>
-            <br>
-            <strong>記憶體:</strong><br>
-            堆疊: ${(performance.memory?.usedJSHeapSize / 1024 / 1024).toFixed(1) || 'N/A'}MB<br>
-        `;
+        try {
+            const stats = game.getGameStats();
+            const imageStats = typeof imageManager !== 'undefined' ? imageManager.getCacheStats() : { cached: 0, loading: 0 };
+            
+            debugInfo.innerHTML = `
+                <strong>遊戲狀態:</strong><br>
+                FPS: ${Math.round(1000 / 16.67)}<br>
+                果實: ${stats.totalFruit}<br>
+                產量: ${stats.productionPerSecond.toFixed(2)}/s<br>
+                農場使用: ${stats.farmUsage}<br>
+                當前階層: ${stats.currentTier}<br>
+                天氣: ${stats.currentWeather}<br>
+                活躍效果: ${stats.activeBoosts}<br>
+                <br>
+                <strong>圖片快取:</strong><br>
+                已快取: ${imageStats.cached}<br>
+                載入中: ${imageStats.loading}<br>
+                <br>
+                <strong>記憶體:</strong><br>
+                堆疊: ${(performance.memory?.usedJSHeapSize / 1024 / 1024).toFixed(1) || 'N/A'}MB<br>
+            `;
+        } catch (error) {
+            debugInfo.innerHTML = `<strong>調試信息錯誤:</strong><br>${error.message}`;
+        }
     }, 1000);
 }
-
-// 全局函數（供HTML onclick調用）
-window.openRewardSelection = function() {
-    if (typeof Rewards !== 'undefined') {
-        Rewards.openRewardSelection();
-    }
-};
 
 /**
  * 停止顯示調試信息
@@ -451,7 +529,7 @@ function attemptEmergencyRecovery() {
     
     try {
         // 清除可能損壞的存檔
-        if (typeof GAME_CONFIG !== 'undefined') {
+        if (typeof GAME_CONFIG !== 'undefined' && GAME_CONFIG.SAVE_KEY) {
             localStorage.removeItem(GAME_CONFIG.SAVE_KEY);
         }
         
@@ -473,18 +551,34 @@ function attemptEmergencyRecovery() {
 }
 
 /**
- * 記錄錯誤（可以擴展為發送到服務器）
+ * 🔧 修復：記錄錯誤（可以擴展為發送到服務器）
  */
-function logError(type, error) {
+function logError(type, errorInfo) {
+    // 🔧 修復：安全的錯誤日誌創建
     const errorLog = {
         type: type,
-        message: error.message || error,
-        stack: error.stack,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
         url: window.location.href,
         gameVersion: typeof GAME_CONFIG !== 'undefined' ? GAME_CONFIG.VERSION : 'unknown'
     };
+    
+    // 🔧 修復：安全地添加錯誤信息
+    try {
+        if (errorInfo) {
+            if (typeof errorInfo === 'object') {
+                errorLog.message = errorInfo.message || 'Unknown error';
+                errorLog.stack = errorInfo.stack || 'No stack trace';
+            } else {
+                errorLog.message = String(errorInfo);
+            }
+        } else {
+            errorLog.message = 'No error information provided';
+        }
+    } catch (e) {
+        errorLog.message = 'Error processing error information';
+        console.error('處理錯誤信息時出錯:', e);
+    }
     
     // 本地存儲錯誤日誌
     try {
@@ -577,8 +671,11 @@ function shutdownGame() {
     
     try {
         // 停止所有遊戲循環
-        if (game) {
+        if (game && game.stopGameLoops) {
             game.stopGameLoops();
+        }
+        
+        if (game && game.saveGame) {
             game.saveGame();
         }
         

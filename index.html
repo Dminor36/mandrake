@@ -152,9 +152,25 @@
                 
                 <!-- 強化選項 -->
                 <div class="enhancement-options" id="enhancement-options">
-                    <h4>🔮 強化選項</h4>
-                    <p>達成特定里程碑後可選擇強化！</p>
-                    <button class="enhancement-btn" onclick="openEnhancementSelection()">選擇強化</button>
+                    <h4>🔮 強化系統</h4>
+                    
+                    <!-- 🔧 新增：強化進度顯示 -->
+                    <div class="enhancement-progress" style="display: none;">
+                        <div class="progress-label">
+                            <span class="progress-text">下個里程碑：載入中...</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 🔧 修改：強化按鈕 -->
+                    <button class="enhancement-btn" onclick="openEnhancementSelection()" disabled>
+                        選擇強化
+                    </button>
+                    
+                    <!-- 🔧 新增：強化狀態說明 -->
+                    <p class="enhancement-hint">達成里程碑後可獲得強化機會！</p>
                 </div>
 
       
@@ -198,18 +214,36 @@
     <script src="js/enhancement.js"></script>
     <script src="js/main.js"></script>
     <script>
-console.log('HTML 已載入');
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM 載入完成');
-    
-    // 檢查各個 JS 文件是否載入
-    console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
-    console.log('game 物件存在:', typeof game !== 'undefined');
-    console.log('UI 類存在:', typeof UI !== 'undefined');
-    
-    // 檢查 HTML 元素
-    console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
-});
-</script>
+    console.log('HTML 已載入');
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM 載入完成');
+        
+        // 檢查各個 JS 文件是否載入
+        console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
+        console.log('game 物件存在:', typeof game !== 'undefined');
+        console.log('UI 類存在:', typeof UI !== 'undefined');
+        
+        // 檢查 HTML 元素
+        console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
+    });
+
+    // 🔧 新增：強化選擇函數
+    window.openEnhancementSelection = function() {
+        // 🔧 修復：檢查是否真的有待處理的強化
+        if (!game.data.enhancements.pendingEnhancement || game.data.enhancements.pendingCount <= 0) {
+            UI.showNotification('目前沒有可用的強化', 'warning');
+            return;
+        }
+        
+        if (typeof EnhancementSystem !== 'undefined') {
+            // 如果已經有選項就直接顯示，否則重新生成
+            if (!game.data.enhancements.currentChoices || game.data.enhancements.currentChoices.length === 0) {
+                EnhancementSystem.triggerEnhancementChoice();
+            } else {
+                UI.showEnhancementChoice();
+            }
+        }
+    };
+    </script>
 </body>
 </html>
