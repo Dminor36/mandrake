@@ -143,7 +143,6 @@ class EnhancementSystem {
             }
         }
         
-        // 🔥 如果有觸發，累積到待處理數量中
         if (triggeredCount > 0) {
             if (!game.data.enhancements.pendingCount) {
                 game.data.enhancements.pendingCount = 0;
@@ -233,7 +232,6 @@ class EnhancementSystem {
         // 清理狀態
         game.data.enhancements.pendingEnhancement = false;
         game.data.enhancements.currentChoices = [];
-        // 🔥 檢查是否還有待處理的強化
         if (game.data.enhancements.pendingCount > 1) {
             game.data.enhancements.pendingCount--;
             console.log(`還有 ${game.data.enhancements.pendingCount - 1} 個強化待處理`);
@@ -374,3 +372,4 @@ window.ENHANCEMENTS = ENHANCEMENTS;
 console.log('✅ ENHANCEMENTS 載入:', Object.keys(ENHANCEMENTS).length, '個強化');
 console.log('✅ EnhancementSystem 載入完成');
 console.log('🔮 enhancement.js 載入完成！');
+

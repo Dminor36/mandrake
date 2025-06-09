@@ -173,8 +173,8 @@ static updateRewardStatus() {
             </div>
             <div class="plant-production">產量：${this.formatNumber(production)}/秒</div>
         </div>
-        <button class="plant-buy-btn" onclick="buyMandrake('${id}')" ${game.data.fruit < cost ? 'disabled' : ''}>
-            種植 (${this.formatNumber(cost)})  
+        <button class="plant-buy-btn" onclick="buyMandrake(this, '${id}')" ${game.data.fruit < cost ? 'disabled' : ''}>
+            種植 (${this.formatNumber(cost)})
         </button>
     `;
 
@@ -313,7 +313,7 @@ static updateRewardStatus() {
     const countdownElement = document.getElementById('reward-countdown');
     if (!countdownElement) return;
 
-    // ✅ 如果獎勵已滿，顯示"已滿"狀態
+    // 如果獎勵已滿，顯示"已滿"狀態
     if (game.data.pendingRewards >= game.data.maxPendingRewards) {
         countdownElement.textContent = '已滿';
         countdownElement.parentElement.style.animation = '';
@@ -322,7 +322,11 @@ static updateRewardStatus() {
     }
 
     const timeSinceReward = Date.now() - game.data.lastRewardTime;
-    const remaining = Math.max(0, GAME_CONFIG.REWARD_INTERVAL - timeSinceReward);
+    const remaining = Math.max(
+        0,
+        GAME_CONFIG.REWARD_INTERVAL * game.data.enhancementEffects.rewardCdMultiplier -
+            timeSinceReward
+    );
 
     if (remaining === 0) {
         countdownElement.textContent = '00:00';
@@ -499,7 +503,7 @@ static updateRewardStatus() {
         buyButtons.forEach(button => {
             const onclick = button.getAttribute('onclick');
             if (onclick) {
-                const match = onclick.match(/buyMandrake\('(.+)'\)/);
+                const match = onclick.match(/buyMandrake\(this,\s*'([^']+)'\)/);
                 if (match) {
                     const id = match[1];
                     const cost = game.getCurrentCost(id);
@@ -531,9 +535,11 @@ static updateRewardStatus() {
 }
 
 // 全局函數（供HTML onclick調用）
-window.buyMandrake = function(id) {
+window.buyMandrake = function(button, id) {
     if (game.buyMandrake(id)) {
-        UI.addVisualEffect(event.target, 'bounce');
+        if (button) {
+            UI.addVisualEffect(button, 'bounce');
+        }
         
         // 更新按鈕狀態
         setTimeout(() => UI.updateButtonStates(), 100);
@@ -550,3 +556,4 @@ window.rebirth = function() {
 
 // 暴露UI類供其他模組使用
 window.UI = UI;
+

@@ -5,7 +5,6 @@ class Game {
         this.data = this.getDefaultGameData();
         this.intervals = {};
         this.isInitialized = false;
-        this.lastFruitCount = 0; 
     }
 
     /**
@@ -418,14 +417,12 @@ class Game {
      * 獲取總產量
      */
     getTotalProduction() {
-        // 🔥 確保對象已初始化
         if (!this.individualProductions) {
             this.individualProductions = {};
         }
         
         let total = 0;
         
-        // 🔥 檢查數據完整性
         if (!this.data || !this.data.ownedMandrakes || !this.data.enhancementEffects) {
             console.warn('getTotalProduction: 遊戲數據不完整');
             return 0;
@@ -509,10 +506,8 @@ class Game {
         if (this.data.fruit >= cost) {
             this.data.fruit -= cost;
 
-            // 🔥 基礎購買數量
             let purchaseAmount = 1;
             
-            // 🔥 檢查購買暴擊
             if (this.data.enhancementEffects.hasPurchaseCrit) {
                 const critChance = ENHANCEMENT_VALUES.luck.purchase_crit_chance;
                 if (Math.random() < critChance) {
@@ -643,69 +638,63 @@ class Game {
      * 檢查獎勵時間
      */
     checkRewardTime() {
-    // ✅ 如果獎勵已滿，直接返回，不進行任何檢查
-    if (this.data.pendingRewards >= this.data.maxPendingRewards) {
-        return;
-    }
-    
-    const timeSinceReward = Date.now() - this.data.lastRewardTime;
-    
-    // 檢查是否應該增加待領取獎勵
-    if (timeSinceReward >= GAME_CONFIG.REWARD_INTERVAL) {
-        // 計算可以累積幾次獎勵
-        const rewardsToAdd = Math.floor(timeSinceReward / GAME_CONFIG.REWARD_INTERVAL);
-        
-        // 增加待領取獎勵，但不超過上限
-        const oldPendingRewards = this.data.pendingRewards;
-        const newPendingRewards = Math.min(
-            this.data.pendingRewards + rewardsToAdd,
-            this.data.maxPendingRewards
-        );
-        
-        // 如果有新的獎勵可以領取
-        if (newPendingRewards > oldPendingRewards) {
-            // 為新增的獎勵預生成獎勵內容
-            const rewardsAdded = newPendingRewards - oldPendingRewards;
-            for (let i = 0; i < rewardsAdded; i++) {
-                this.generateNewReward();
-            }
-
-            this.data.pendingRewards = newPendingRewards;
-            
-            // ✅ 修改時間更新邏輯
-            // 如果達到上限，將最後獎勵時間設為當前時間，停止計時
-            if (this.data.pendingRewards >= this.data.maxPendingRewards) {
-                this.data.lastRewardTime = Date.now();
-            } else {
-                // 未達上限時，正常更新時間
-                this.data.lastRewardTime = Date.now() - (timeSinceReward % GAME_CONFIG.REWARD_INTERVAL);
-            }
-            
-            // 立即更新獎勵狀態UI
-            if (typeof UI !== 'undefined') {
-                UI.updateRewardStatus(); 
-            }
-            
-            // 顯示通知
-            if (typeof UI !== 'undefined') {
-                const message = newPendingRewards === this.data.maxPendingRewards ? 
-                    '🎁 獎勵已滿！記得領取哦～' : 
-                    `🎁 新獎勵可領取！(${this.data.pendingRewards}/${this.data.maxPendingRewards})`;
-                UI.showNotification(message, 'info');
-            }
+        // 如果獎勵已滿，重置計時並停止檢查
+        if (this.data.pendingRewards >= this.data.maxPendingRewards) {
+            this.data.lastRewardTime = Date.now();
+            return;
         }
-        const adjustedInterval = GAME_CONFIG.REWARD_INTERVAL * this.data.enhancementEffects.rewardCdMultiplier;
-        
-        if (this.data.enhancementEffects.rewardRarityBoost > 0 && rarityName !== 'common') {
-        weight *= (1 + this.data.enhancementEffects.rewardRarityBoost);
-    }
 
-    }
+        const adjustedInterval =
+            GAME_CONFIG.REWARD_INTERVAL * this.data.enhancementEffects.rewardCdMultiplier;
+        const timeSinceReward = Date.now() - this.data.lastRewardTime;
+
+        // 檢查是否應該增加待領取獎勵
+        if (timeSinceReward >= adjustedInterval) {
+            // 計算可以累積幾次獎勵
+            const rewardsToAdd = Math.floor(timeSinceReward / adjustedInterval);
+
+            // 增加待領取獎勵，但不超過上限
+            const oldPendingRewards = this.data.pendingRewards;
+            const newPendingRewards = Math.min(
+                this.data.pendingRewards + rewardsToAdd,
+                this.data.maxPendingRewards
+            );
+
+            // 如果有新的獎勵可以領取
+            if (newPendingRewards > oldPendingRewards) {
+                // 為新增的獎勵預生成獎勵內容
+                const rewardsAdded = newPendingRewards - oldPendingRewards;
+                for (let i = 0; i < rewardsAdded; i++) {
+                    this.generateNewReward();
+                }
+
+                this.data.pendingRewards = newPendingRewards;
+
+                // 立即更新獎勵狀態UI
+                if (typeof UI !== 'undefined') {
+                    UI.updateRewardStatus();
+                }
+
+                // 顯示通知
+                if (typeof UI !== 'undefined') {
+                    const message = newPendingRewards === this.data.maxPendingRewards ?
+                        '🎁 獎勵已滿！記得領取哦～' :
+                        `🎁 新獎勵可領取！(${this.data.pendingRewards}/${this.data.maxPendingRewards})`;
+                    UI.showNotification(message, 'info');
+                }
+            }
+
+            // 更新最後領獎時間，考慮強化影響的間隔
+            const remainder = timeSinceReward % adjustedInterval;
+            this.data.lastRewardTime =
+                newPendingRewards >= this.data.maxPendingRewards
+                    ? Date.now()
+                    : Date.now() - remainder;
+        }
 }
 
     // 生成單個獎勵的函數
 generateNewReward() {
-    console.log('開始生成新獎勵...');
 
    const rewardOptions = [];
     
@@ -776,31 +765,33 @@ generateNewReward() {
 }
 // 稀有度選擇邏輯
 selectRarity() {
+    const weights = {};
     let totalWeight = 0;
-    for (const rarity of Object.values(RARITY_CONFIG)) {
-        totalWeight += rarity.weight;
-    }
 
-    // 考慮迷霧天氣的稀有度加成
-    if (this.data.weather === 'misty') {
-        totalWeight *= (WEATHER_CONFIG.misty.bonusRarity || 1);
+    for (const [rarityName, rarity] of Object.entries(RARITY_CONFIG)) {
+        let weight = rarity.weight;
+
+        if (this.data.weather === 'misty' && rarityName !== 'common') {
+            weight *= WEATHER_CONFIG.misty.bonusRarity || 1;
+        }
+
+        // 強化：提升非普通稀有度的機率
+        if (this.data.enhancementEffects.rewardRarityBoost > 0 && rarityName !== 'common') {
+            weight *= 1 + this.data.enhancementEffects.rewardRarityBoost;
+        }
+
+        weights[rarityName] = weight;
+        totalWeight += weight;
     }
 
     let random = Math.random() * totalWeight;
-    
-    for (const [rarityName, rarity] of Object.entries(RARITY_CONFIG)) {
-        let weight = rarity.weight;
-        
-        if (this.data.weather === 'misty' && rarityName !== 'common') {
-            weight *= (WEATHER_CONFIG.misty.bonusRarity || 1);
-        }
-        
+    for (const [rarityName, weight] of Object.entries(weights)) {
         random -= weight;
         if (random <= 0) {
             return rarityName;
         }
     }
-    
+
     return 'common';
 }
 
@@ -1113,7 +1104,6 @@ selectRewardTemplate() {
         this.rebuildEnhancementEffects();
     }
         rebuildEnhancementEffects() {
-            // 🔥 先保存運氣因子的固定值
             const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
             const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
             
@@ -1121,7 +1111,6 @@ selectRewardTemplate() {
             const defaultEffects = this.getDefaultGameData().enhancementEffects;
             this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
             
-            // 🔥 恢復運氣因子的固定值
             this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
             this.data.enhancementEffects.savedCostVariance = savedCostVariance;
             
@@ -1205,3 +1194,4 @@ console.log('✅ Game 實例創建完成:', window.game);
 window.Game = Game;
 
 console.log('🎮 game.js 載入完成');
+
