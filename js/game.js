@@ -1106,11 +1106,13 @@ selectRewardTemplate() {
         rebuildEnhancementEffects() {
             const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
             const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
-            
+
             // 重置所有效果到默認值
-            const defaultEffects = this.getDefaultGameData().enhancementEffects;
+            const defaults = this.getDefaultGameData();
+            const defaultEffects = defaults.enhancementEffects;
             this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
-            
+            this.data.maxPendingRewards = defaults.maxPendingRewards;
+
             this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
             this.data.enhancementEffects.savedCostVariance = savedCostVariance;
             
