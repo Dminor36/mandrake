@@ -337,10 +337,21 @@ static applyRewardEffect(selectedOption) {
      * @returns {Object} 統計信息
      */
     static getRewardStats() {
+        let nextRewardIn =
+            GAME_CONFIG.REWARD_INTERVAL *
+                game.data.enhancementEffects.rewardCdMultiplier -
+            (Date.now() - game.data.lastRewardTime);
+
+        if (game.data.pendingRewards >= game.data.maxPendingRewards) {
+            nextRewardIn = 0;
+        } else {
+            nextRewardIn = Math.max(0, nextRewardIn);
+        }
+
         return {
             totalTemplates: Object.keys(REWARD_TEMPLATES).length,
             totalRarities: Object.keys(RARITY_CONFIG).length,
-            nextRewardIn: Math.max(0, GAME_CONFIG.REWARD_INTERVAL - (Date.now() - game.data.lastRewardTime)),
+            nextRewardIn,
             activeBoosts: Object.keys(game.data.tempBoosts).length
         };
     }
@@ -388,7 +399,9 @@ static applyRewardEffect(selectedOption) {
      */
     static debugTriggerReward() {
         if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-            game.data.lastRewardTime = Date.now() - GAME_CONFIG.REWARD_INTERVAL;
+            game.data.lastRewardTime =
+                Date.now() -
+                GAME_CONFIG.REWARD_INTERVAL * game.data.enhancementEffects.rewardCdMultiplier;
             this.showRewardChoice();
         }
     }
@@ -432,3 +445,4 @@ if (typeof document !== 'undefined') {
 
 // 暴露Rewards類供其他模組使用
 window.Rewards = Rewards;
+

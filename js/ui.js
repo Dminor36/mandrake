@@ -185,7 +185,7 @@ static updateRewardStatus() {
             </div>
             <div class="plant-upgrade-info">
                 <div class="upgrade-benefit">+${formattedIncrease}/秒</div>
-                <button class="plant-buy-btn" onclick="buyMandrakesBulk('${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
+                <button class="plant-buy-btn" onclick="buyMandrakesBulk(this, '${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
                     ${buttonText}
                 </button>
             </div>
@@ -326,7 +326,7 @@ static updateRewardStatus() {
     const countdownElement = document.getElementById('reward-countdown');
     if (!countdownElement) return;
 
-    // ✅ 如果獎勵已滿，顯示"已滿"狀態
+    // 如果獎勵已滿，顯示"已滿"狀態
     if (game.data.pendingRewards >= game.data.maxPendingRewards) {
         countdownElement.textContent = '已滿';
         countdownElement.parentElement.style.animation = '';
@@ -335,7 +335,11 @@ static updateRewardStatus() {
     }
 
     const timeSinceReward = Date.now() - game.data.lastRewardTime;
-    const remaining = Math.max(0, GAME_CONFIG.REWARD_INTERVAL - timeSinceReward);
+    const remaining = Math.max(
+        0,
+        GAME_CONFIG.REWARD_INTERVAL * game.data.enhancementEffects.rewardCdMultiplier -
+            timeSinceReward
+    );
 
     if (remaining === 0) {
         countdownElement.textContent = '00:00';
@@ -452,7 +456,6 @@ static updateRewardStatus() {
         const element = document.getElementById(elementId);
         if (!element) return;
         
-        // 🔥 添加 null/undefined 檢查
         if (newValue === null || newValue === undefined || isNaN(newValue)) {
                 console.warn(`updateNumberWithAnimation: ${elementId} 收到無效數值:`, newValue);
                 newValue = 0; // 設為默認值
@@ -516,21 +519,20 @@ static updateRewardStatus() {
         buyButtons.forEach(button => {
             const onclick = button.getAttribute('onclick');
             if (onclick) {
-                const match = onclick.match(/buyMandrakesBulk\('(.+?)',\s*(\d+)\)/);
+                const match = onclick.match(/buyMandrakesBulk\(this,\s*'([^']+)',\s*(\d+)\)/);
                 if (match) {
                     const id = match[1];
                     const amount = parseInt(match[2]);
                     
-                    // 🔥 直接使用遊戲的成本計算，不要用 calculateBulkCost
                     let totalCost = 0;
+                    const originalCount = game.data.ownedMandrakes[id] || 0;
                     for (let i = 0; i < amount; i++) {
-                        // 模擬購買第 i 個的成本
-                        const currentCount = game.data.ownedMandrakes[id] || 0;
-                        const tempOriginal = game.data.ownedMandrakes[id];
-                        game.data.ownedMandrakes[id] = currentCount + i;
+                        // 模擬逐一購買，依序遞增成本
+                        game.data.ownedMandrakes[id] = originalCount + i;
                         totalCost += game.getCurrentCost(id);
-                        game.data.ownedMandrakes[id] = tempOriginal;
                     }
+                    // 還原原始持有數量
+                    game.data.ownedMandrakes[id] = originalCount;
                     
                     const canAfford = game.data.fruit >= totalCost;
                     button.disabled = !canAfford;
@@ -589,30 +591,17 @@ static updateRewardStatus() {
      * 計算批量購買成本
      */
     static calculateBulkCost(id, amount) {
-        const config = MANDRAKE_CONFIG[id];
-        const currentCount = game.data.ownedMandrakes[id] || 0;
-        const effects = game.data.enhancementEffects;
+        const originalCount = game.data.ownedMandrakes[id] || 0;
         let totalCost = 0;
-        
+
         for (let i = 0; i < amount; i++) {
-            // 計算基礎成本
-            let cost = Math.floor(config.baseCost * Math.pow(config.costGrowth, currentCount + i));
-            
-            // 🔥 應用所有強化效果（複製 getCurrentCost 的邏輯）
-            cost *= effects.globalCostMultiplier;
-            cost *= effects.typeCostMultipliers[config.type] || 1.0;
-            
-            // 運氣效果：成本波動（如果有的話）
-            if (effects.hasCostVariance) {
-                const min = ENHANCEMENT_VALUES.luck.cost_variance_min;
-                const max = ENHANCEMENT_VALUES.luck.cost_variance_max;
-                const randomFactor = 1 + (Math.random() * (max - min) + min);
-                cost *= Math.max(0.1, randomFactor);
-            }
-            
-            totalCost += Math.floor(Math.max(1, cost));
+            // 模擬逐一購買計算成本
+            game.data.ownedMandrakes[id] = originalCount + i;
+            totalCost += game.getCurrentCost(id);
         }
-        
+
+        // 還原原始持有數量
+        game.data.ownedMandrakes[id] = originalCount;
         return totalCost;
     }
 
@@ -708,9 +697,11 @@ static updateRewardStatus() {
 
 
 // 全局函數（供HTML onclick調用）
-window.buyMandrake = function(id) {
+window.buyMandrake = function(button, id) {
     if (game.buyMandrake(id)) {
-        UI.addVisualEffect(event.target, 'bounce');
+        if (button) {
+            UI.addVisualEffect(button, 'bounce');
+        }
         
         // 更新按鈕狀態
         setTimeout(() => UI.updateButtonStates(), 100);
@@ -726,7 +717,7 @@ window.rebirth = function() {
 };
 
 // 批量購買函數
-window.buyMandrakesBulk = function(id, amount) {
+window.buyMandrakesBulk = function(button, id, amount) {
     // 先檢查是否能買得起完整批量
     const totalCost = UI.calculateBulkCost(id, amount);
     
@@ -752,7 +743,9 @@ window.buyMandrakesBulk = function(id, amount) {
         UI.showNotification(`只成功種植 ${successCount} 個`, 'warning');
     }
     
-    UI.addVisualEffect(event.target, 'bounce');
+    if (button) {
+        UI.addVisualEffect(button, 'bounce');
+    }
     setTimeout(() => UI.updateButtonStates(), 100);
 };
 
@@ -1292,3 +1285,4 @@ function calculateOtherBonuses(mandrakeId) {
 
 // 暴露UI類供其他模組使用
 window.UI = UI;
+
