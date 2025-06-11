@@ -507,7 +507,7 @@
             position: relative;
             /* 🔧 修復：移除 overflow: hidden，改為 visible */
             overflow: visible;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: none;
             min-height: 500px;
             /* 🔧 修復3：設定固定寬高比 */
             aspect-ratio: 16 / 10;
@@ -534,6 +534,14 @@
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
             /* 🔧 修復1：確保變換原點在中心，防止位置偏移 */
             transform-origin: center center;
+
+            /* 移除按鈕樣式 */
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .mandrake-image:hover {
