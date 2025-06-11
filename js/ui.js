@@ -19,6 +19,7 @@ class UI {
     static updateAll() {
         this.updateResources();
         this.updateWeather();
+        this.updateWeatherTimer();
         this.updateMandrakeList();
         this.updateFarmVisual();
         this.updateRebirthInfo();
@@ -117,21 +118,47 @@ class UI {
     /**
      * 更新天氣顯示
      */
+    // 🔧 更新 updateWeather 函數
     static updateWeather() {
         if (!game || !game.data) return;
         
         const weatherConfig = WEATHER_CONFIG[game.data.weather];
         if (!weatherConfig) return;
 
-        const iconElement = document.getElementById('weather-icon');
-        const nameElement = document.getElementById('current-weather');
-        const effectElement = document.getElementById('weather-effect');
-        const costElement = document.getElementById('weather-cost');
-
-        if (iconElement) iconElement.textContent = weatherConfig.icon;
+        // 更新天氣名稱（菱形中）
+        const nameElement = document.getElementById('current-weather-name');
         if (nameElement) nameElement.textContent = weatherConfig.name;
+
+        // 更新效果描述
+        const effectElement = document.getElementById('weather-effect-desc');
         if (effectElement) effectElement.textContent = weatherConfig.effect;
+
+        // 更新重骰成本
+        const costElement = document.getElementById('weather-cost');
         if (costElement) costElement.textContent = game.data.freeWeatherReroll ? '免費' : '100';
+    }
+
+    // 🔧 新增天氣刷新倒數計時功能
+    static updateWeatherTimer() {
+        const timerElement = document.getElementById('weather-refresh-timer');
+        if (!timerElement || !game || !game.data) return;
+
+        // 計算距離下次天氣變化的時間
+        const now = Date.now();
+        const weatherChangeInterval = GAME_CONFIG.WEATHER_CHANGE_INTERVAL; // 5分鐘
+        const lastWeatherChange = game.data.lastWeatherChange || now;
+        const nextWeatherChange = lastWeatherChange + weatherChangeInterval;
+        const remaining = Math.max(0, nextWeatherChange - now);
+
+        if (remaining === 0) {
+            timerElement.textContent = '即將刷新';
+            timerElement.style.color = '#e74c3c';
+        } else {
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.style.color = '#666';
+        }
     }
 
     /**
@@ -186,11 +213,13 @@ class UI {
      * 🔧 修正：計算進度條寬度 - 果實 ÷ 購買成本
      */
     static calculateProgressWidth(id, currentFruit) {
-        const cost = game.getCurrentCost(id);
-        if (cost === 0) return 100; // 避免除以零
+        // 使用當前的批量購買數量計算成本
+        const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
         
-        // 進度 = 當前果實 ÷ 購買成本，最大100%
-        const progress = Math.min((currentFruit / cost) * 100, 100);
+        if (bulkCost === 0) return 100; // 避免除以零
+        
+        // 進度 = 當前果實 ÷ 批量購買成本，最大100%
+        const progress = Math.min((currentFruit / bulkCost) * 100, 100);
         return progress;
     }
 
@@ -247,11 +276,18 @@ class UI {
         const canAfford = game.data.fruit >= bulkCost;
         
         // 🔧 修正：適應更小按鈕的更緊湊文字
-        const buttonHtml = this.currentBulkAmount > 1 ? 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div><div style="font-size: 0.7em; line-height: 0.9;">${formattedCost}</div>` : 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div><div style="font-size: 0.7em; line-height: 0.9;">${formattedCost}</div>`;
-        
-        // 計算進度條
+       const buttonHtml = this.currentBulkAmount > 1 ? 
+            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+            <div class="hover-tooltip">
+                <div>產量: +${formattedIncrease}/秒</div>
+            </div>` : 
+            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+            <div class="hover-tooltip">
+                <div>產量: +${formattedIncrease}/秒</div>
+            </div>`;
+                // 計算進度條
         const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
         const isHighProgress = progressWidth > 80;
         
@@ -276,7 +312,6 @@ class UI {
             <div class="plant-buy-section">
                 <button class="plant-buy-btn" onclick="buyMandrakesBulk(this, '${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
                     ${buttonHtml}
-                    <div class="hover-tooltip">購買後 +${formattedIncrease}/秒</div>
                 </button>
             </div>
         `;
@@ -638,9 +673,30 @@ class UI {
                     
                     const formattedCost = this.formatNumber(totalCost);
                     const buttonText = amount > 1 ? 
-                        `種植 ${amount}個 (${formattedCost})` : 
-                        `種植 (${formattedCost})`;
-                    button.textContent = buttonText;
+                        `種植 ${amount}個 ${formattedCost}` : 
+                        `種植 ${formattedCost}`;
+                    const textDivs = button.querySelectorAll('div:not(.hover-tooltip)');
+                    if (textDivs.length >= 2) {
+                        textDivs[0].textContent = amount > 1 ? '種植' : '種植';
+                        textDivs[1].textContent = formattedCost;
+                    } else {
+                        // 如果結構不符合預期，重新生成整個按鈕內容
+                        button.innerHTML = amount > 1 ? 
+                            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+                            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+                            <div class="hover-tooltip">
+                                <div>購買 ${amount} 株</div>
+                                <div>成本: ${formattedCost}</div>
+                                <div>產量: +${this.formatNumber((totalCost * 0.1))}/秒</div>
+                            </div>` : 
+                            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+                            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+                            <div class="hover-tooltip">
+                                <div>購買 1 株</div>
+                                <div>成本: ${formattedCost}</div>
+                                <div>產量: +${this.formatNumber((totalCost * 0.1))}/秒</div>
+                            </div>`;
+                    }
                 }
             }
         });
@@ -683,6 +739,9 @@ class UI {
         
         // 更新所有購買按鈕的顯示
         this.updateMandrakeList();
+
+        // 更新進度條以反映新的批量成本
+        this.updateProgressBars();
     }
 
     /**

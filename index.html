@@ -112,6 +112,7 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
+            overflow: visible !important; /* 🔧 修復1：確保內容不被裁剪 */
         }
 
         .purchase-section h3 {
@@ -160,7 +161,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0px;
             min-width: 0;
             /* 🔧 調整：減少右側間距 */
             padding-right: 8px;
@@ -197,6 +198,8 @@
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
+            overflow: visible !important; /* 🔧 強制：確保內容不被裁剪 */
+            position: relative !important; /* 🔧 強制：確保定位正確 */
         }
 
         .plant-buy-btn {
@@ -236,36 +239,44 @@
         }
 
         /* 🔧 新增：懸停提示樣式 */
-        .plant-buy-btn .hover-tooltip {
+        
+        /* 🔧 簡潔版 tooltip - 顯示在左側 */
+        .hover-tooltip {
             position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            top: 0;
+            right: 120% !important;  /* 顯示在按鈕左側 */
+            background: rgb(53, 53, 53);
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             white-space: nowrap;
+            z-index: 9999 !important;
             opacity: 0;
-            pointer-events: none;
+            visibility: hidden;
             transition: opacity 0.3s ease;
-            z-index: 100;
-            margin-bottom: 5px;
+            pointer-events: none !important;
+            min-width: 150px;
         }
 
-        .plant-buy-btn .hover-tooltip::after {
-            content: '';
+        /* 箭頭指向右邊（按鈕方向） */
+        .hover-tooltip::after {
+            content: "";
             position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: rgba(0, 0, 0, 0.8);
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-left-color: rgba(0, 0, 0, 0.9);
         }
 
         .plant-buy-btn:hover .hover-tooltip {
             opacity: 1;
+            visibility: visible;
+        }
+
+        .plant-buy-btn {
+            position: relative !important;
         }
 
         /* 進度條樣式保持不變 */
@@ -286,6 +297,7 @@
         .plant-row > * {
             position: relative;
             z-index: 2;
+            overflow: visible !important; /* 確保內容不被裁剪 */
         }
 
         /* 不同類型的進度條顏色 */
@@ -502,76 +514,7 @@
             max-height: 600px;
         }
 
-        /* 天氣顯示 - 左上角 */
-        .weather-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
-            z-index: 10;
-        }
-
-        .weather-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .weather-icon {
-            font-size: 2em;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .weather-details {
-            font-size: 0.9em;
-        }
-
-        .weather-details div {
-            margin: 2px 0;
-        }
-
-        .weather-name {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .weather-effect {
-            color: #666;
-        }
-
-        /* 🔧 修復1：天氣重骰按鈕改為白底黑字 */
-        .weather-reroll-btn {
-            background: rgba(255, 255, 255, 0.95);
-            color: #2c3e50;
-            border: 2px solid rgba(44, 62, 80, 0.3);
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            font-size: 0.9em;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .weather-reroll-btn:hover {
-            background: rgba(255, 255, 255, 1);
-            border-color: rgba(44, 62, 80, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .weather-reroll-btn:disabled {
-            background: rgba(220, 220, 220, 0.8);
-            color: #999;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
+       
 
         /* 🔧 修復1：曼德拉草圖片區域 - 防止點擊時移動 */
         .mandrake-display {
@@ -706,6 +649,7 @@
             .left-panel {
                 width: 100%;
                 min-width: auto;
+                overflow: visible !important; /* 🔧 修復1：確保左側面板內容不被裁剪 */
             }
             
             .top-bar {
@@ -816,6 +760,55 @@
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+
+       /* 🔧 調大一點的按鈕 - 替換最底部的代碼 */
+        .plant-buy-section {
+            width: 50px !important;
+            min-width: 50px !important;
+            max-width: 50px !important;
+            flex: 0 0 40px !important;
+        }
+
+        .plant-buy-btn {
+            width: 70x !important;
+            height: 50px !important;
+            min-width: 70px !important;
+            max-width: 80px !important;
+            font-size: 0.65em !important;
+            padding: 3px 2px !important;
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            border-radius: 5px !important;
+        }
+
+        /* 調整按鈕內文字 */
+        .plant-buy-btn div {
+            font-size: 0.85em !important;
+            line-height: 1 !important;
+            margin: 0px 0 !important;
+        }
+
+        /* 🔧 按鈕不可用狀態的視覺反饋 */
+        .plant-buy-btn:disabled {
+            background: #bdc3c7 !important;           /* 灰色背景 */
+            color: #151818 !important;                /* 灰色文字 */
+            cursor: not-allowed !important;           /* 禁用游標 */
+            opacity: 0.6 !important;                  /* 半透明效果 */
+            transform: none !important;               /* 禁用變形效果 */
+            box-shadow: none !important;              /* 移除陰影 */
+            border: 1px solid #95a5a6 !important;     /* 灰色邊框 */
+        }
+
+        /* 確保 hover 效果在 disabled 時不會觸發 */
+        .plant-buy-btn:disabled:hover {
+            background: #bdc3c7 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            opacity: 1 !important;
+        }
+
+        
+
+        
     </style>
 </head>
 <body>
@@ -922,19 +915,178 @@
             
             <!-- 主要遊戲區域 -->
             <div class="main-game-area" onclick="clickMandrake()">
-                <!-- 天氣顯示 -->
-                <div class="weather-overlay">
-                    <div class="weather-info">
-                        <span class="weather-icon" id="weather-icon">🌤️</span>
-                        <div class="weather-details">
-                            <div class="weather-name">當前天氣：<span id="current-weather">晴天</span></div>
-                            <div class="weather-effect">效果：<span id="weather-effect">所有產量 +10%</span></div>
+                <!-- 🔧 獨立刷新時間的天氣顯示設計 -->
+                <div class="weather-display-container">
+                    <!-- 左側：菱形天氣名稱 -->
+                    <div class="weather-name-diamond">
+                        <div class="diamond-content">
+                            <span id="current-weather-name">暴雨</span>
                         </div>
                     </div>
-                    <button class="weather-reroll-btn" onclick="rerollWeather()">
-                        重骰天氣 (<span id="weather-cost">100</span>果實)
-                    </button>
+                    
+                    <!-- 右側：時間和效果的垂直排列 -->
+                    <div class="weather-right-section">
+                        <!-- 獨立的刷新時間區域 -->
+                        <div class="weather-timer-section">
+                            下次刷新：<span id="weather-refresh-timer">04:23</span>
+                        </div>
+                        
+                        <!-- 效果框 -->
+                        <div class="weather-effect-box">
+                            <div class="weather-effect-content">
+                                <div class="weather-effect-text">
+                                    <span id="weather-effect-desc">動物系暫停, 普通系 +30%</span>
+                                </div>
+                                <button class="weather-reroll-btn" onclick="rerollWeather()">
+                                    重骰 <span id="weather-cost">100</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <style>
+                /* 🔧 獨立刷新時間的天氣系統樣式 */
+                .weather-display-container {
+                    position: absolute;
+                    top: 20px;
+                    left: 20px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 15px;
+                    z-index: 10;
+                }
+
+                /* 菱形天氣名稱 */
+                .weather-name-diamond {
+                    width: 80px;
+                    height: 80px;
+                    transform: rotate(45deg);
+                    background: linear-gradient(135deg, #74b9ff, #0984e3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    border: 2px solid rgba(255,255,255,0.3);
+                }
+
+                .diamond-content {
+                    transform: rotate(-45deg);
+                    color: white;
+                    font-weight: bold;
+                    font-size: 1.8em;
+                    text-align: center;
+                    line-height: 1.2;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                }
+
+                /* 右側垂直區域 */
+                .weather-right-section {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                /* 獨立的刷新時間區域 */
+                .weather-timer-section {
+                    background: rgba(255, 255, 255, 0.9);
+                    border-radius: 8px;
+                    padding: 4px 8px;
+                    font-size: 0.8em;
+                    color: #666;
+                    text-align: center;
+                    font-weight: bold;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    backdrop-filter: blur(5px);
+                    border: 1px solid rgba(255,255,255,0.5);
+                    min-width: 150px;
+                    max-width: 150px;
+                    width: 150px;
+                }
+
+                /* 效果框 */
+                .weather-effect-box {
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 12px;
+                    padding: 12px 15px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                    backdrop-filter: blur(5px);
+                    border: 1px solid rgba(255,255,255,0.5);
+                    min-width: 270px;
+                    max-width: 270px;       
+                    width: 270px;         
+                }
+
+                /* 效果內容 */
+                .weather-effect-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 5px;
+                }
+
+                .weather-effect-text {
+                    flex: 1;
+                    font-size: 0.8em;
+                    color: #2c3e50;
+                    font-weight: bold;
+                }
+
+                /* 重骰按鈕 */
+                .weather-reroll-btn {
+                    background: linear-gradient(45deg, #667eea, #764ba2);
+                    color: white;
+                    border: none;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    font-size: 0.8em;
+                    transition: all 0.3s ease;
+                    white-space: nowrap;
+                }
+
+                .weather-reroll-btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                }
+
+                .weather-reroll-btn:disabled {
+                    background: #bdc3c7;
+                    cursor: not-allowed;
+                    transform: none;
+                    box-shadow: none;
+                    opacity: 0.6;
+                }
+
+                /* 響應式調整 */
+                @media (max-width: 768px) {
+                    .weather-display-container {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 10px;
+                    }
+                    
+                    .weather-name-diamond {
+                        width: 60px;
+                        height: 60px;
+                    }
+                    
+                    .diamond-content {
+                        font-size: 0.8em;
+                    }
+                    
+                    .weather-timer-section,
+                    .weather-effect-box {
+                        min-width: 200px;
+                    }
+                    
+                    .weather-effect-content {
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                }
+                </style>
                 
                 <!-- 曼德拉草圖片 -->
                 <div class="mandrake-display">
