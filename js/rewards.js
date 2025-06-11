@@ -149,15 +149,6 @@ static selectReward(selectedOption, rewardGroupId) {
     const message = `獲得 ${selectedOption.rarityInfo.name} ${selectedOption.template.name}！`;
     UI.showNotification(message, 'success');
     
-    // 如果還有獎勵，詢問是否繼續領取
-    if (game.data.pendingRewards > 0) {
-        setTimeout(() => {
-            if (confirm(`還有 ${game.data.pendingRewards} 個獎勵可以領取，要繼續嗎？`)) {
-                this.showRewardChoice();
-            }
-        }, 1000);
-    }
-    
     // 更新UI
     UI.updateAll();
 }

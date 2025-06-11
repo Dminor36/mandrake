@@ -276,6 +276,15 @@ class EnhancementSystem {
             UI.updateEnhancementStatus(); // 🔧 新增：更新強化狀態顯示
             UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
         }
+         if (typeof UI !== 'undefined') {
+            UI.hideEnhancementChoice();
+            UI.updateAll();
+            UI.updateEnhancementStatus();
+            UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
+            
+            // 🔧 新增：重置強化區域UI
+            UI.resetEnhancementSection();
+        }
     }
     
     /**

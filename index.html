@@ -8,103 +8,859 @@
     <!-- CSS 檔案 -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
+    <style>
+        /* 新的佈局樣式 */
+        .game-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        /* 左側欄位 */
+        .left-panel {
+            width: 350px;
+            min-width: 350px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 遊戲標題 */
+        .game-title {
+            text-align: center;
+            font-size: 2em;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin: 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+        }
+
+        /* 主要資源顯示 */
+        .main-resources {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .resource-combined {
+            display: flex;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+
+        .fruit-section {
+            flex: 2;
+            text-align: center;
+            padding: 20px;
+            border-right: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .production-section {
+            flex: 1;
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .resource-combined .resource-label {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .fruit-section .resource-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #e67e22;
+            font-family: 'Courier New', monospace;
+        }
+
+        .production-section .resource-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #27ae60;
+            font-family: 'Courier New', monospace;
+        }
+
+        .resource-combined .resource-label {
+            font-size: 0.9em;
+        }
+
+        .production-section .resource-label {
+            font-size: 0.8em;
+        }
+
+        /* 購買區域 */
+        .purchase-section {
+            flex: 1;
+            background: rgba(255,255,255,0.6);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .purchase-section h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        /* 🔧 重新設計：三欄式佈局 */
+        .plant-row {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+            gap: 15px;
+        }
+
+        /* 🔧 調整：左側數量區域 - 進一步縮小到40px */
+        .plant-count-section {
+            flex: 0 0 40px; /* 🔧 從60px縮小到40px */
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plant-count-large {
+            font-size: 2em; /* 🔧 稍微縮小字體以適應更小空間 */
+            font-weight: bold;
+            color: #2c3e50;
+            font-family: 'Courier New', monospace;
+            line-height: 1;
+        }
+
+        /* 🔧 調整：中間信息區域 - 獲得更多空間 */
+        .plant-info-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+            /* 🔧 調整：減少右側間距 */
+            padding-right: 8px;
+        }
+
+        .plant-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #2c3e50;
+            line-height: 1.3;
+            max-height: 2.6em; /* 兩行的高度 */
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .plant-production {
+            font-size: 0.9em;
+            color: #27ae60;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 🔧 強制修正：右側購買區域 - 使用!important確保生效 */
+        .plant-buy-section {
+            flex: 0 0 35px !important; /* 🔧 強制：容器寬度35px */
+            max-width: 35px !important;
+            min-width: 35px !important;
+            width: 35px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .plant-buy-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            color: white !important;
+            border: none !important;
+            padding: 3px 2px !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            font-weight: bold !important;
+            font-size: 0.65em !important;
+            transition: all 0.3s ease !important;
+            width: 32px !important; /* 🔧 強制：按鈕寬度32px */
+            height: 26px !important; /* 🔧 強制：按鈕高度26px */
+            max-width: 32px !important;
+            position: relative !important;
+            line-height: 1 !important;
+            text-align: center !important;
+            white-space: normal !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+
+        .plant-buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .plant-buy-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 🔧 新增：懸停提示樣式 */
+        .plant-buy-btn .hover-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            margin-bottom: 5px;
+        }
+
+        .plant-buy-btn .hover-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .plant-buy-btn:hover .hover-tooltip {
+            opacity: 1;
+        }
+
+        /* 進度條樣式保持不變 */
+        .plant-row::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(39, 174, 96, 0.15);
+            transition: width 0.5s ease;
+            z-index: 1;
+            border-radius: 12px 0 0 12px;
+            width: var(--progress-width, 0%);
+        }
+
+        /* 確保內容在進度條上方 */
+        .plant-row > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 不同類型的進度條顏色 */
+        .plant-row.normal::before {
+            background: rgba(40, 167, 69, 0.15);
+        }
+
+        .plant-row.element::before {
+            background: rgba(220, 53, 69, 0.15);
+        }
+
+        .plant-row.animal::before {
+            background: rgba(255, 193, 7, 0.15);
+        }
+
+        /* 高進度特殊效果 */
+        .plant-row.high-progress::before {
+            background: rgba(40, 167, 69, 0.25);
+            animation: progressGlow 2s ease-in-out infinite alternate;
+        }
+
+        .plant-row.element.high-progress::before {
+            background: rgba(220, 53, 69, 0.25);
+        }
+
+        .plant-row.animal.high-progress::before {
+            background: rgba(255, 193, 7, 0.25);
+        }
+
+        @keyframes progressGlow {
+            from {
+                box-shadow: inset 0 0 5px rgba(40, 167, 69, 0.3);
+            }
+            to {
+                box-shadow: inset 0 0 15px rgba(40, 167, 69, 0.6);
+            }
+        }
+
+        .plant-row:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .plant-row.locked {
+            opacity: 0.6;
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            border-left-color: #6c757d;
+        }
+
+        .plant-row.normal {
+            border-left-color: #28a745;
+        }
+
+        .plant-row.element {
+            border-left-color: #dc3545;
+        }
+
+        /* 🔧 響應式設計 */
+        @media (max-width: 768px) {
+            .plant-row {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .plant-count-section {
+                flex: none;
+                width: 100%;
+                order: 1;
+            }
+
+            .plant-info-section {
+                flex: none;
+                width: 100%;
+                order: 2;
+                text-align: center;
+            }
+
+            .plant-production {
+                margin-left: 0;
+            }
+
+            .plant-buy-section {
+                flex: none;
+                width: 100%;
+                order: 3;
+            }
+        }
+
+        /* 天賦與強化區域 */
+        .bottom-systems {
+            background: rgba(255,255,255,0.6);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* 右側主要區域 */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 右側上方橫幅 */
+        .top-bar {
+            display: grid;
+            grid-template-columns: 300px 1fr 240px;
+            gap: 20px;
+            height: 120px;
+        }
+
+        /* 獎勵領取區 */
+        .reward-section {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 輪播區 */
+        .carousel-section {
+            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .carousel-text {
+            font-size: 1.1em;
+            text-align: center;
+            color: #2c3e50;
+            animation: fadeInOut 6s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 20% { opacity: 0; transform: translateY(20px); }
+            30%, 70% { opacity: 1; transform: translateY(0); }
+            80%, 100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        /* 系統按鈕區 */
+        .system-buttons {
+            background: linear-gradient(135deg, #e8f4fd, #c3e9ff);
+            border-radius: 15px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .system-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 25px;
+            padding: 5px;
+        }
+
+        .system-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .system-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .system-btn.placeholder {
+            background: #ecf0f1;
+            color: #95a5a6;
+            cursor: default;
+        }
+
+        /* 🔧 修復3：主要遊戲區域 - 確保內部元素可見 */
+        .main-game-area {
+            flex: 1;
+            background: linear-gradient(to bottom, 
+                #87CEEB 0%, 
+                #87CEEB 30%, 
+                #32CD32 30%, 
+                #228B22 32%, 
+                #654321 32%, 
+                #8B4513 100%
+            );
+            border-radius: 15px;
+            position: relative;
+            /* 🔧 修復：移除 overflow: hidden，改為 visible */
+            overflow: visible;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-height: 500px;
+            /* 🔧 修復3：設定固定寬高比 */
+            aspect-ratio: 16 / 10;
+            max-height: 600px;
+        }
+
+        /* 天氣顯示 - 左上角 */
+        .weather-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .weather-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weather-icon {
+            font-size: 2em;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .weather-details {
+            font-size: 0.9em;
+        }
+
+        .weather-details div {
+            margin: 2px 0;
+        }
+
+        .weather-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .weather-effect {
+            color: #666;
+        }
+
+        /* 🔧 修復1：天氣重骰按鈕改為白底黑字 */
+        .weather-reroll-btn {
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+            border: 2px solid rgba(44, 62, 80, 0.3);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .weather-reroll-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: rgba(44, 62, 80, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .weather-reroll-btn:disabled {
+            background: rgba(220, 220, 220, 0.8);
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 🔧 修復1：曼德拉草圖片區域 - 防止點擊時移動 */
+        .mandrake-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        .mandrake-image {
+            width: 400px;
+            height: 400px;
+            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            /* 🔧 修復1：確保變換原點在中心，防止位置偏移 */
+            transform-origin: center center;
+        }
+
+        .mandrake-image:hover {
+            /* 🔧 修復1：只進行縮放，不改變位置 */
+            transform: scale(1.05);
+        }
+
+        .mandrake-image:active {
+            /* 🔧 修復1：只進行縮放，不改變位置 */
+            transform: scale(0.95);
+        }
+
+        /* 🔧 修改2：強化按鈕 - 右上角位置 */
+        .enhancement-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .enhancement-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 16px !important;
+            border-radius: 10px !important;
+            cursor: pointer !important;
+            font-weight: bold !important;
+            font-size: 0.9em !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+            backdrop-filter: blur(5px) !important;
+            position: relative !important;
+            display: inline-block !important;
+        }
+
+        .enhancement-btn:hover {
+            background: linear-gradient(45deg, #a569bd, #9c56c5) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        }
+
+        .enhancement-btn:disabled {
+            background: rgba(189, 195, 199, 0.8) !important;
+            color: #999 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        }
+
+        .enhancement-btn.has-enhancement {
+            background: linear-gradient(45deg, #e74c3c, #c0392b) !important;
+            animation: enhancementPulse 2s infinite !important;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5) !important;
+        }
+
+        .enhancement-btn.has-enhancement:hover {
+            background: linear-gradient(45deg, #ec7063, #d5454d) !important;
+        }
+
+        .enhancement-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3838;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        @keyframes enhancementPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 0 25px rgba(231, 76, 60, 0.8);
+            }
+        }
+
+        /* 土壤紋理效果 */
+        .main-game-area::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(101, 67, 33, 0.4) 2px, transparent 2px),
+                radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.3) 1px, transparent 1px),
+                radial-gradient(circle at 40% 40%, rgba(160, 82, 45, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px, 25px 25px, 15px 15px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1400px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .top-bar {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            /* 🔧 修復3：響應式中保持比例 */
+            .main-game-area {
+                aspect-ratio: 16 / 9;
+                min-height: 400px;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                height: auto;
+            }
+            
+            .system-buttons {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+            
+            .mandrake-image {
+                width: 250px;
+                height: 250px;
+            }
+
+            /* 🔧 修復3：手機版比例調整 */
+            .main-game-area {
+                aspect-ratio: 4 / 3;
+                min-height: 300px;
+            }
+
+            /* 🔧 修復2：手機版曼德拉草布局優化 */
+            .plant-control-line {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+            .plant-buy-section {
+                align-items: stretch;
+            }
+
+            .plant-buy-btn {
+                min-width: auto;
+                width: 100%;
+            }
+
+            /* 🔧 修改2：手機版強化按鈕調整 */
+            .enhancement-overlay {
+                top: 10px;
+                right: 10px;
+            }
+
+            .enhancement-btn {
+                padding: 10px 12px;
+                font-size: 0.8em;
+            }
+        }
+
+        /* 批量購買控制 */
+        .bulk-buy-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bulk-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .bulk-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s ease;
+            min-width: 50px;
+        }
+
+        .bulk-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .bulk-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
-        <div class="header">
-            <h1>🌱 曼德拉草農場 🌱</h1>
-        </div>
-
-        <!-- 資源顯示區 -->
-        <div class="resources">
-            <div class="resource-item">
-                <div class="resource-label">🍎 果實</div>
-                <div class="resource-value" id="fruit">100</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-label">🌱 曼德拉草總數</div>
-                <div class="resource-value" id="total-mandrakes">0</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-label">⚡ 產量/秒</div>
-                <div class="resource-value" id="production-rate">0</div>
-            </div>
-            <div class="resource-item">
-                <div class="resource-label">⭐ 天賦點</div>
-                <div class="resource-value talent-points" id="talent-points">0</div>
-            </div>
-        </div>
-
-        <!-- 天氣與獎勵系統 -->
-        <div class="weather-reward-section">
-            <!-- 天氣系統 -->
-            <div class="weather-info-container">
-                <div class="weather-info">
-                    <span class="weather-icon" id="weather-icon">🌤️</span>
-                    <div class="weather-details">
-                        <div>當前天氣：<span id="current-weather">晴天</span></div>
-                        <div>效果：<span id="weather-effect">所有產量 +10%</span></div>
+        <!-- 左側面板 -->
+        <div class="left-panel">
+            <!-- 遊戲標題 -->
+            <h1 class="game-title">🌱 曼德拉草農場 🌱</h1>
+            
+            <!-- 主要資源顯示 -->
+            <div class="main-resources">
+                <div class="resource-combined">
+                    <div class="fruit-section">
+                        <div class="resource-label">🍎 當前果實</div>
+                        <div class="resource-value" id="fruit">100</div>
                     </div>
-                </div>
-                <button class="weather-reroll-btn" onclick="rerollWeather()">
-                    重骰天氣 (<span id="weather-cost">100</span>果實)
-                </button>
-            </div>
-
-            <!-- 獎勵系統 -->
-            <div class="reward-info-container">
-                <div class="reward-info">
-                    <div class="reward-count">
-                        🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
-                    </div>
-                    <div class="reward-timer">
-                        下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
-                    </div>
-                </div>
-                <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
-                    領取獎勵
-                </button>
-            </div>
-        </div>
-        
-        <!-- 統計模態框 -->
-        <button onclick="showStats()" class="action-btn">📊 統計</button>
-
-        <!-- 統計模態框 -->
-        <div id="stats-modal" class="modal-overlay">
-            <div class="modal-content stats-modal">
-                <div class="modal-header">
-                    <h3>📊 遊戲統計</h3>
-                    <button onclick="hideStats()" style="position: absolute; top: 15px; right: 15px; background: none; color: #666; font-size: 20px; padding: 5px; border: none; cursor: pointer;">×</button>
-                </div>
-                <div class="modal-body">
-                    <div id="stats-content">
-                        <!-- 統計內容將由 JavaScript 生成 -->
+                    <div class="production-section">
+                        <div class="resource-label">⚡ 每秒產量</div>
+                        <div class="resource-value small" id="production-rate">0</div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 主要內容區 -->
-        <div class="main-content">
-            <!-- 左側：曼德拉草管理 -->
-            <div class="mandrake-section">
-                <div class="section-header">
-                    <h3>🌱 曼德拉草種植區</h3>
-                    <!-- 批量購買切換 -->
-                    <div class="bulk-buy-controls">
-                        <span class="bulk-label">批量購買：</span>
-                        <div class="bulk-buttons">
-                            <button class="bulk-btn active" data-amount="1">1個</button>
-                            <button class="bulk-btn" data-amount="10">10個</button>
-                            <button class="bulk-btn" data-amount="100">100個</button>
-                        </div>
+            
+            <!-- 購買區域 -->
+            <div class="purchase-section">
+                <!-- 🔧 修改1：刪除標題行 -->
+                
+                <!-- 批量購買控制 -->
+                <div class="bulk-buy-controls">
+                    <span class="bulk-label">批量購買：</span>
+                    <div class="bulk-buttons">
+                        <button class="bulk-btn active" data-amount="1">1個</button>
+                        <button class="bulk-btn" data-amount="10">10個</button>
+                        <button class="bulk-btn" data-amount="100">100個</button>
                     </div>
                 </div>
                 
                 <div class="mandrake-list" id="mandrake-list">
                     <!-- 曼德拉草項目會動態生成 -->
                 </div>
+            </div>
+            
+            <!-- 底部系統區域 -->
+            <div class="bottom-systems">
+                <!-- 🔧 修改2：簡化強化系統，移除標題和進度條 -->
                 
                 <!-- 重生系統 -->
                 <div class="rebirth-section">
@@ -115,65 +871,94 @@
                     </div>
                     <button class="rebirth-btn" onclick="rebirth()">重生</button>
                 </div>
+                
+                <!-- 🔧 修復3：天賦點移到最下方 -->
+                <div class="talent-points-section" style="margin-top: 15px;">
+                    <h4>⭐ 天賦點數</h4>
+                    <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.8); border-radius: 10px;">
+                        <span style="font-size: 2em; font-weight: bold; color: #d63031;" id="talent-points">0</span>
+                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">累積天賦點數</div>
+                    </div>
+                </div>
             </div>
-
-            <!-- 新的中央象徵區域 -->
-        <div class="symbolic-area">
-            <div class="symbolic-mandrake">
-                <div class="mandrake-visual">
-                    <!-- 象徵性的曼德拉草圖像 -->
-                    <div class="mandrake-root"></div>
-                    <div class="mandrake-leaves">
-                        <div class="leaf leaf-1"></div>
-                        <div class="leaf leaf-2"></div>
+        </div>
+        
+        <!-- 右側面板 -->
+        <div class="right-panel">
+            <!-- 上方橫幅 -->
+            <div class="top-bar">
+                <!-- 獎勵領取區 -->
+                <div class="reward-section">
+                    <div class="reward-count">
+                        🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
                     </div>
-                    <div class="mandrake-eyes">
-                        <div class="eye eye-left"></div>
-                        <div class="eye eye-right"></div>
+                    <div class="reward-timer">
+                        下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
                     </div>
+                    <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()" style="margin-top: 10px;">
+                        領取獎勵
+                    </button>
+                </div>
+                
+                <!-- 輪播區 -->
+                <div class="carousel-section">
+                    <div class="carousel-text" id="carousel-text">
+                        歡迎來到曼德拉草農場！開始你的魔法種植之旅吧！
+                    </div>
+                </div>
+                
+                <!-- 系統按鈕區 -->
+                <div class="system-buttons">
+                    <button class="system-btn" onclick="showStats()">📊 統計</button>
+                    <!-- 🔧 放在這裡：強化按鈕 -->
+                    <button class="system-btn" id="enhancement-btn" onclick="openEnhancementSelection()" disabled 
+                            style="background: linear-gradient(45deg, #9b59b6, #8e44ad);">🔮 強化</button>
+                    <button class="system-btn placeholder">成就</button>
+                    <button class="system-btn placeholder">商店</button>
+                    <button class="system-btn placeholder">圖鑑</button>
+                    <button class="system-btn placeholder">幫助</button>
                 </div>
             </div>
             
-            <!-- 可選：添加點擊效果的提示 -->
-            <div class="click-hint">點擊曼德拉草！</div>
+            <!-- 主要遊戲區域 -->
+            <div class="main-game-area" onclick="clickMandrake()">
+                <!-- 天氣顯示 -->
+                <div class="weather-overlay">
+                    <div class="weather-info">
+                        <span class="weather-icon" id="weather-icon">🌤️</span>
+                        <div class="weather-details">
+                            <div class="weather-name">當前天氣：<span id="current-weather">晴天</span></div>
+                            <div class="weather-effect">效果：<span id="weather-effect">所有產量 +10%</span></div>
+                        </div>
+                    </div>
+                    <button class="weather-reroll-btn" onclick="rerollWeather()">
+                        重骰天氣 (<span id="weather-cost">100</span>果實)
+                    </button>
+                </div>
+                
+                <!-- 曼德拉草圖片 -->
+                <div class="mandrake-display">
+                    <!-- 這裡放你的曼德拉草圖片 -->
+                    <img src="images/mandrake_himself.png" alt="曼德拉草" class="mandrake-image" id="main-mandrake">
+                </div>
+            </div>
         </div>
     </div>
 
-            <!-- 右側：天賦與強化 -->
-            <div class="talent-enhancement-section">
-                <div class="section-header">
-                    <h3>🌟 天賦與強化</h3>
+    <!-- 統計模態框 -->
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-content stats-modal">
+            <div class="modal-header">
+                <h3>📊 遊戲統計</h3>
+                <button onclick="hideStats()" style="position: absolute; top: 15px; right: 15px; background: none; color: #666; font-size: 20px; padding: 5px; border: none; cursor: pointer;">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="stats-content">
+                    <!-- 統計內容將由 JavaScript 生成 -->
                 </div>
-                
-                <!-- 天賦樹 -->
-                <div class="talent-tree" id="talent-tree">
-                    <!-- 天賦選項會動態生成 -->
-                </div>
-                
-                <!-- 強化選項 -->
-                <div class="enhancement-options" id="enhancement-options">
-                    <h4>🔮 強化系統</h4>
-                    
-                    <!-- 🔧 新增：強化進度顯示 -->
-                    <div class="enhancement-progress" style="display: none;">
-                        <div class="progress-label">
-                            <span class="progress-text">下個里程碑：載入中...</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- 🔧 修改：強化按鈕 -->
-                    <button class="enhancement-btn" onclick="openEnhancementSelection()" disabled>
-                        選擇強化
-                    </button>
-                    
-                    <!-- 🔧 新增：強化狀態說明 -->
-                    <p class="enhancement-hint">達成里程碑後可獲得強化機會！</p>
-                </div>
-
-      
+            </div>
+        </div>
+    </div>
 
     <!-- 獎勵選擇彈窗 -->
     <div class="modal-overlay" id="reward-modal">
@@ -214,36 +999,250 @@
     <script src="js/enhancement.js"></script>
     <script src="js/main.js"></script>
     <script>
-    console.log('HTML 已載入');
-    window.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM 載入完成');
-        
-        // 檢查各個 JS 文件是否載入
-        console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
-        console.log('game 物件存在:', typeof game !== 'undefined');
-        console.log('UI 類存在:', typeof UI !== 'undefined');
-        
-        // 檢查 HTML 元素
-        console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
-    });
+        console.log('HTML 已載入');
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM 載入完成');
+            
+            // 檢查各個 JS 文件是否載入
+            console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
+            console.log('game 物件存在:', typeof game !== 'undefined');
+            console.log('UI 類存在:', typeof UI !== 'undefined');
+            
+            // 檢查 HTML 元素
+            console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
+            
+            // 初始化輪播系統
+            initCarousel();
+            
+            // 🔧 新增：啟動優化的遊戲循環
+            setTimeout(() => {
+                if (window.optimizedGameLoop) {
+                    console.log('🚀 啟動優化遊戲循環');
+                    requestAnimationFrame(window.optimizedGameLoop);
+                }
+            }, 1000);
+        });
 
-    // 🔧 新增：強化選擇函數
-    window.openEnhancementSelection = function() {
-        // 🔧 修復：檢查是否真的有待處理的強化
-        if (!game.data.enhancements.pendingEnhancement || game.data.enhancements.pendingCount <= 0) {
-            UI.showNotification('目前沒有可用的強化', 'warning');
-            return;
-        }
-        
-        if (typeof EnhancementSystem !== 'undefined') {
-            // 如果已經有選項就直接顯示，否則重新生成
-            if (!game.data.enhancements.currentChoices || game.data.enhancements.currentChoices.length === 0) {
-                EnhancementSystem.triggerEnhancementChoice();
-            } else {
-                UI.showEnhancementChoice();
+        // 🔧 新增：強化選擇函數
+        window.openEnhancementSelection = function() {
+            // 🔧 修復：檢查是否真的有待處理的強化
+            if (!game.data.enhancements.pendingEnhancement || game.data.enhancements.pendingCount <= 0) {
+                UI.showNotification('目前沒有可用的強化', 'warning');
+                return;
             }
+            
+            if (typeof EnhancementSystem !== 'undefined') {
+                // 如果已經有選項就直接顯示，否則重新生成
+                if (!game.data.enhancements.currentChoices || game.data.enhancements.currentChoices.length === 0) {
+                    EnhancementSystem.triggerEnhancementChoice();
+                } else {
+                    UI.showEnhancementChoice();
+                }
+            }
+        };
+
+        // 輪播系統
+        const carouselTexts = [
+            "歡迎來到曼德拉草農場！開始你的魔法種植之旅吧！",
+            "點擊曼德拉草可以獲得額外果實！",
+            "不同天氣會影響你的產量，記得關注天氣變化！",
+            "收集天賦點可以解鎖強大的永久提升！",
+            "達成里程碑可以獲得神秘強化效果！",
+            "定時領取獎勵，獲得意想不到的收穫！"
+        ];
+
+        let currentCarouselIndex = 0;
+        let carouselInterval;
+
+        // 輪播管理系統
+        const CarouselManager = {
+            // 添加新的輪播文字（支援條件判斷）
+            addText: function(text, condition = null) {
+                if (condition === null || condition()) {
+                    if (!carouselTexts.includes(text)) {
+                        carouselTexts.push(text);
+                    }
+                }
+            },
+
+            // 移除特定文字
+            removeText: function(text) {
+                const index = carouselTexts.indexOf(text);
+                if (index > -1) {
+                    carouselTexts.splice(index, 1);
+                    // 如果當前顯示的是被移除的文字，立即切換到下一個
+                    if (currentCarouselIndex >= carouselTexts.length) {
+                        currentCarouselIndex = 0;
+                        this.updateDisplay();
+                    }
+                }
+            },
+
+            // 根據遊戲進度更新輪播內容
+            updateByProgress: function() {
+                // 檢查遊戲是否已載入
+                if (typeof game === 'undefined' || !game.data) {
+                    return;
+                }
+
+                const data = game.data;
+                const totalMandrakes = Game.getTotalMandrakeCount();
+                
+                // 根據曼德拉草總數量添加提示
+                if (totalMandrakes >= 5) {
+                    this.addText("嘗試種植不同類型的曼德拉草，獲得更高收益！");
+                }
+                
+                if (totalMandrakes >= 10) {
+                    this.addText("第二階段的曼德拉草即將解鎖！");
+                }
+                
+                if (totalMandrakes >= 25) {
+                    this.addText("多樣化種植可以觸發特殊的協同效果！");
+                }
+
+                // 根據天賦點數添加提示
+                if (data.talentPoints > 0) {
+                    this.addText("使用天賦點可以獲得永久性的強力加成！");
+                }
+                
+                if (data.talentPoints >= 5) {
+                    this.addText("考慮投資重生相關的天賦來加速發展！");
+                }
+
+                // 根據當前階層添加提示
+                if (data.currentTier >= 2) {
+                    this.addText("新解鎖的曼德拉草擁有更強的生產能力！");
+                }
+                
+                if (data.currentTier >= 3) {
+                    this.addText("高階曼德拉草擁有獨特的魔法屬性！");
+                }
+
+                // 根據重生次數添加提示
+                if (data.rebirthCount > 0) {
+                    this.addText("重生讓你變得更強！繼續挑戰更高的目標！");
+                }
+
+                // 根據天氣狀況添加提示
+                if (data.weather === 'rainy') {
+                    this.addText("雨天對元素系曼德拉草特別有利！");
+                } else if (data.weather === 'stormy') {
+                    this.addText("暴風天氣下，普通系曼德拉草表現更佳！");
+                } else if (data.weather === 'misty') {
+                    this.addText("迷霧天氣雖然降低產量，但能提升獎勵稀有度！");
+                }
+
+                // 根據強化數量添加提示
+                if (data.enhancements && data.enhancements.obtained) {
+                    const enhancementCount = Object.keys(data.enhancements.obtained).length;
+                    if (enhancementCount >= 3) {
+                        this.addText("強化效果可以疊加，創造驚人的產量提升！");
+                    }
+                    if (enhancementCount >= 5) {
+                        this.addText("你已經是強化大師了！繼續尋找更多組合！");
+                    }
+                }
+
+                // 根據待領取獎勵數量添加提示
+                if (data.pendingRewards > 0) {
+                    this.addText("別忘了領取你的獎勵！有些效果有時間限制！");
+                }
+
+                // 根據總果實數量添加提示
+                if (data.totalFruitEarned >= 10000) {
+                    this.addText("你已經收穫了大量果實！考慮重生來獲得天賦點！");
+                }
+                
+                if (data.totalFruitEarned >= 100000) {
+                    this.addText("果實收穫達到新高度！你已經成為真正的農場主！");
+                }
+
+                // 根據產量添加動態提示
+                const production = game.getTotalProduction();
+                if (production >= 50) {
+                    this.addText("優秀的產量！繼續優化你的農場配置！");
+                }
+                if (production >= 200) {
+                    this.addText("驚人的產量！你的農場運作得非常高效！");
+                }
+            },
+
+            // 手動切換到下一個文字
+            next: function() {
+                if (carouselTexts.length === 0) return;
+                currentCarouselIndex = (currentCarouselIndex + 1) % carouselTexts.length;
+                this.updateDisplay();
+            },
+
+            // 更新顯示
+            updateDisplay: function() {
+                const carouselElement = document.getElementById('carousel-text');
+                if (carouselElement && carouselTexts.length > 0) {
+                    carouselElement.textContent = carouselTexts[currentCarouselIndex];
+                }
+            },
+
+            // 設置輪播間隔
+            setInterval: function(seconds = 6) {
+                if (carouselInterval) {
+                    clearInterval(carouselInterval);
+                }
+                carouselInterval = setInterval(() => {
+                    this.next();
+                }, seconds * 1000);
+            },
+
+            // 停止輪播
+            stop: function() {
+                if (carouselInterval) {
+                    clearInterval(carouselInterval);
+                    carouselInterval = null;
+                }
+            },
+
+            // 重新整理輪播內容（建議定期調用）
+            refresh: function() {
+                this.updateByProgress();
+                // 確保至少有基本文字
+                if (carouselTexts.length === 0) {
+                    carouselTexts.push("歡迎來到曼德拉草農場！");
+                }
+            }
+        };
+
+        function initCarousel() {
+            // 初始化時更新進度
+            CarouselManager.refresh();
+            // 開始輪播
+            CarouselManager.setInterval(6);
+            // 立即顯示第一個文字
+            CarouselManager.updateDisplay();
+            
+            // 設置定期更新（每30秒檢查一次進度變化）
+            setInterval(() => {
+                CarouselManager.refresh();
+            }, 30000);
         }
-    };
+
+        // 將 CarouselManager 暴露到全域，供其他 JS 檔案使用
+        window.CarouselManager = CarouselManager;
+
+        // 🔧 修復1：點擊曼德拉草功能 - 防止位置移動
+        function clickMandrake() {
+            // 🔧 修復1：簡化的點擊效果，不改變 transform 屬性
+            const mandrakeImg = document.getElementById('main-mandrake');
+            if (mandrakeImg) {
+                // 使用 scale 變換而不是修改 transform 屬性
+                mandrakeImg.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    mandrakeImg.style.transform = 'scale(1)';
+                }, 150);
+            }
+            
+            // 這裡未來可以添加點擊獲得果實的功能
+            console.log('曼德拉草被點擊了！');
+        }
     </script>
 </body>
 </html>
