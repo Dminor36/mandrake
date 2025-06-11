@@ -9,3 +9,6 @@
 
 執行 `index.html` 即可在瀏覽器中體驗遊戲。
 
+若想關閉遊戲中的彈窗通知，可在 `js/config.js` 中調整 `ENABLE_NOTIFICATIONS`，預設值為 `false`。
+選擇強化後，強化視窗會立即關閉，避免停留在畫面上。
+
