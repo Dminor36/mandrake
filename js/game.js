@@ -193,7 +193,33 @@ class Game {
         }
 
         // 計算並增加果實產量
-        const production = this.getTotalProduction()/10; // 每100毫秒計算一次產量
+        let production = this.getTotalProduction()/10; // 每100毫秒計算一次產量
+        
+        // 🆕 幸運連擊檢查
+        if (this.data.luckyStreak && 
+            this.data.luckyStreak.remainingTriggers > 0 && 
+            Date.now() < this.data.luckyStreak.endTime) {
+            
+            // 每次遊戲循環都有機會觸發幸運
+            if (Math.random() < this.data.luckyStreak.chance / 100) { // 除以100是因為要把觸發率降低
+                production *= 2; // 雙倍產量
+                this.data.luckyStreak.remainingTriggers--;
+                
+                if (typeof UI !== 'undefined') {
+                    UI.showNotification('🍀 幸運觸發！雙倍產量！', 'success', 1000);
+                }
+                
+                console.log(`幸運連擊觸發！剩餘次數: ${this.data.luckyStreak.remainingTriggers}`);
+                
+                if (this.data.luckyStreak.remainingTriggers <= 0) {
+                    delete this.data.luckyStreak;
+                    if (typeof UI !== 'undefined') {
+                        UI.showNotification('幸運連擊效果已用完', 'info');
+                    }
+                }
+            }
+        }
+        
         if (!isNaN(production) && production > 0) {
             this.data.fruit += production;
             this.data.totalFruitEarned += production;
@@ -533,6 +559,13 @@ class Game {
             }
         }
                 
+        // 🆕 應用獎勵 - 購買狂潮折扣
+        if (this.data.purchaseBoost && 
+            this.data.purchaseBoost.remainingPurchases > 0 && 
+            Date.now() < this.data.purchaseBoost.endTime) {
+            const originalCost = cost;
+            cost *= (1 - this.data.purchaseBoost.discount);
+        }
         return Math.floor(Math.max(1, cost)); // 最低成本為1
     }
 
@@ -562,13 +595,26 @@ class Game {
                 }
             }
 
+            // 獎勵效果 - 消耗購買狂潮次數
+            if (this.data.purchaseBoost && this.data.purchaseBoost.remainingPurchases > 0) {
+                this.data.purchaseBoost.remainingPurchases--;
+                
+                if (typeof UI !== 'undefined') {
+                    const remaining = this.data.purchaseBoost.remainingPurchases;
+                    const discount = (this.data.purchaseBoost.discount * 100).toFixed(0);
+                    
+                    if (remaining > 0) {
+                        UI.showNotification(`購買狂潮！還剩 ${remaining} 次 ${discount}% 折扣`, 'info', 1500);
+                    } else {
+                        UI.showNotification('購買狂潮效果已用完', 'warning', 2000);
+                        delete this.data.purchaseBoost; // 清除狂潮狀態
+                    }
+                }
+            }
+
             // 應用購買數量
             this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + purchaseAmount;
 
-            // 在農場中種植（根據實際獲得數量）
-            for (let i = 0; i < purchaseAmount; i++) {
-                this.plantInFarm(id);
-            }
 
             // 檢查階層解鎖
             this.checkTierUnlock();
@@ -587,23 +633,6 @@ class Game {
         return false;
     }
 
-    /**
-     * 在農場中種植
-     */
-    plantInFarm(id) {
-        const emptySlotIndex = this.data.farmSlots.findIndex(slot => slot === null);
-        
-        if (emptySlotIndex !== -1) {
-            this.data.farmSlots[emptySlotIndex] = {
-                type: id,
-                plantedAt: Date.now()
-            };
-            
-            if (typeof UI !== 'undefined') {
-                UI.updateFarmVisual();
-            }
-        }
-    }
 
     /**
      * 檢查階層解鎖

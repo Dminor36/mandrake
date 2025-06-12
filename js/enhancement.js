@@ -270,16 +270,15 @@ class EnhancementSystem {
         game.saveGame();
         
         // 更新UI
-        if (typeof UI !== 'undefined') {
-            UI.hideEnhancementChoice();
-            UI.updateAll();
-            UI.updateEnhancementStatus(); // 🔧 新增：更新強化狀態顯示
-            UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
-        }
          if (typeof UI !== 'undefined') {
             UI.hideEnhancementChoice();
             UI.updateAll();
             UI.updateEnhancementStatus();
+            setTimeout(() => {
+                UI.updateMandrakeList();        // 重建整個列表
+                UI.updateButtonStates();       // 更新按鈕狀態
+                UI.updateProgressBars();       // 更新進度條
+            }, 100);
             UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
             
             // 🔧 新增：重置強化區域UI

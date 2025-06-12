@@ -22,7 +22,6 @@ class UI {
         this.updateWeatherTimer();
         this.updateWeatherRerollButton(); 
         this.updateMandrakeList();
-        this.updateFarmVisual();
         this.updateRebirthInfo();
         this.updateRewardStatus(); 
         this.updateEnhancementStatus();
@@ -222,53 +221,110 @@ class UI {
         this.addTierUnlockProgress(container);
     }
 
-    /**
-     * 🔧 改進：使用遊戲模擬計算產量增加
+       /**
+     * 🔧 完全修正：計算購買指定數量曼德拉草後的產量增加
+     * 關鍵：考慮會影響全局/現有曼德拉草的強化效果
      */
     static calculateProductionIncrease(id, currentCount, purchaseAmount) {
         if (!game || !game.data) return 0;
         
-        // 🔧 方法1：使用遊戲現有的individualProductions
-        if (game.individualProductions && game.individualProductions[id]) {
-            const currentSingleProduction = game.individualProductions[id] / Math.max(currentCount, 1);
-            return currentSingleProduction * purchaseAmount;
-        }
+        // 保存原始遊戲狀態
+        const originalOwnedMandrakes = JSON.parse(JSON.stringify(game.data.ownedMandrakes));
+        const originalTotalProduction = game.getTotalProduction();
         
-        // 🔧 方法2：模擬遊戲的產量計算邏輯
         try {
-            // 保存原始狀態
-            const originalCount = game.data.ownedMandrakes[id] || 0;
+            // 模擬購買後的狀態
+            game.data.ownedMandrakes[id] = (game.data.ownedMandrakes[id] || 0) + purchaseAmount;
             
-            // 計算當前產量
-            game.data.ownedMandrakes[id] = currentCount;
-            const currentProduction = this.getGameCalculatedProduction(id, currentCount);
+            // 計算購買後的總產量
+            const newTotalProduction = game.getTotalProduction();
             
-            // 計算購買後產量
-            game.data.ownedMandrakes[id] = currentCount + purchaseAmount;
-            const afterProduction = this.getGameCalculatedProduction(id, currentCount + purchaseAmount);
+            // 產量增加 = 新總產量 - 原總產量
+            const productionIncrease = newTotalProduction - originalTotalProduction;
             
             // 還原原始狀態
-            game.data.ownedMandrakes[id] = originalCount;
+            game.data.ownedMandrakes = originalOwnedMandrakes;
             
-            return afterProduction - currentProduction;
+            return productionIncrease;
+            
         } catch (error) {
-            console.warn('產量計算錯誤:', error);
+            console.error('計算產量增加時發生錯誤:', error);
             
-            // 🔧 方法3：備用簡單計算
-            const config = MANDRAKE_CONFIG[id];
-            if (config) {
-                let singleProduction = config.baseProduction;
-                
-                // 只加上天氣效果
-                const weatherConfig = WEATHER_CONFIG[game.data.weather];
-                if (weatherConfig && typeof weatherConfig.getMultiplier === 'function') {
-                    singleProduction *= weatherConfig.getMultiplier(config.type);
-                }
-                
-                return singleProduction * purchaseAmount;
+            // 還原原始狀態
+            game.data.ownedMandrakes = originalOwnedMandrakes;
+            
+            // 備用簡單計算
+            return this.fallbackProductionCalculation(id, currentCount, purchaseAmount);
+        }
+    }
+
+    /**
+     * 🔧 新增：獲取詳細的產量增加分解（用於調試和顯示）
+     */
+    static getDetailedProductionIncrease(id, currentCount, purchaseAmount) {
+        if (!game || !game.data) return null;
+        
+        // 保存原始狀態
+        const originalOwnedMandrakes = JSON.parse(JSON.stringify(game.data.ownedMandrakes));
+        const originalProductions = JSON.parse(JSON.stringify(game.individualProductions || {}));
+        
+        try {
+            // 計算購買前各品種的產量
+            const beforeProductions = {};
+            game.getTotalProduction(); // 更新 individualProductions
+            for (const [mandrakeId, production] of Object.entries(game.individualProductions || {})) {
+                beforeProductions[mandrakeId] = production;
             }
             
-            return 0;
+            // 模擬購買
+            game.data.ownedMandrakes[id] = (game.data.ownedMandrakes[id] || 0) + purchaseAmount;
+            
+            // 計算購買後各品種的產量
+            const afterProductions = {};
+            game.getTotalProduction(); // 重新計算
+            for (const [mandrakeId, production] of Object.entries(game.individualProductions || {})) {
+                afterProductions[mandrakeId] = production;
+            }
+            
+            // 計算每個品種的產量變化
+            const productionChanges = {};
+            let totalIncrease = 0;
+            
+            for (const mandrakeId of Object.keys(game.data.ownedMandrakes)) {
+                const before = beforeProductions[mandrakeId] || 0;
+                const after = afterProductions[mandrakeId] || 0;
+                const change = after - before;
+                
+                if (Math.abs(change) > 0.001) {
+                    productionChanges[mandrakeId] = {
+                        before: before,
+                        after: after,
+                        change: change,
+                        name: MANDRAKE_CONFIG[mandrakeId]?.name || mandrakeId
+                    };
+                    totalIncrease += change;
+                }
+            }
+            
+            // 還原狀態
+            game.data.ownedMandrakes = originalOwnedMandrakes;
+            game.individualProductions = originalProductions;
+            
+            return {
+                totalIncrease: totalIncrease,
+                changes: productionChanges,
+                primaryBenefit: productionChanges[id]?.change || 0,
+                secondaryBenefit: totalIncrease - (productionChanges[id]?.change || 0)
+            };
+            
+        } catch (error) {
+            console.error('詳細產量計算錯誤:', error);
+            
+            // 還原狀態
+            game.data.ownedMandrakes = originalOwnedMandrakes;
+            game.individualProductions = originalProductions;
+            
+            return null;
         }
     }
 
@@ -304,12 +360,20 @@ class UI {
     }
 
     /**
-     * 計算曼德拉草產量
+     * 🔧 修正：計算當前曼德拉草產量（用於顯示）
      */
     static calculateMandrakeProduction(id, count) {
-        // 直接從遊戲的計算結果取得
-        return game.individualProductions?.[id] || 0;
+        // 直接使用遊戲的產量計算函數，確保包含所有效果
+        return game.calculateSingleMandrakeProduction(id, count);
     }
+    
+    /**
+     * 🔧 新增：獲取單株曼德拉草的實際產量（用於工具提示）
+     */
+    static getSingleMandrakeProduction(id) {
+        return game.calculateSingleMandrakeProduction(id, 1);
+    }
+
 
     /**
      * 🔧 修正：計算進度條寬度 - 果實 ÷ 購買成本
@@ -356,7 +420,7 @@ class UI {
     }
 
     /**
-     * 🔧 修正：創建曼德拉草行 - 修復產量計算
+     * 🔧 修正：創建曼德拉草行 - 使用修正後的計算並顯示詳細信息
      */
     static createMandrakeRow(id, config, count, cost, production) {
         const row = document.createElement('div');
@@ -368,8 +432,11 @@ class UI {
         // 計算批量購買的成本和收益
         const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
         
-        // 🔧 修正：使用新的產量增加計算方法
+        // 🔧 修正：使用新的正確計算方法
         const productionIncrease = this.calculateProductionIncrease(id, count, this.currentBulkAmount);
+        
+        // 🔧 新增：獲取詳細分解（用於高級工具提示）
+        const detailedIncrease = this.getDetailedProductionIncrease(id, count, this.currentBulkAmount);
         
         const formattedIncrease = this.formatNumber(productionIncrease);
         const formattedCost = this.formatNumber(bulkCost);
@@ -378,19 +445,30 @@ class UI {
         // 檢查是否能負擔完整批量
         const canAfford = game.data.fruit >= bulkCost;
         
-        // 🔧 修正：簡化工具提示，只顯示效率
-       const buttonHtml = this.currentBulkAmount > 1 ? 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-            <div class="hover-tooltip">
-                <div>+${formattedIncrease}/秒</div>
-            </div>` : 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-            <div class="hover-tooltip">
-                <div>+${formattedIncrease}/秒</div>
+        // 🔧 修正：工具提示顯示詳細的產量分解
+        let tooltipContent = `<div>總產量增加: +${formattedIncrease}/秒</div>`;
+        
+        if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
+            tooltipContent += `<div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                <div>├ 新增產量: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
+                <div>└ 現有提升: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
             </div>`;
-                // 計算進度條
+        }
+        
+        if (bulkCost > 0) {
+            const efficiency = (productionIncrease / bulkCost).toFixed(3);
+            tooltipContent += `<div style="font-size: 0.8em; color: #999; margin-top: 3px;">效率: ${efficiency}</div>`;
+        }
+        
+        const buttonHtml = this.currentBulkAmount > 1 ? 
+            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+            <div class="hover-tooltip">${tooltipContent}</div>` : 
+            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+            <div class="hover-tooltip">${tooltipContent}</div>`;
+
+        // 計算進度條
         const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
         const isHighProgress = progressWidth > 80;
         
@@ -398,20 +476,20 @@ class UI {
             row.classList.add('high-progress');
         }
 
-        // 🔧 修正：簡化佈局，移除圖標，移除多餘成本顯示
+        // 🔧 保持原有的佈局
         row.innerHTML = `
             <!-- 左側：大數字顯示數量 -->
             <div class="plant-count-section">
                 <div class="plant-count-large">${count}</div>
             </div>
             
-            <!-- 中間：曼德拉草信息（無圖標） -->
+            <!-- 中間：曼德拉草信息 -->
             <div class="plant-info-section">
                 <div class="plant-name">${config.name}</div>
                 <div class="plant-production">產量：${formattedProduction}/秒</div>
             </div>
             
-            <!-- 右側：購買按鈕（內含成本，無額外成本顯示） -->
+            <!-- 右側：購買按鈕 -->
             <div class="plant-buy-section">
                 <button class="plant-buy-btn" onclick="buyMandrakesBulk(this, '${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
                     ${buttonHtml}
@@ -457,55 +535,6 @@ class UI {
         return requirements[tier] || 1000;
     }
 
-    /**
-     * 更新農場視覺效果
-     */
-    static updateFarmVisual() {
-        const farmArea = document.getElementById('farm-area');
-        if (!farmArea) return;
-
-        farmArea.innerHTML = '';
-
-        // 為每個格子創建元素
-        game.data.farmSlots.forEach((slot, index) => {
-            const slotElement = this.createFarmSlot(slot, index);
-            farmArea.appendChild(slotElement);
-        });
-    }
-
-    /**
-     * 創建農場格子
-     */
-    static createFarmSlot(slot, index) {
-        const slotDiv = document.createElement('div');
-        slotDiv.className = 'farm-slot';
-        slotDiv.setAttribute('data-slot-index', index);
-
-        if (slot) {
-            // 有曼德拉草的格子
-            slotDiv.classList.add('occupied');
-            const config = MANDRAKE_CONFIG[slot.type];
-            
-            if (config) {
-                const visualElement = this.createMandrakeVisual(slot.type, config);
-                slotDiv.appendChild(visualElement);
-
-                // 添加數量徽章（如果同類型曼德拉草數量大於1）
-                const count = game.data.ownedMandrakes[slot.type] || 0;
-                if (count > 1) {
-                    const countBadge = this.createCountBadge(count);
-                    slotDiv.appendChild(countBadge);
-                }
-            }
-        } else {
-            // 空格子
-            slotDiv.classList.add('empty');
-            slotDiv.textContent = '🌱';
-            slotDiv.title = '空地';
-        }
-
-        return slotDiv;
-    }
 
     /**
      * 創建曼德拉草視覺元素
@@ -746,9 +775,7 @@ class UI {
         }
     }
 
-    /**
-     * 更新按鈕狀態
-     */
+    // 🔧 同樣修正 updateButtonStates 中的計算
     static updateButtonStates() {
         if (!game || !game.data) return;
 
@@ -761,12 +788,11 @@ class UI {
                     const id = match[1];
                     const amount = parseInt(match[2]);
                     
-                    // 🔧 修正：使用正確的批量成本計算
                     const totalCost = this.calculateBulkCost(id, amount);
                     const canAfford = game.data.fruit >= totalCost;
                     button.disabled = !canAfford;
                     
-                    // 🔧 修正：使用新的產量增加計算方法
+                    // 🔧 修正：使用新的正確計算方法
                     const currentCount = game.data.ownedMandrakes[id] || 0;
                     const productionIncrease = this.calculateProductionIncrease(id, currentCount, amount);
                     
@@ -782,16 +808,19 @@ class UI {
                         // 更新工具提示
                         const tooltip = button.querySelector('.hover-tooltip');
                         if (tooltip) {
-                            tooltip.innerHTML = `<div>+${formattedIncrease}/秒</div>`;
+                            const detailedIncrease = this.getDetailedProductionIncrease(id, currentCount, amount);
+                            let tooltipContent = `<div>總產量增加: +${formattedIncrease}/秒</div>`;
+                            
+                            if (true) {
+                                tooltipContent += `<div style="font-size: 0.8em; color: #666; margin-top: 5px; text-align: left;">
+                                    <div>├ 本項提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
+                                    <div>└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
+                                </div>`;
+                            }
+                            
+                            
+                            tooltip.innerHTML = tooltipContent;
                         }
-                    } else {
-                        // 如果結構不符合預期，重新生成整個按鈕內容
-                        button.innerHTML = `
-                            <div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-                            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-                            <div class="hover-tooltip">
-                                <div>+${formattedIncrease}/秒</div>
-                            </div>`;
                     }
                 }
             }
@@ -1208,18 +1237,70 @@ class UI {
             case '生產力提升':
                 game.applyTempBoost('production', 1 + tier.bonus/100, tier.duration);
                 break;
-            case '元素加速':
+                
+            case '元素共鳴':
                 game.applyTempBoost('element', 1 + tier.bonus/100, tier.duration);
                 break;
+                
+            case '野性爆發':
+                game.applyTempBoost('animal', 1 + tier.bonus/100, tier.duration);
+                break;
+                
+            case '返璞歸真':
+                game.applyTempBoost('normal', 1 + tier.bonus/100, tier.duration);
+                break;
+                
             case '即時果實':
-                const production = game.getTotalProduction() * 3600 * tier.hours;
-                game.data.fruit += production;
+                const minuteProduction = game.getTotalProduction() * 60 * tier.minutes;
+                game.data.fruit += minuteProduction;
+                this.showNotification(`獲得 ${tier.minutes} 分鐘產量的果實！`, 'success');
                 break;
-            case '天賦點數':
-                game.data.talentPoints += tier.points;
+                
+            case '收穫爆發':
+                // 找到擁有最多的曼德拉草
+                let maxCount = 0;
+                let maxType = null;
+                
+                for (const [id, count] of Object.entries(game.data.ownedMandrakes)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        maxType = id;
+                    }
+                }
+                
+                if (maxType && maxCount > 0) {
+                    const singleProduction = game.calculateSingleMandrakeProduction(maxType, 1);
+                    const burstAmount = singleProduction * maxCount * 3600 * tier.hours;
+                    game.data.fruit += burstAmount;
+                    
+                    const config = MANDRAKE_CONFIG[maxType];
+                    this.showNotification(`${config.name} 收穫爆發！獲得 ${tier.hours} 小時產量！`, 'success');
+                } else {
+                    this.showNotification('沒有曼德拉草可以爆發收穫', 'warning');
+                }
                 break;
+                
+            case '購買狂潮':
+                game.data.purchaseBoost = {
+                    remainingPurchases: tier.count,
+                    discount: tier.discount / 100,
+                    endTime: Date.now() + 3600000 // 1小時後過期
+                };
+                this.showNotification(`購買狂潮啟動！接下來 ${tier.count} 次購買享 ${tier.discount}% 折扣！`, 'success');
+                break;
+                
+            case '幸運連擊':
+                game.data.luckyStreak = {
+                    remainingTriggers: tier.count,
+                    chance: tier.chance / 100,
+                    endTime: Date.now() + 3600000 // 1小時後過期
+                };
+                this.showNotification(`幸運連擊啟動！接下來 ${tier.count} 次有 ${tier.chance}% 機率雙倍產量！`, 'success');
+                break;
+                
             default:
                 console.log('未處理的獎勵類型:', template.name);
+                this.showNotification(`獲得了 ${template.name}，但效果尚未實作`, 'warning');
         }
     }
 

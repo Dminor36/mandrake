@@ -198,8 +198,42 @@ const RARITY_CONFIG = {
     }
 };
 
-// ✅ 獎勵模板配置 - 完整版本
+// ========== 新的獎勵系統配置 ==========
+
+// ✅ 新的獎勵模板配置 - 8種平衡獎勵
 const REWARD_TEMPLATES = {
+    // 💪 強力檔 - 流派導向
+    harvest_burst: {
+        name: '收穫爆發',
+        description: function(tier) {
+            return `立即獲得你擁有最多曼德拉草${tier.hours}小時的產量`;
+        },
+        icon: '💥',
+        category: 'instant',
+        tiers: {
+            common: { hours: 2 },
+            rare: { hours: 4 },
+            epic: { hours: 8 },
+            legendary: { hours: 16 }
+        }
+    },
+    
+    purchase_boost: {
+        name: '購買狂潮',
+        description: function(tier) {
+            return `接下來${tier.count}次購買，成本減少${tier.discount}%`;
+        },
+        icon: '💰',
+        category: 'boost',
+        tiers: {
+            common: { count: 3, discount: 20 },
+            rare: { count: 5, discount: 30 },
+            epic: { count: 8, discount: 40 },
+            legendary: { count: 10, discount: 50 }
+        }
+    },
+
+    // 💪 中強檔 - 平衡發展
     production_boost: {
         name: '生產力提升',
         description: function(tier) {
@@ -215,8 +249,9 @@ const REWARD_TEMPLATES = {
         }
     },
     
+    // 🎯 中等檔 - 系別特化
     element_boost: {
-        name: '元素加速',
+        name: '元素共鳴',
         description: function(tier) {
             return `1小時內元素系產量 +${tier.bonus}%`;
         },
@@ -230,80 +265,68 @@ const REWARD_TEMPLATES = {
         }
     },
     
+    animal_boost: {
+        name: '野性爆發',
+        description: function(tier) {
+            return `1小時內動物系產量 +${tier.bonus}%`;
+        },
+        icon: '🐾',
+        category: 'boost',
+        tiers: {
+            common: { bonus: 20, duration: 3600000 },
+            rare: { bonus: 35, duration: 3600000 },
+            epic: { bonus: 60, duration: 3600000 },
+            legendary: { bonus: 100, duration: 3600000 }
+        }
+    },
+    
+    normal_boost: {
+        name: '返璞歸真',
+        description: function(tier) {
+            return `1小時內普通系產量 +${tier.bonus}%`;
+        },
+        icon: '🌿',
+        category: 'boost',
+        tiers: {
+            common: { bonus: 20, duration: 3600000 },
+            rare: { bonus: 35, duration: 3600000 },
+            epic: { bonus: 60, duration: 3600000 },
+            legendary: { bonus: 100, duration: 3600000 }
+        }
+    },
+
+    // 🍀 輕度檔 - 即時滿足與趣味
     instant_fruit: {
         name: '即時果實',
         description: function(tier) {
-            return `立即獲得當前${tier.hours}小時產量的果實`;
+            return `立即獲得當前${tier.minutes}分鐘產量的果實`;
         },
         icon: '🍎',
         category: 'instant',
         tiers: {
-            common: { hours: 1 },
-            rare: { hours: 2 },
-            epic: { hours: 4 },
-            legendary: { hours: 8 }
+            common: { minutes: 10 },
+            rare: { minutes: 20 },
+            epic: { minutes: 40 },
+            legendary: { minutes: 60 }
         }
     },
     
-    force_type: {
-        name: '類型保證',
+    lucky_streak: {
+        name: '幸運連擊',
         description: function(tier) {
-            return `下次解鎖${tier.guarantee}`;
+            return `接下來${tier.count}次產量結算，有${tier.chance}%機率獲得雙倍產量`;
         },
-        icon: '🎯',
-        category: 'unlock',
-        tiers: {
-            common: { guarantee: '有30%機率是指定類型', chance: 0.3 },
-            rare: { guarantee: '有60%機率是指定類型', chance: 0.6 },
-            epic: { guarantee: '必定是指定類型', chance: 1.0 },
-            legendary: { guarantee: '必定是指定類型，且獲得額外效果', chance: 1.0, bonus: true }
-        }
-    },
-    
-    talent_points: {
-        name: '天賦點數',
-        description: function(tier) {
-            return `獲得 ${tier.points} 點天賦點數`;
-        },
-        icon: '⭐',
+        icon: '🍀',
         category: 'special',
         tiers: {
-            common: { points: 1 },
-            rare: { points: 2 },
-            epic: { points: 4 },
-            legendary: { points: 8 }
-        }
-    },
-    
-    weather_control: {
-        name: '天氣操控',
-        description: function(tier) {
-            return tier.description;
-        },
-        icon: '🌤️',
-        category: 'special',
-        tiers: {
-            common: { 
-                description: '下次重骰天氣免費', 
-                effect: 'free_reroll' 
-            },
-            rare: { 
-                description: '可以選擇下一個天氣', 
-                effect: 'choose_weather' 
-            },
-            epic: { 
-                description: '鎖定當前天氣2小時', 
-                effect: 'lock_weather',
-                duration: 7200000
-            },
-            legendary: { 
-                description: '創造完美天氣4小時', 
-                effect: 'perfect_weather',
-                duration: 14400000
-            }
+            common: { count: 10, chance: 30 },
+            rare: { count: 15, chance: 35 },
+            epic: { count: 20, chance: 40 },
+            legendary: { count: 30, chance: 50 }
         }
     }
 };
+
 
 // 類型顏色配置
 const TYPE_COLORS = {

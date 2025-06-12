@@ -163,33 +163,72 @@ static applyRewardEffect(selectedOption) {
         case '生產力提升':
             game.applyTempBoost('production', 1 + tier.bonus/100, tier.duration);
             break;
-
-        case '元素加速':
+            
+        case '元素共鳴':
             game.applyTempBoost('element', 1 + tier.bonus/100, tier.duration);
             break;
-
+            
+        case '野性爆發':
+            game.applyTempBoost('animal', 1 + tier.bonus/100, tier.duration);
+            break;
+            
+        case '返璞歸真':
+            game.applyTempBoost('normal', 1 + tier.bonus/100, tier.duration);
+            break;
+            
         case '即時果實':
-            const production = game.getTotalProduction() * 3600 * tier.hours;
-            game.data.fruit += production;
-            const formattedAmount = UI.formatNumber(production);
-            UI.showNotification(`獲得 ${formattedAmount} 果實！`, 'success');
+            const minuteProduction = game.getTotalProduction() * 60 * tier.minutes;
+            game.data.fruit += minuteProduction;
+            const formattedAmount = UI.formatNumber(minuteProduction);
+            UI.showNotification(`獲得 ${tier.minutes} 分鐘產量的果實！(${formattedAmount})`, 'success');
             break;
-
-        case '類型保證':
-            this.applyTypeGuarantee(tier);
+            
+        case '收穫爆發':
+            // 找到擁有最多的曼德拉草
+            let maxCount = 0;
+            let maxType = null;
+            
+            for (const [id, count] of Object.entries(game.data.ownedMandrakes)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxType = id;
+                }
+            }
+            
+            if (maxType && maxCount > 0) {
+                const singleProduction = game.calculateSingleMandrakeProduction(maxType, 1);
+                const burstAmount = singleProduction * maxCount * 3600 * tier.hours;
+                game.data.fruit += burstAmount;
+                
+                const config = MANDRAKE_CONFIG[maxType];
+                const formattedAmount = UI.formatNumber(burstAmount);
+                UI.showNotification(`${config.name} 收穫爆發！獲得 ${tier.hours} 小時產量！(${formattedAmount})`, 'success');
+            } else {
+                UI.showNotification('沒有曼德拉草可以爆發收穫', 'warning');
+            }
             break;
-
-        case '天賦點數':
-            game.data.talentPoints += tier.points;
-            UI.showNotification(`獲得 ${tier.points} 天賦點數！`, 'success');
+            
+        case '購買狂潮':
+            game.data.purchaseBoost = {
+                remainingPurchases: tier.count,
+                discount: tier.discount / 100,
+                endTime: Date.now() + 3600000
+            };
+            UI.showNotification(`購買狂潮啟動！接下來 ${tier.count} 次購買享 ${tier.discount}% 折扣！`, 'success');
             break;
-
-        case '天氣操控':
-            this.applyWeatherControl(tier);
+            
+        case '幸運連擊':
+            game.data.luckyStreak = {
+                remainingTriggers: tier.count,
+                chance: tier.chance / 100,
+                endTime: Date.now() + 3600000
+            };
+            UI.showNotification(`幸運連擊啟動！接下來 ${tier.count} 次有 ${tier.chance}% 機率雙倍產量！`, 'success');
             break;
 
         default:
             console.warn('未知的獎勵類型:', template.name);
+            UI.showNotification(`獲得了 ${template.name}，但效果尚未實作`, 'warning');
     }
 
     // 更新UI
@@ -389,15 +428,32 @@ static applyRewardEffect(selectedOption) {
      * 強制觸發獎勵（調試用）
      */
     static debugTriggerReward() {
-        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-            game.data.lastRewardTime =
-                Date.now() -
-                GAME_CONFIG.REWARD_INTERVAL * game.data.enhancementEffects.rewardCdMultiplier;
-            this.showRewardChoice();
+        console.log('調試觸發獎勵');
+        
+        if (!game || !game.data) {
+            console.error('遊戲未初始化');
+            return;
+        }
+        
+        try {
+            // 增加待領取獎勵
+            const oldCount = game.data.pendingRewards;
+            game.data.pendingRewards = Math.min(oldCount + 1, game.data.maxPendingRewards || 2);
+            
+            // 生成新獎勵
+            game.generateNewReward();
+            
+            // 更新UI
+            UI.updateRewardStatus();
+            UI.showNotification('調試：強制觸發獎勵！', 'success');
+            
+            console.log(`獎勵觸發成功：${oldCount} → ${game.data.pendingRewards}`);
+            
+        } catch (error) {
+            console.error('觸發獎勵失敗:', error);
         }
     }
 }
-
 // 添加CSS動畫（如果不存在）
 if (typeof document !== 'undefined') {
     const style = document.createElement('style');
