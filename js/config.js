@@ -5,7 +5,7 @@ console.log('📋 config.js 開始載入...');
 // 遊戲基本設定
 const GAME_CONFIG = {
     // 時間設定 (毫秒)
-    REWARD_INTERVAL: 30000,        // 獎勵間隔 (測試用30秒，正式版3600000)
+    REWARD_INTERVAL: 3600000,        // 獎勵間隔 (測試用30秒，正式版3600000)
     AUTOSAVE_INTERVAL: 30000,      // 自動存檔間隔
     WEATHER_CHANGE_INTERVAL: 300000, // 天氣變化間隔 (5分鐘)
     
@@ -29,54 +29,98 @@ const GAME_CONFIG = {
     SAVE_KEY: "mandrakeGameSave"
 };
 
-// 曼德拉草數據配置
+// 曼德拉草數據配置 (平衡調整版 - 高階大幅優勢 + 統一成長率)
 const MANDRAKE_CONFIG = {
-    // 第1階
+    // 第1階 - 基礎效率
     original: { 
-        tier: 1, type: 'normal', name: '原始曼德拉草', icon: '🌱',
-        baseCost: 10, baseProduction: 0.1, costGrowth: 1.15, prodGrowth: 1 
+        tier: 1, type: 'normal', name: '曼德拉草', icon: '🌱',
+        baseCost: 10, baseProduction: 0.1, costGrowth: 1.12, prodGrowth: 1,
+        description: '常見的曼德拉草'
     },
     
-    // 第2階
-    fat: { 
-        tier: 2, type: 'normal', name: '胖曼德拉草', icon: '🟢',
-        baseCost: 50, baseProduction: 1, costGrowth: 1.20, prodGrowth: 1 
-    },
+    // 第2階 - 1.7倍效率
     fire: { 
         tier: 2, type: 'element', name: '火曼德拉草', icon: '🔥',
-        baseCost: 60, baseProduction: 1, costGrowth: 1.22, prodGrowth: 1 
+        baseCost: 60, baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
+        description: '看起來很燙'
     },
     cat: { 
         tier: 2, type: 'animal', name: '貓曼德拉草', icon: '🐱',
-        baseCost: 55, baseProduction: 1, costGrowth: 1.18, prodGrowth: 1 
+        baseCost: 60, baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
+        description: '睡著會發出呼嚕呼嚕聲'
+    },
+    fat: { 
+        tier: 2, type: 'normal', name: '胖曼德拉草', icon: '🟢',
+        baseCost: 60, baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
+        description: '比一般的曼德拉草更加圓潤'
     },
     
-    // 第3階
-    thin: { 
-        tier: 3, type: 'normal', name: '瘦曼德拉草', icon: '🟡',
-        baseCost: 200, baseProduction: 10, costGrowth: 1.25, prodGrowth: 1 
-    },
+    // 第3階 - 3.3倍效率
     water: { 
         tier: 3, type: 'element', name: '水曼德拉草', icon: '💧',
-        baseCost: 250, baseProduction: 10, costGrowth: 1.28, prodGrowth: 1 
+        baseCost: 300, baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
+        description: '不知道為什麼很受歡迎'
     },
-    bird: { 
-        tier: 3, type: 'animal', name: '鳥曼德拉草', icon: '🐦',
-        baseCost: 220, baseProduction: 10, costGrowth: 1.23, prodGrowth: 1 
+    dried: { 
+        tier: 3, type: 'normal', name: '枯乾曼德拉草', icon: '🟤',
+        baseCost: 300, baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
+        description: '好幾天沒喝水'
+    },
+    rabbit: { 
+        tier: 3, type: 'animal', name: '兔曼德拉草', icon: '🐰',
+        baseCost: 300, baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
+        description: '主食是牧草'
     },
     
-    // 第4階 (未來擴展)
-    giant: { 
-        tier: 4, type: 'normal', name: '巨型曼德拉草', icon: '🟤',
-        baseCost: 1000, baseProduction: 100, costGrowth: 1.30, prodGrowth: 1
+    // 第4階 - 8.3倍效率
+    wind: { 
+        tier: 4, type: 'element', name: '風曼德拉草', icon: '💨',
+        baseCost: 1200, baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
+        description: '覺得自己是一種反向噴射器'
     },
-    lightning: { 
-        tier: 4, type: 'element', name: '雷曼德拉草', icon: '⚡',
-        baseCost: 1200, baseProduction: 12.0, costGrowth: 1.32, prodGrowth: 1
+    mouse: { 
+        tier: 4, type: 'animal', name: '鼠曼德拉草', icon: '🐭',
+        baseCost: 1200, baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
+        description: '小巧靈活的曼德拉草'
     },
-    dragon: { 
-        tier: 4, type: 'animal', name: '龍曼德拉草', icon: '🐲',
-        baseCost: 1100, baseProduction: 100, costGrowth: 1.31, prodGrowth: 1
+    mini: { 
+        tier: 4, type: 'normal', name: '迷你曼德拉草', icon: '🟡',
+        baseCost: 1200, baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
+        description: '體型嬌小但產量驚人'
+    },
+    
+    // 第5階 - 25倍效率
+    electric: { 
+        tier: 5, type: 'element', name: '電曼德拉草', icon: '⚡',
+        baseCost: 4000, baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
+        description: '帶有強烈電流的曼德拉草'
+    },
+    fear: { 
+        tier: 5, type: 'normal', name: '恐懼曼德拉草', icon: '😨',
+        baseCost: 4000, baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
+        description: '散發著不安氣息的曼德拉草'
+    },
+    bear: { 
+        tier: 5, type: 'animal', name: '熊曼德拉草', icon: '🐻',
+        baseCost: 4000, baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
+        description: '體型巨大且力大無窮'
+    },
+    
+    // 第6階 - 83.3倍效率！
+    ice: { 
+        tier: 6, type: 'element', name: '冰曼德拉草', icon: '🧊',
+        baseCost: 12000, baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
+        description: '散發著極寒氣息的曼德拉草'
+    },
+    white: { 
+        tier: 6, type: 'normal', name: '白曼德拉草', icon: '⚪',
+        baseCost: 12000, baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
+        description: '純白無瑕的神秘曼德拉草'
+    },
+    bat: { 
+        tier: 6, type: 'animal', name: '蝙蝠曼德拉草', icon: '🦇',
+        baseCost: 12000, baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
+        description: '夜行性的神秘曼德拉草'
     }
 };
 
@@ -85,7 +129,8 @@ const TIER_UNLOCK_CONDITIONS = {
     2: () => Game.getTotalMandrakeCount() >= 10,
     3: () => Game.getTotalMandrakeCount() >= 50,
     4: () => Game.getTotalMandrakeCount() >= 200,
-    5: () => Game.getTotalMandrakeCount() >= 500
+    5: () => Game.getTotalMandrakeCount() >= 500,
+    6: () => Game.getTotalMandrakeCount() >= 1000
 };
 
 // 天氣系統配置

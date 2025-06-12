@@ -29,6 +29,8 @@ class Game {
             // 天氣系統
             weather: 'sunny',
             weatherLocked: null,
+            weatherTimer: 300,  
+            lastWeatherChange: Date.now(), 
             
             // 特殊效果
             freeWeatherReroll: false,
@@ -151,10 +153,33 @@ class Game {
             this.saveGame();
         }, GAME_CONFIG.AUTOSAVE_INTERVAL);
 
+        // 天氣倒數循環（每秒更新）
+        this.intervals.weatherTimer = setInterval(() => {
+            this.updateWeatherTimer();
+        }, 1000);
+
         // 天氣變化循環
         this.intervals.weather = setInterval(() => {
             this.changeWeather();
         }, GAME_CONFIG.WEATHER_CHANGE_INTERVAL);
+    }
+
+    updateWeatherTimer() {
+        if (!this.data) return;
+        
+        // 倒數減1
+        if (this.data.weatherTimer > 0) {
+            this.data.weatherTimer--;
+        } else {
+            // 時間到了，重置倒數
+            this.data.weatherTimer = GAME_CONFIG.WEATHER_CHANGE_INTERVAL / 1000; // 轉換為秒
+            this.data.lastWeatherChange = Date.now();
+        }
+        
+        // 更新UI顯示
+        if (typeof UI !== 'undefined') {
+            UI.updateWeatherTimer();
+        }
     }
 
     /**
@@ -856,9 +881,15 @@ class Game {
         if (newWeather !== this.data.weather) {
             this.data.weather = newWeather;
             const weatherConfig = WEATHER_CONFIG[newWeather];
+            
+            // 🔧 重置倒數計時器
+            this.data.weatherTimer = GAME_CONFIG.WEATHER_CHANGE_INTERVAL / 1000;
+            this.data.lastWeatherChange = Date.now();
+            
             if (typeof UI !== 'undefined') {
                 UI.showNotification(`天氣變為 ${weatherConfig.name}！`, 'info');
                 UI.updateWeather();
+                UI.updateWeatherTimer(); // 🔧 添加：更新倒數顯示
             }
         }
     }
@@ -867,21 +898,55 @@ class Game {
      * 重骰天氣
      */
     rerollWeather() {
+        // 🔧 檢查是否被鎖定
+        if (this.data.weatherLocked && Date.now() < this.data.weatherLocked) {
+            if (typeof UI !== 'undefined') {
+                UI.showNotification('天氣被鎖定中，無法重骰！', 'warning');
+            }
+            return;
+        }
+        
         const cost = this.data.freeWeatherReroll ? 0 : 100;
         
         if (this.data.fruit >= cost) {
             this.data.fruit -= cost;
             this.data.freeWeatherReroll = false;
             
-            this.changeWeather();
+            // 🔧 獲取可用天氣（包含當前天氣，保持隨機性）
+            const availableWeathers = Object.entries(WEATHER_CONFIG)
+                .filter(([type, config]) => !config.isSpecial)
+                .map(([type]) => type);
             
+            // 🔧 隨機選擇天氣（可能相同）
+            const oldWeather = this.data.weather;
+            const newWeather = availableWeathers[Math.floor(Math.random() * availableWeathers.length)];
+            
+            // 🔧 更新天氣
+            this.data.weather = newWeather;
+            
+            // 🔧 重置倒數計時器
+            this.data.weatherTimer = GAME_CONFIG.WEATHER_CHANGE_INTERVAL / 1000;
+            this.data.lastWeatherChange = Date.now();
+            
+            const weatherConfig = WEATHER_CONFIG[newWeather];
             const message = cost === 0 ? '免費重骰天氣成功！' : '天氣已重新隨機！';
+            
             if (typeof UI !== 'undefined') {
-                UI.showNotification(message, 'success');
+                // 🔧 顯示重骰結果
+                if (oldWeather === newWeather) {
+                    UI.showNotification(`${message} 維持 ${weatherConfig.name}`, 'success');
+                } else {
+                    UI.showNotification(`${message} 變為 ${weatherConfig.name}！`, 'success');
+                }
+                
+                UI.updateWeather();
+                UI.updateWeatherTimer();
                 UI.updateAll();
             }
             
             this.saveGame();
+            console.log(`天氣重骰：${oldWeather} → ${newWeather}`);
+            
         } else {
             if (typeof UI !== 'undefined') {
                 UI.showNotification('果實不足！', 'error');
@@ -1091,6 +1156,25 @@ class Game {
         if (typeof this.data.ownedMandrakes !== 'object') {
             this.data.ownedMandrakes = { original: 0 };
         }
+
+         // 🔧 添加：驗證天氣倒數數據
+        if (typeof this.data.weatherTimer !== 'number' || this.data.weatherTimer < 0) {
+            this.data.weatherTimer = 300; // 默認5分鐘
+        }
+        
+        if (typeof this.data.lastWeatherChange !== 'number') {
+            this.data.lastWeatherChange = Date.now();
+        }
+        
+        // 🔧 添加：載入存檔時同步倒數
+        if (this.data.lastWeatherChange) {
+            const timePassed = Math.floor((Date.now() - this.data.lastWeatherChange) / 1000);
+            const intervalSeconds = GAME_CONFIG.WEATHER_CHANGE_INTERVAL / 1000;
+            
+            // 計算應該剩餘的時間
+            const remainingTime = intervalSeconds - (timePassed % intervalSeconds);
+            this.data.weatherTimer = Math.max(0, remainingTime);
+        }
         
         // 驗證臨時加成
         if (typeof this.data.tempBoosts !== 'object') {
@@ -1275,7 +1359,6 @@ class Game {
             delete this.intervals[name];
         }
     }
-
     /**
      * 獲取遊戲統計信息
      */

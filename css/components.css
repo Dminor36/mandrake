@@ -7,19 +7,20 @@
 
 .plant-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: 15px;
-    margin: 10px 0;
+    margin: 0px 0;
     background: rgba(255,255,255,0.9);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 0px;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     border-left: 4px solid transparent;
+    position: relative;
+    overflow: hidden;
+    gap: 10px;
 }
 
 .plant-row:hover {
-    transform: translateX(5px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
@@ -41,19 +42,100 @@
     border-left-color: #ffc107;
 }
 
-.plant-info {
-    flex-grow: 1;
-    margin-right: 15px;
+/* 進度條效果 */
+.plant-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(39, 174, 96, 0.15);
+    transition: width 0.5s ease;
+    z-index: 1;
+    border-radius: 0px 0 0 0px;
+    width: var(--progress-width, 0%);
+}
+
+.plant-row.normal::before {
+    background: rgba(40, 167, 69, 0.15);
+}
+
+.plant-row.element::before {
+    background: rgba(220, 53, 69, 0.15);
+}
+
+.plant-row.animal::before {
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.plant-row.high-progress::before {
+    background: rgba(40, 167, 69, 0.25);
+    animation: progressGlow 3s ease-in-out infinite alternate;
+}
+
+.plant-row.element.high-progress::before {
+    background: rgba(220, 53, 69, 0.25);
+}
+
+.plant-row.animal.high-progress::before {
+    background: rgba(255, 193, 7, 0.25);
+}
+
+@keyframes progressGlow {
+    from {
+        box-shadow: inset 0 0 2px rgba(40, 167, 69, 0.3);
+    }
+    to {
+        box-shadow: inset 0 0 5px rgba(40, 167, 69, 0.6);
+    }
+}
+
+/* 確保內容在進度條上方 */
+.plant-row > * {
+    position: relative;
+    z-index: 2;
+    overflow: visible;
+}
+
+/* ========== 植物信息區域 ========== */
+.plant-count-section {
+    flex: 0 0 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.plant-count-large {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c3e50;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+}
+
+.plant-info-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    min-width: 0;
+    padding-right: 8px;
 }
 
 .plant-name {
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 1.2em;
     margin-bottom: 2px;
     color: #2c3e50;
     display: flex;
     align-items: center;
     gap: 8px;
+    line-height: 1.3;
+    max-height: 2.6em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
 }
 
 .plant-icon {
@@ -69,97 +151,162 @@
 }
 
 .plant-production {
-    color: #666;
+    color: #27ae60;
     font-size: 0.9em;
     margin-top: 0px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========== 購買按鈕區域 ========== */
+.plant-buy-section {
+    flex: 0 0 50px;
+    max-width: 50px;
+    min-width: 50px;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    position: relative;
+    margin-right: 3px;
 }
 
 .plant-buy-btn {
-    min-width: 40px;
-    white-space: nowrap;
-}
-
-/* ========== 農場格子 ========== */
-.farm-slot {
-    background: rgba(139, 69, 19, 0.3);
-    border: 2px dashed rgba(139, 69, 19, 0.5);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    min-height: 50px;
-}
-
-.farm-slot.empty {
-    opacity: 0.6;
-    cursor: pointer;
-}
-
-.farm-slot.empty:hover {
-    opacity: 0.8;
-    background: rgba(139, 69, 19, 0.4);
-}
-
-.farm-slot.occupied {
-    background: rgba(34, 139, 34, 0.4);
-    border: 2px solid rgba(34, 139, 34, 0.8);
-    animation: plantGrow 0.6s ease-out;
-}
-
-@keyframes plantGrow {
-    0% { 
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% { 
-        transform: scale(1.2);
-        opacity: 0.8;
-    }
-    100% { 
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.mandrake-visual {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    font-size: 28px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.mandrake-image {
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.mandrake-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    background: linear-gradient(45deg, #667eea, #764ba2);
     color: white;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
+    border: none;
+    padding: 3px 2px;
+    border-radius: 0px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.7em;
+    transition: all 0.3s ease;
+    width: 70px;
+    height: 50px;
+    min-width: 70px;
+    max-width: 80px;
+    position: relative;
+    line-height: 1;
+    text-align: center;
+    white-space: normal;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+}
+
+.plant-buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.plant-buy-btn:disabled {
+    background: #bdc3c7;
+    color: #151818;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+    border: 1px solid #95a5a6;
+}
+
+.plant-buy-btn:disabled:hover {
+    background: #bdc3c7;
+    transform: none;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.plant-buy-btn div {
+    font-size: 0.85em;
+    line-height: 1;
+    margin: 3px 0;
+}
+
+/* ========== 懸停提示 ========== */
+.hover-tooltip {
+    position: absolute;
+    top: 0;
+    right: 120%;
+    background: rgba(53, 53, 53, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75em;
+    white-space: nowrap;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    min-width: 150px;
+}
+
+.hover-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-left-color: rgba(53, 53, 53, 0.95);
+}
+
+.plant-buy-btn:hover .hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ========== 批量購買控制 ========== */
+.bulk-buy-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0px;
+    margin-top: 10px;
+}
+
+.bulk-label {
+    font-size: 0.9em;
+    color: #666;
     font-weight: bold;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.bulk-buttons {
+    display: flex;
+    background: rgba(255,255,255,0.8);
+    border-radius: 0px;
+    padding: 0px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bulk-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 0px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #666;
+    transition: all 0.3s ease;
+    min-width: 50px;
+}
+
+.bulk-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.bulk-btn.active {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* ========== 重生系統 ========== */
@@ -169,6 +316,7 @@
     border-radius: 15px;
     text-align: center;
     border: 2px solid rgba(255,255,255,0.3);
+    margin-bottom: 20px;
 }
 
 .rebirth-section h4 {
@@ -200,6 +348,142 @@
     padding: 12px 30px;
 }
 
+/* ========== 獎勵系統 ========== */
+.reward-count {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.pending-count {
+    color: #d63031;
+    font-size: 1.2em;
+}
+
+.reward-timer {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.claim-reward-btn {
+    background: linear-gradient(45deg, #00b894, #00a085);
+    padding: 10px 15px;
+    font-size: 0.9em;
+    min-width: 100px;
+    position: relative;
+}
+
+.claim-reward-btn:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.claim-reward-btn.has-rewards {
+    animation: rewardPulse 2s infinite;
+}
+
+@keyframes rewardPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.reward-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* ========== 強化系統 ========== */
+
+
+.enhancement-btn.has-enhancement {
+    background: linear-gradient(45deg, #e74c3c, #c0392b) 
+}
+
+.enhancement-btn.has-enhancement:hover {
+    background: linear-gradient(45deg, #ec7063, #d5454d) 
+}
+
+.enhancement-badge {
+    position: absolute;
+    top: -8px; /* 🔧 稍微調高一點 */
+    right: -8px; /* 🔧 稍微調右一點 */
+    background: #ff3838;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 10; /* 🔧 確保在最上層 */
+    pointer-events: none; /* 🔧 不影響按鈕點擊 */
+}
+
+@keyframes enhancementPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+    }
+    50% { 
+        transform: scale(1.05); 
+        box-shadow: 0 0 25px rgba(231, 76, 60, 0.8);
+    }
+}
+
+.enhancement-progress {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.progress-label {
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.enhancement-hint {
+    font-size: 0.85em;
+    color: #666;
+    text-align: center;
+    margin: 10px 0 0 0;
+    font-style: italic;
+}
+
+
 /* ========== 彈窗系統 ========== */
 .modal-overlay {
     position: fixed;
@@ -207,12 +491,12 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.2);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 2000;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(0px);
 }
 
 .modal-overlay.show {
@@ -236,6 +520,7 @@
     overflow-y: auto;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
+    margin-left: 300px;
 }
 
 @keyframes modalSlideIn {
@@ -258,78 +543,8 @@
     font-size: 1.5em;
     margin: 0;
 }
-/* 獎勵狀態區域 */
-.reward-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
-    padding: 15px 20px;
-    border-radius: 15px;
-    border: 2px solid rgba(255,255,255,0.3);
-    margin-bottom: 20px;
-}
 
-.reward-info {
-    flex-grow: 1;
-}
-
-.reward-count {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.pending-count {
-    color: #d63031;
-    font-size: 1.2em;
-}
-
-.reward-timer {
-    color: #666;
-    font-size: 0.9em;
-}
-
-.claim-reward-btn {
-    background: linear-gradient(45deg, #00b894, #00a085);
-    padding: 10px 20px;
-    font-size: 1em;
-    min-width: 120px;
-    position: relative;
-}
-
-.claim-reward-btn:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-}
-
-.claim-reward-btn.has-rewards {
-    animation: rewardPulse 2s infinite;
-}
-
-@keyframes rewardPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-/* 獎勵數量徽章 */
-.reward-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff6b6b;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-}
-
-/* ========== 獎勵選項 ========== */
+/* ========== 獎勵選擇 ========== */
 .reward-options {
     display: flex;
     gap: 15px;
@@ -399,263 +614,7 @@
     margin: 0;
 }
 
-/* ========== 通知系統 ========== */
-.notification-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 3000;
-    pointer-events: none;
-}
-
-.notification {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    animation: notificationSlideIn 0.3s ease-out, notificationFadeOut 0.3s ease-in 2.7s;
-    pointer-events: auto;
-    max-width: 300px;
-    word-wrap: break-word;
-}
-
-@keyframes notificationSlideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes notificationFadeOut {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-    }
-}
-
-.notification.success {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-}
-
-.notification.info {
-    background: linear-gradient(45deg, #2196F3, #1976D2);
-}
-
-.notification.warning {
-    background: linear-gradient(45deg, #ff9800, #f57c00);
-}
-
-.notification.error {
-    background: linear-gradient(45deg, #f44336, #d32f2f);
-}
-
-/* ========== 滾動條樣式 ========== */
-.mandrake-list::-webkit-scrollbar {
-    width: 8px;
-}
-
-.mandrake-list::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.1);
-    border-radius: 4px;
-}
-
-.mandrake-list::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border-radius: 4px;
-}
-
-.mandrake-list::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #5a6fd8, #6a4190);
-}
-
-/* ========== 載入動畫 ========== */
-.loading {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* 數字更新動畫 */
-@keyframes numberUpdate {
-    0% {
-        transform: scale(1);
-        color: inherit;
-    }
-    50% {
-        transform: scale(1.1);
-        color: #4CAF50;
-        text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-    }
-    100% {
-        transform: scale(1);
-        color: inherit;
-        text-shadow: none;
-    }
-}
-
-/* 資源數值樣式增強 */
-.resource-value {
-    font-size: 2em;
-    font-weight: bold;
-    color: #2c3e50;
-    transition: all 0.3s ease;
-    font-family: 'Courier New', monospace; /* 等寬字體，數字對齊更好看 */
-}
-
-/* 產量/秒的特殊樣式 */
-#production-rate {
-    color: #27ae60;
-}
-
-/* 天賦點的特殊樣式 */
-#talent-points {
-    color: #d63031;
-}
-
-/* 果實數量的特殊樣式 */
-#fruit {
-    color: #e67e22;
-}
-
-/* ========== 升級效益顯示 ========== */
-.plant-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    margin: 10px 0;
-    background: rgba(255,255,255,0.9);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-}
-
-.plant-upgrade-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
-}
-
-.upgrade-benefit {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #27ae60;
-    background: rgba(39, 174, 96, 0.1);
-    padding: 2px 8px;
-    border-radius: 12px;
-    border: 1px solid rgba(39, 174, 96, 0.3);
-    min-width: 80px;
-    text-align: center;
-}
-
-.plant-buy-btn {
-    min-width: 120px;
-    white-space: nowrap;
-}
-
-/* 響應式調整 */
-@media (max-width: 768px) {
-    .plant-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .plant-upgrade-info {
-        width: 100%;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-
-/* ========== 批量購買控制 ========== */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #ddd;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.bulk-buy-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.bulk-label {
-    font-size: 0.9em;
-    color: #666;
-    font-weight: bold;
-}
-
-.bulk-buttons {
-    display: flex;
-    background: rgba(255,255,255,0.8);
-    border-radius: 8px;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.bulk-btn {
-    background: transparent;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #666;
-    transition: all 0.3s ease;
-    min-width: 50px;
-}
-
-.bulk-btn:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
-}
-
-.bulk-btn.active {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* 響應式調整 */
-@media (max-width: 768px) {
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .bulk-buy-controls {
-        width: 100%;
-        justify-content: space-between;
-    }
-}
-
-/* ========== 強化選擇彈窗 ========== */
+/* ========== 強化選擇 ========== */
 .enhancement-modal-content {
     max-width: 800px;
     width: 95%;
@@ -744,7 +703,6 @@
     margin: 0;
 }
 
-/* 類別顏色邊框 */
 .enhancement-option.stable {
     border-color: #27ae60;
 }
@@ -761,19 +719,27 @@
     border-color: #9b59b6;
 }
 
-/* 響應式調整 */
-@media (max-width: 768px) {
-    .enhancement-options {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .enhancement-option {
-        max-width: none;
-        min-width: auto;
-    }
+/* ========== 統計模態框關閉按鈕 ========== */
+.stats-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    color: #666;
+    font-size: 20px;
+    padding: 5px;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
 }
 
+.stats-close-btn:hover {
+    color: #333;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ========== 統計系統 ========== */
 .stats-modal {
     max-width: 800px;
     max-height: 80vh;
@@ -833,686 +799,12 @@
     font-size: 0.9em;
 }
 
-/* ========== 強化類別顯示樣式 ========== */
-
-/* 類別標題 */
-.formula-line.category-header {
-    background: rgba(52, 152, 219, 0.15);
-    margin: 10px -15px 5px -15px;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95em;
-    border-left: 3px solid #3498db;
-}
-
-/* 強化項目樣式 */
-.formula-line.factor.enhancement {
-    margin-left: 10px;
-    border-left: 2px solid rgba(52, 152, 219, 0.3);
-    padding-left: 10px;
-    background: rgba(52, 152, 219, 0.05);
-}
-
-.formula-line.factor.weather {
-    border-left: 2px solid rgba(39, 174, 96, 0.3);
-    padding-left: 5px;
-    background: rgba(39, 174, 96, 0.05);
-}
-
-.formula-line.factor.temp {
-    border-left: 2px solid rgba(230, 126, 34, 0.3);
-    padding-left: 5px;
-    background: rgba(230, 126, 34, 0.05);
-}
-
-.formula-line.factor.other {
-    border-left: 2px solid rgba(155, 89, 182, 0.3);
-    padding-left: 5px;
-    background: rgba(155, 89, 182, 0.05);
-}
-
-/* 強化名稱特殊樣式 */
-.formula-line.factor.enhancement .factor-name {
-    font-size: 0.85em;
-    color: #2980b9;
-}
-
-/* 強化等級顯示 */
-.formula-line.factor.enhancement .factor-name {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* 如果強化項目太多，可以設置最大高度和滾動 */
-.formula-breakdown {
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-/* 美化滾動條 */
-.formula-breakdown::-webkit-scrollbar {
-    width: 6px;
-}
-
-.formula-breakdown::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.1);
-    border-radius: 3px;
-}
-
-.formula-breakdown::-webkit-scrollbar-thumb {
-    background: rgba(52, 152, 219, 0.5);
-    border-radius: 3px;
-}
-
-.formula-breakdown::-webkit-scrollbar-thumb:hover {
-    background: rgba(52, 152, 219, 0.7);
-}
-
-/* ========== 曼德拉草詳細計算卡片 ========== */
-.mandrake-details-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-.mandrake-detail-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
-    border-radius: 15px;
-    margin-bottom: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border-left: 5px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.mandrake-detail-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-/* 類型邊框顏色 */
-.mandrake-detail-card.normal { border-left-color: #28a745; }
-.mandrake-detail-card.element { border-left-color: #dc3545; }
-.mandrake-detail-card.animal { border-left-color: #ffc107; }
-.mandrake-detail-card.rare { border-left-color: #6f42c1; }
-.mandrake-detail-card.legendary { border-left-color: #fd7e14; }
-
-/* 卡片頭部 */
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid rgba(0,0,0,0.1);
-}
-
-.mandrake-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.mandrake-icon {
-    font-size: 3em;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.mandrake-title h4 {
-    margin: 0;
-    color: #2c3e50;
-    font-size: 1.4em;
-}
-
-.mandrake-type {
-    color: #666;
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-
-.current-production {
-    text-align: right;
-}
-
-.production-label {
-    display: block;
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 5px;
-}
-
-.production-value {
-    display: block;
-    color: #27ae60;
-    font-size: 1.8em;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-}
-
-/* 卡片主體 */
-.card-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-/* 計算區域 */
-.calculation-section h5,
-.investment-section h5 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    font-size: 1.1em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.formula-breakdown {
-    background: rgba(0,0,0,0.05);
-    border-radius: 10px;
-    padding: 15px;
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-.formula-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-.formula-line:last-child {
-    border-bottom: none;
-}
-
-.formula-line.base {
-    background: rgba(52, 152, 219, 0.1);
-    margin: -15px -15px 5px -15px;
-    padding: 10px 15px;
-    border-radius: 10px 10px 0 0;
-}
-
-.formula-line.factor {
-    font-size: 0.9em;
-    color: #666;
-}
-
-.formula-line.total {
-    background: rgba(39, 174, 96, 0.1);
-    margin: 5px -15px;
-    padding: 10px 15px;
-    font-weight: bold;
-}
-
-.formula-line.final {
-    background: rgba(230, 126, 34, 0.1);
-    margin: 5px -15px -15px -15px;
-    padding: 10px 15px;
-    border-radius: 0 0 10px 10px;
-    font-weight: bold;
-    font-size: 1.1em;
-}
-
-.factor-name {
-    color: #2c3e50;
-}
-
-.factor-value {
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-}
-
-/* 投資分析區域 */
-.investment-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-}
-
-.investment-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background: rgba(255,255,255,0.6);
-    border-radius: 8px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.item-label {
-    color: #666;
-    font-size: 0.9em;
-}
-
-.item-value {
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    color: #2c3e50;
-}
-
-/* 效率等級顏色 */
-.item-value.efficiency-excellent { color: #27ae60; }
-.item-value.efficiency-good { color: #f39c12; }
-.item-value.efficiency-average { color: #e67e22; }
-.item-value.efficiency-poor { color: #e74c3c; }
-
-/* 強化分類樣式 */
-.formula-line.category-header {
-    background: rgba(52, 152, 219, 0.15);
-    margin: 10px -15px 5px -15px;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95em;
-    border-left: 3px solid #3498db;
-}
-
-.formula-line.factor.enhancement {
-    margin-left: 10px;
-    border-left: 2px solid rgba(52, 152, 219, 0.3);
-    padding-left: 10px;
-    background: rgba(52, 152, 219, 0.05);
-}
-
-.formula-line.factor.weather {
-    border-left: 2px solid rgba(39, 174, 96, 0.3);
-    padding-left: 5px;
-    background: rgba(39, 174, 96, 0.05);
-}
-
-.formula-line.factor.temp {
-    border-left: 2px solid rgba(230, 126, 34, 0.3);
-    padding-left: 5px;
-    background: rgba(230, 126, 34, 0.05);
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .card-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .card-body {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .mandrake-icon {
-        font-size: 2.5em;
-        width: 50px;
-        height: 50px;
-    }
-    
-    .production-value {
-        font-size: 1.5em;
-    }
-}
-
-@media (max-width: 480px) {
-    .mandrake-detail-card {
-        padding: 15px;
-    }
-    
-    .mandrake-info {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
-/* 🔧 新增強化系統樣式 */
-.enhancement-btn {
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.enhancement-btn.has-enhancement {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-    animation: enhancementPulse 2s infinite;
-    box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
-}
-
-.enhancement-btn:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-    animation: none;
-    box-shadow: none;
-}
-
-.enhancement-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff3838;
-    color: white;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.enhancement-progress {
-    margin-bottom: 15px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.progress-label {
-    margin-bottom: 8px;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-}
-
-.enhancement-hint {
-    font-size: 0.85em;
-    color: #666;
-    text-align: center;
-    margin: 10px 0 0 0;
-    font-style: italic;
-}
-
-@keyframes enhancementPulse {
-    0%, 100% { 
-        transform: scale(1); 
-        box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
-    }
-    50% { 
-        transform: scale(1.05); 
-        box-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
-    }
-}
-
-/* ========== 移除彈窗的CSS樣式 ========== */
-
-/* 隱藏所有模態框 */
-.modal-overlay {
-    display: none !important;
-}
-
-/* 內嵌式獎勵選擇 */
-.inline-reward-choices {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    border: 2px solid #f39c12;
-    border-radius: 15px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.choices-header h4 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    text-align: center;
-}
-
-.choices-options {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.inline-reward-option {
-    flex: 1;
-    min-width: 200px;
-    padding: 15px;
-    background: rgba(255,255,255,0.9);
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.inline-reward-option:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    border-color: #f39c12;
-}
-
-.option-icon {
-    font-size: 2em;
-    min-width: 50px;
-    text-align: center;
-}
-
-.option-content {
-    flex: 1;
-}
-
-.option-name {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.option-desc {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.option-rarity {
-    font-size: 0.8em;
-    font-weight: bold;
-    padding: 2px 8px;
-    border-radius: 12px;
-    display: inline-block;
-}
-
-.option-rarity.common { 
-    background: #e0e0e0; 
-    color: #666; 
-}
-
-.option-rarity.rare { 
-    background: #e3f2fd; 
-    color: #1976d2; 
-}
-
-.option-rarity.epic { 
-    background: #f3e5f5; 
-    color: #7b1fa2; 
-}
-
-.option-rarity.legendary { 
-    background: #fff3e0; 
-    color: #f57c00;
-    animation: legendaryShimmer 2s ease-in-out infinite;
-}
-
-@keyframes legendaryShimmer {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-}
-
-/* 內嵌式強化選擇 */
-.inline-enhancement-choices {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.inline-enhancement-option {
-    padding: 15px;
-    background: rgba(255,255,255,0.9);
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.inline-enhancement-option:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-}
-
-.inline-enhancement-option.stable {
-    border-left-color: #27ae60;
-}
-
-.inline-enhancement-option.luck {
-    border-left-color: #e74c3c;
-}
-
-.inline-enhancement-option.reward {
-    border-left-color: #3498db;
-}
-
-.inline-enhancement-option.combo {
-    border-left-color: #9b59b6;
-}
-
-.enhancement-icon {
-    font-size: 2em;
-    min-width: 50px;
-    text-align: center;
-}
-
-.enhancement-content {
-    flex: 1;
-}
-
-.enhancement-name {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.enhancement-desc {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.enhancement-category {
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #888;
-}
-
-/* 內嵌式統計 */
-.inline-stats-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255,255,255,0.98);
-    border: 3px solid #3498db;
-    border-radius: 20px;
-    padding: 25px;
-    max-width: 500px;
-    width: 90%;
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    backdrop-filter: blur(10px);
-}
-
-.stats-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
-}
-
-.stats-header h3 {
-    margin: 0;
-    color: #2c3e50;
-}
-
-.close-stats {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.close-stats:hover {
-    background: #c0392b;
-    transform: scale(1.1);
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background: rgba(52, 152, 219, 0.1);
-    border-radius: 8px;
-    border-left: 3px solid #3498db;
-}
-
-.stat-label {
-    color: #666;
-    font-weight: bold;
-}
-
-.stat-value {
-    color: #2c3e50;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-}
-
-/* 優化通知系統 - 減少干擾 */
+/* ========== 通知系統 ========== */
 .notification-container {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 2000;
+    z-index: 3000;
     pointer-events: none;
     max-width: 300px;
 }
@@ -1530,7 +822,6 @@
     line-height: 1.3;
 }
 
-/* 縮短通知動畫時間，減少視覺干擾 */
 @keyframes notificationSlideIn {
     from {
         transform: translateX(100%);
@@ -1568,36 +859,125 @@
     background: linear-gradient(45deg, #f44336, #d32f2f);
 }
 
-/* 響應式調整 */
+/* ========== 滾動條樣式 ========== */
+.mandrake-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mandrake-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.mandrake-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
+
+.mandrake-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+/* ========== 載入動畫 ========== */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+.number-update {
+    animation: numberUpdate 0.5s ease-out;
+}
+
+/* ========== 響應式組件調整 ========== */
 @media (max-width: 768px) {
-    .choices-options {
+    .plant-row {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .plant-count-section {
+        flex: none;
+        width: 100%;
+        order: 1;
+    }
+
+    .plant-info-section {
+        flex: none;
+        width: 100%;
+        order: 2;
+        text-align: center;
+    }
+
+    .plant-buy-section {
+        flex: none;
+        width: 100%;
+        order: 3;
+    }
+
+    .plant-buy-btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .bulk-buy-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .bulk-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .enhancement-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .enhancement-option {
+        max-width: none;
+        min-width: auto;
+    }
+
+    .reward-options {
         flex-direction: column;
     }
     
-    .inline-reward-option {
+    .reward-option {
         min-width: auto;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .inline-stats-container {
-        width: 95%;
-        padding: 20px;
     }
 }
 
 @media (max-width: 480px) {
-    .inline-reward-option,
-    .inline-enhancement-option {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
+    .plant-buy-btn {
+        font-size: 0.8em;
+        padding: 8px;
+        height: auto;
     }
-    
-    .option-icon,
-    .enhancement-icon {
-        font-size: 2.5em;
+
+    .modal-content {
+        padding: 20px;
+        width: 95%;
+    }
+
+    .enhancement-option,
+    .reward-option {
+        padding: 15px;
     }
 }

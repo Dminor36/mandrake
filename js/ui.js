@@ -20,6 +20,7 @@ class UI {
         this.updateResources();
         this.updateWeather();
         this.updateWeatherTimer();
+        this.updateWeatherRerollButton(); 
         this.updateMandrakeList();
         this.updateFarmVisual();
         this.updateRebirthInfo();
@@ -93,6 +94,11 @@ class UI {
                 buttonElement.classList.add('has-rewards');
                 buttonElement.textContent = `領取獎勵 (${pendingCount})`;
                 
+                // 🔧 修復：確保onclick事件正確綁定
+                if (!buttonElement.onclick && !buttonElement.getAttribute('onclick')) {
+                    buttonElement.onclick = openRewardSelection;
+                }
+                
                 // 添加獎勵徽章
                 let badge = buttonElement.querySelector('.reward-badge');
                 if (!badge) {
@@ -136,28 +142,43 @@ class UI {
         // 更新重骰成本
         const costElement = document.getElementById('weather-cost');
         if (costElement) costElement.textContent = game.data.freeWeatherReroll ? '免費' : '100';
+    
+        const weatherDisplay = document.getElementById('current-weather');
+    if (!weatherDisplay || !game.data) return;
+    
+        const weather = WEATHER_CONFIG[game.data.weather];
+        if (weather) {
+            weatherDisplay.innerHTML = `
+                <div class="weather-info">
+                    <span class="weather-icon">${weather.icon}</span>
+                    <span class="weather-name">${weather.name}</span>
+                    <small class="weather-effect">${weather.effect}</small>
+                </div>
+            `;
+        }
+
     }
 
     // 🔧 新增天氣刷新倒數計時功能
     static updateWeatherTimer() {
         const timerElement = document.getElementById('weather-refresh-timer');
-        if (!timerElement || !game || !game.data) return;
-
-        // 計算距離下次天氣變化的時間
-        const now = Date.now();
-        const weatherChangeInterval = GAME_CONFIG.WEATHER_CHANGE_INTERVAL; // 5分鐘
-        const lastWeatherChange = game.data.lastWeatherChange || now;
-        const nextWeatherChange = lastWeatherChange + weatherChangeInterval;
-        const remaining = Math.max(0, nextWeatherChange - now);
-
-        if (remaining === 0) {
-            timerElement.textContent = '即將刷新';
+        if (!timerElement || !game.data) return;
+        
+        const seconds = game.data.weatherTimer || 0;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        
+        // 時間緊急時添加視覺效果
+        if (seconds <= 10) {
             timerElement.style.color = '#e74c3c';
+            timerElement.style.fontWeight = 'bold';
+        } else if (seconds <= 30) {
+            timerElement.style.color = '#f39c12';
         } else {
-            const minutes = Math.floor(remaining / 60000);
-            const seconds = Math.floor((remaining % 60000) / 1000);
-            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            timerElement.style.color = '#666';
+            timerElement.style.color = '';
+            timerElement.style.fontWeight = '';
         }
     }
 
@@ -199,6 +220,87 @@ class UI {
 
         // 顯示下一階層解鎖進度
         this.addTierUnlockProgress(container);
+    }
+
+    /**
+     * 🔧 改進：使用遊戲模擬計算產量增加
+     */
+    static calculateProductionIncrease(id, currentCount, purchaseAmount) {
+        if (!game || !game.data) return 0;
+        
+        // 🔧 方法1：使用遊戲現有的individualProductions
+        if (game.individualProductions && game.individualProductions[id]) {
+            const currentSingleProduction = game.individualProductions[id] / Math.max(currentCount, 1);
+            return currentSingleProduction * purchaseAmount;
+        }
+        
+        // 🔧 方法2：模擬遊戲的產量計算邏輯
+        try {
+            // 保存原始狀態
+            const originalCount = game.data.ownedMandrakes[id] || 0;
+            
+            // 計算當前產量
+            game.data.ownedMandrakes[id] = currentCount;
+            const currentProduction = this.getGameCalculatedProduction(id, currentCount);
+            
+            // 計算購買後產量
+            game.data.ownedMandrakes[id] = currentCount + purchaseAmount;
+            const afterProduction = this.getGameCalculatedProduction(id, currentCount + purchaseAmount);
+            
+            // 還原原始狀態
+            game.data.ownedMandrakes[id] = originalCount;
+            
+            return afterProduction - currentProduction;
+        } catch (error) {
+            console.warn('產量計算錯誤:', error);
+            
+            // 🔧 方法3：備用簡單計算
+            const config = MANDRAKE_CONFIG[id];
+            if (config) {
+                let singleProduction = config.baseProduction;
+                
+                // 只加上天氣效果
+                const weatherConfig = WEATHER_CONFIG[game.data.weather];
+                if (weatherConfig && typeof weatherConfig.getMultiplier === 'function') {
+                    singleProduction *= weatherConfig.getMultiplier(config.type);
+                }
+                
+                return singleProduction * purchaseAmount;
+            }
+            
+            return 0;
+        }
+    }
+
+    /**
+     * 🔧 新增：獲取遊戲計算的產量
+     */
+    static getGameCalculatedProduction(id, count) {
+        // 如果遊戲有計算個別產量的函數，優先使用
+        if (typeof game.calculateMandrakeProduction === 'function') {
+            return game.calculateMandrakeProduction(id, count);
+        }
+        
+        // 如果有個別產量記錄，使用比例計算
+        if (game.individualProductions && game.individualProductions[id]) {
+            const currentCount = game.data.ownedMandrakes[id] || 1;
+            const singleProduction = game.individualProductions[id] / Math.max(currentCount, 1);
+            return singleProduction * count;
+        }
+        
+        // 最後備用：基礎計算
+        const config = MANDRAKE_CONFIG[id];
+        if (!config) return 0;
+        
+        let production = config.baseProduction * count;
+        
+        // 天氣效果
+        const weatherConfig = WEATHER_CONFIG[game.data.weather];
+        if (weatherConfig && typeof weatherConfig.getMultiplier === 'function') {
+            production *= weatherConfig.getMultiplier(config.type);
+        }
+        
+        return production;
     }
 
     /**
@@ -254,7 +356,7 @@ class UI {
     }
 
     /**
-     * 🔧 修正：創建曼德拉草行 - 簡化佈局
+     * 🔧 修正：創建曼德拉草行 - 修復產量計算
      */
     static createMandrakeRow(id, config, count, cost, production) {
         const row = document.createElement('div');
@@ -265,8 +367,9 @@ class UI {
 
         // 計算批量購買的成本和收益
         const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
-        const nextProduction = game.calculateSingleMandrakeProduction(id, count + this.currentBulkAmount);
-        const productionIncrease = nextProduction - production;
+        
+        // 🔧 修正：使用新的產量增加計算方法
+        const productionIncrease = this.calculateProductionIncrease(id, count, this.currentBulkAmount);
         
         const formattedIncrease = this.formatNumber(productionIncrease);
         const formattedCost = this.formatNumber(bulkCost);
@@ -275,17 +378,17 @@ class UI {
         // 檢查是否能負擔完整批量
         const canAfford = game.data.fruit >= bulkCost;
         
-        // 🔧 修正：適應更小按鈕的更緊湊文字
+        // 🔧 修正：簡化工具提示，只顯示效率
        const buttonHtml = this.currentBulkAmount > 1 ? 
             `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
             <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
             <div class="hover-tooltip">
-                <div>產量: +${formattedIncrease}/秒</div>
+                <div>+${formattedIncrease}/秒</div>
             </div>` : 
             `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
             <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
             <div class="hover-tooltip">
-                <div>產量: +${formattedIncrease}/秒</div>
+                <div>+${formattedIncrease}/秒</div>
             </div>`;
                 // 計算進度條
         const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
@@ -574,7 +677,7 @@ class UI {
             if (number >= unit.value) {
                 const formatted = (number / unit.value).toFixed(2);
                 // 移除末尾的零
-                return formatted.replace(/\.?0+$/, '') + unit.symbol;
+                return formatted + unit.symbol;
             }
         }
     
@@ -658,43 +761,36 @@ class UI {
                     const id = match[1];
                     const amount = parseInt(match[2]);
                     
-                    let totalCost = 0;
-                    const originalCount = game.data.ownedMandrakes[id] || 0;
-                    for (let i = 0; i < amount; i++) {
-                        // 模擬逐一購買，依序遞增成本
-                        game.data.ownedMandrakes[id] = originalCount + i;
-                        totalCost += game.getCurrentCost(id);
-                    }
-                    // 還原原始持有數量
-                    game.data.ownedMandrakes[id] = originalCount;
-                    
+                    // 🔧 修正：使用正確的批量成本計算
+                    const totalCost = this.calculateBulkCost(id, amount);
                     const canAfford = game.data.fruit >= totalCost;
                     button.disabled = !canAfford;
                     
+                    // 🔧 修正：使用新的產量增加計算方法
+                    const currentCount = game.data.ownedMandrakes[id] || 0;
+                    const productionIncrease = this.calculateProductionIncrease(id, currentCount, amount);
+                    
                     const formattedCost = this.formatNumber(totalCost);
-                    const buttonText = amount > 1 ? 
-                        `種植 ${amount}個 ${formattedCost}` : 
-                        `種植 ${formattedCost}`;
+                    const formattedIncrease = this.formatNumber(productionIncrease);
+                    
+                    // 更新按鈕文字
                     const textDivs = button.querySelectorAll('div:not(.hover-tooltip)');
                     if (textDivs.length >= 2) {
-                        textDivs[0].textContent = amount > 1 ? '種植' : '種植';
+                        textDivs[0].textContent = '種植';
                         textDivs[1].textContent = formattedCost;
+                        
+                        // 更新工具提示
+                        const tooltip = button.querySelector('.hover-tooltip');
+                        if (tooltip) {
+                            tooltip.innerHTML = `<div>+${formattedIncrease}/秒</div>`;
+                        }
                     } else {
                         // 如果結構不符合預期，重新生成整個按鈕內容
-                        button.innerHTML = amount > 1 ? 
-                            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+                        button.innerHTML = `
+                            <div style="font-size: 0.8em; line-height: 0.9;">種植</div>
                             <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
                             <div class="hover-tooltip">
-                                <div>購買 ${amount} 株</div>
-                                <div>成本: ${formattedCost}</div>
-                                <div>產量: +${this.formatNumber((totalCost * 0.1))}/秒</div>
-                            </div>` : 
-                            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-                            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-                            <div class="hover-tooltip">
-                                <div>購買 1 株</div>
-                                <div>成本: ${formattedCost}</div>
-                                <div>產量: +${this.formatNumber((totalCost * 0.1))}/秒</div>
+                                <div>+${formattedIncrease}/秒</div>
                             </div>`;
                     }
                 }
@@ -884,7 +980,7 @@ class UI {
             enhancementButton.disabled = false;
             enhancementButton.classList.add('has-enhancement');
             enhancementButton.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
-            enhancementButton.textContent = `🔮 強化 (${status.pendingCount})`;
+            enhancementButton.textContent = `🔮 強化`;
             
             // 添加強化數量徽章
             let badge = enhancementButton.querySelector('.enhancement-badge');
@@ -1127,16 +1223,51 @@ class UI {
         }
     }
 
-    // 重置強化區域
-static resetEnhancementSection() {
-    // 🔧 修改2：由於強化按鈕已移到遊戲區右上角，此函數不再需要重置UI
-    // 保留函數以免其他地方調用時出錯
-}
+        // 重置強化區域
+    static resetEnhancementSection() {
+        // 🔧 修改2：由於強化按鈕已移到遊戲區右上角，此函數不再需要重置UI
+        // 保留函數以免其他地方調用時出錯
+    }
 
-// 取消強化選擇
-static cancelEnhancementChoice() {
-    // 🔧 修改2：同樣簡化，不再需要重置區域
-}
+    // 取消強化選擇
+    static cancelEnhancementChoice() {
+        // 🔧 修改2：同樣簡化，不再需要重置區域
+    }
+
+    // 更新天氣重骰按鈕狀態
+    static updateWeatherRerollButton() {
+        const button = document.getElementById('reroll-weather-btn');
+        if (!button || !game.data) return;
+        
+        const isLocked = game.data.weatherLocked && Date.now() < game.data.weatherLocked;
+        const cost = game.data.freeWeatherReroll ? 0 : 100;
+        const canAfford = game.data.fruit >= cost;
+        
+        if (isLocked) {
+            // 🔧 天氣被鎖定時
+            button.disabled = true;
+            button.textContent = '被鎖定';
+            button.className = 'btn btn-secondary btn-sm';
+            
+            // 🔧 顯示剩餘鎖定時間
+            const remainingTime = Math.ceil((game.data.weatherLocked - Date.now()) / 60000);
+            button.title = `天氣被鎖定，剩餘 ${remainingTime} 分鐘`;
+            
+        } else if (!canAfford && cost > 0) {
+            // 🔧 果實不足時
+            button.disabled = true;
+            button.textContent = `重骰 (${cost})`;
+            button.className = 'btn btn-outline-danger btn-sm';
+            button.title = '果實不足';
+            
+        } else {
+            // 🔧 正常狀態
+            button.disabled = false;
+            button.className = cost === 0 ? 'btn btn-success btn-sm' : 'btn btn-primary btn-sm';
+            button.textContent = cost === 0 ? '免費重骰' : `重骰 (${cost})`;
+            button.title = cost === 0 ? '免費重骰天氣' : `花費 ${cost} 果實重骰天氣`;
+        }
+    }
 }
 
 // 全局函數（供HTML onclick調用）
@@ -1211,7 +1342,12 @@ window.openRewardSelection = function() {
         return;
     }
     
-    UI.showInlineRewardChoice();
+    // 🔧 修改：使用Rewards系統的模態框
+    if (typeof Rewards !== 'undefined') {
+        Rewards.openRewardSelection();
+    } else {
+        UI.showNotification('獎勵系統未載入', 'error');
+    }
 };
 
 // 暴露UI類供其他模組使用
