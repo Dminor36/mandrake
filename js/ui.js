@@ -51,12 +51,6 @@ class UI {
         this.updateNumberWithAnimation('production-rate', productionRate, true);
         this.updateNumberWithAnimation('talent-points', talentPoints, false);
         
-        // 更新農場使用情況
-        const usedSlots = game.getUsedFarmSlots();
-        const farmUsedElement = document.getElementById('farm-used');
-        if (farmUsedElement) {
-            farmUsedElement.textContent = usedSlots;
-        }
 
         // 🔧 新增：更新進度條
         this.updateProgressBars();
@@ -217,8 +211,6 @@ class UI {
             container.appendChild(row);
         }
 
-        // 顯示下一階層解鎖進度
-        this.addTierUnlockProgress(container);
     }
 
        /**
@@ -507,19 +499,7 @@ class UI {
      * 添加階層解鎖進度
      */
     static addTierUnlockProgress(container) {
-        const nextTier = game.data.currentTier + 1;
-        const unlockCondition = TIER_UNLOCK_CONDITIONS[nextTier];
 
-        if (unlockCondition) {
-            const row = document.createElement('div');
-            row.className = 'plant-row locked';
-
-            const progress = Game.getTotalMandrakeCount();
-            const needed = this.getTierRequirement(nextTier);
-
-            row.innerHTML = `🔒 第${nextTier}階解鎖 (${progress}/${needed} 曼德拉草)`;
-            container.appendChild(row);
-        }
     }
 
     /**
@@ -1487,10 +1467,6 @@ window.showStats = function() {
         <div class="stats-section">
             <h4>🌱 農場狀況</h4>
             <div class="stats-grid">
-                <div class="stats-item">
-                    <span>農場使用率：</span>
-                    <span class="stats-value">${stats.farmUsage}</span>
-                </div>
                 <div class="stats-item">
                     <span>已解鎖品種：</span>
                     <span class="stats-value">${stats.unlockedCount}/${Object.keys(MANDRAKE_CONFIG).length}</span>

@@ -111,7 +111,7 @@
             </div>
             
             <!-- 主要遊戲區域 -->
-            <div class="main-game-area" onclick="clickMandrake()">
+            <div class="main-game-area">
                 <!-- 天氣顯示 -->
                 <div class="weather-display-container">
                     <!-- 左側：菱形天氣名稱 -->
@@ -144,7 +144,7 @@
                 
                 <!-- 曼德拉草圖片 -->
                 <div class="mandrake-display">
-                    <img src="images/mandrake_himself.png" alt="曼德拉草" class="mandrake-image" id="main-mandrake">
+                    <img src="images/mandrake_himself.png" alt="曼德拉草" class="mandrake-image" id="main-mandrake" onmousedown="clickMandrake()" ontouchstart="clickMandrake()">
                 </div>
             </div>
         </div>
@@ -249,15 +249,10 @@
 
         // 點擊曼德拉草功能
         function clickMandrake() {
-            const mandrakeImg = document.getElementById('main-mandrake');
-            if (mandrakeImg) {
-                mandrakeImg.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    mandrakeImg.style.transform = 'scale(1)';
-                }, 150);
+            // 呼叫遊戲的點擊方法
+            if (game && game.clickMandrake) {
+                game.clickMandrake();
             }
-            
-            console.log('曼德拉草被點擊了！');
         }
     </script>
 </body>

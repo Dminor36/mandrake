@@ -488,7 +488,6 @@ function startDebugInfo() {
                 FPS: ${Math.round(1000 / 16.67)}<br>
                 果實: ${stats.totalFruit}<br>
                 產量: ${stats.productionPerSecond.toFixed(2)}/s<br>
-                農場使用: ${stats.farmUsage}<br>
                 當前階層: ${stats.currentTier}<br>
                 天氣: ${stats.currentWeather}<br>
                 活躍效果: ${stats.activeBoosts}<br>

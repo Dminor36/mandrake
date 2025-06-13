@@ -5,6 +5,11 @@ class Game {
         this.data = this.getDefaultGameData();
         this.intervals = {};
         this.isInitialized = false;
+        // 確認解鎖狀態
+        this.lastUnlockCheck = {
+            tier: 1,           // 上次檢查到的最高階層
+            fruitAmount: 0     // 上次檢查時的果實數量
+        };
     }
 
     /**
@@ -13,7 +18,7 @@ class Game {
     getDefaultGameData() {
         return {
             // 基礎資源
-            fruit: 100,
+            fruit: 10,
             talentPoints: 0,
             totalFruitEarned: 0,
             rebirthCount: 0,
@@ -22,9 +27,6 @@ class Game {
             currentTier: 1,
             unlockedMandrakes: ['original'],
             ownedMandrakes: { original: 0 },
-            
-            // 農場系統
-            farmSlots: Array(GAME_CONFIG.FARM_TOTAL_SLOTS).fill(null),
             
             // 天氣系統
             weather: 'sunny',
@@ -90,6 +92,10 @@ class Game {
                 savedProductionVariance: null,
                 savedCostVariance: null
             },
+
+            // 點擊統計數據
+            totalClicks: 0,             // 總點擊次數
+            clickFruitEarned: 0,        // 通過點擊獲得的總果實
             
             // 版本控制
             version: GAME_CONFIG.VERSION,
@@ -1049,12 +1055,7 @@ class Game {
         return Math.floor(Math.sqrt(this.data.totalFruitEarned / GAME_CONFIG.REBIRTH_COST_DIVISOR));
     }
 
-    /**
-     * 獲取已使用的農場格子數量
-     */
-    getUsedFarmSlots() {
-        return this.data.farmSlots.filter(slot => slot !== null).length;
-    }
+
 
     /**
      * 保存遊戲
@@ -1171,10 +1172,6 @@ class Game {
             }
         }
         
-        // 驗證農場格子數量
-        if (!Array.isArray(this.data.farmSlots) || this.data.farmSlots.length !== GAME_CONFIG.FARM_TOTAL_SLOTS) {
-            this.data.farmSlots = Array(GAME_CONFIG.FARM_TOTAL_SLOTS).fill(null);
-        }
         
         // 驗證已解鎖的曼德拉草
         if (!Array.isArray(this.data.unlockedMandrakes) || this.data.unlockedMandrakes.length === 0) {
@@ -1186,7 +1183,7 @@ class Game {
             this.data.ownedMandrakes = { original: 0 };
         }
 
-         // 🔧 添加：驗證天氣倒數數據
+         // 驗證天氣倒數數據
         if (typeof this.data.weatherTimer !== 'number' || this.data.weatherTimer < 0) {
             this.data.weatherTimer = 300; // 默認5分鐘
         }
@@ -1195,7 +1192,7 @@ class Game {
             this.data.lastWeatherChange = Date.now();
         }
         
-        // 🔧 添加：載入存檔時同步倒數
+        // 載入存檔時同步倒數
         if (this.data.lastWeatherChange) {
             const timePassed = Math.floor((Date.now() - this.data.lastWeatherChange) / 1000);
             const intervalSeconds = GAME_CONFIG.WEATHER_CHANGE_INTERVAL / 1000;
@@ -1409,9 +1406,6 @@ class Game {
             unlockedCount: this.data.unlockedMandrakes.length,
             maxTier: Math.max(...Object.values(MANDRAKE_CONFIG).map(config => config.tier)),
             
-            // 農場統計
-            farmUsage: `${this.getUsedFarmSlots()}/${GAME_CONFIG.FARM_TOTAL_SLOTS}`,
-            
             // 天氣統計
             currentWeather: this.data.weather,
             weatherLocked: this.data.weatherLocked ? new Date(this.data.weatherLocked).toLocaleString() : null,
@@ -1420,7 +1414,157 @@ class Game {
             activeBoosts: Object.keys(this.data.tempBoosts).length
         };
     }
+
+
+    /**
+     * 點擊曼德拉草
+     */
+    clickMandrake() {
+        // 視覺效果
+        this.playClickAnimation();
+            
+        // 獲得果實
+        const clickReward = this.getClickReward();
+        this.data.fruit += clickReward;
+        this.data.totalFruitEarned += clickReward;
+            
+        // 更新UI
+        if (typeof UI !== 'undefined') {
+            UI.updateResources();
+        }
+            
+        // 顯示視覺反饋
+        this.showClickReward(clickReward);
+            
+        console.log(`曼德拉草被點擊！獲得 ${clickReward} 果實`);
+    }
+
+    /**
+     * 獲取點擊獎勵數量
+     */
+    getClickReward() {
+        let reward = GAME_CONFIG.CLICK_BASE_REWARD;
+        
+        // 暴擊檢定
+        const isCrit = Math.random() < GAME_CONFIG.CLICK_CRIT_CHANCE;
+        if (isCrit) {
+            reward *= GAME_CONFIG.CLICK_CRIT_MULTIPLIER;
+            return { amount: reward, isCrit: true };
+        }
+        
+        return { amount: reward, isCrit: false };
+    }
+
+    /**
+     * 點擊曼德拉草
+     */
+    clickMandrake() {
+        // 統計點擊次數
+        this.data.totalClicks++;
+        
+        // 視覺效果
+        this.playClickAnimation();
+        
+        // 獲得果實
+        const rewardResult = this.getClickReward();
+        const clickReward = parseFloat(rewardResult.amount.toFixed(2));
+        
+        this.data.fruit += clickReward;
+        this.data.totalFruitEarned += clickReward;
+        this.data.clickFruitEarned += clickReward;
+        
+        // 更新UI
+        if (typeof UI !== 'undefined') {
+            UI.updateResources();
+        }
+        
+        // 顯示視覺反饋（包含暴擊效果）
+        this.showClickReward(clickReward, rewardResult.isCrit);
+               
+        console.log(`點擊獲得 ${clickReward} 果實${rewardResult.isCrit ? ' (暴擊!)' : ''}`);
+    }
+
+    /**
+     * 播放點擊動畫
+     */
+    playClickAnimation() {
+        const mandrakeImg = document.getElementById('main-mandrake');
+        if (mandrakeImg) {
+            mandrakeImg.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                mandrakeImg.style.transform = 'scale(1)';
+            }, GAME_CONFIG.CLICK_ANIMATION_DURATION);
+        }
+    }
+
+    /**
+     * 顯示點擊獎勵視覺效果（增強版）
+     */
+    showClickReward(amount, isCrit = false) {
+        const mandrakeImg = document.getElementById('main-mandrake');
+        if (!mandrakeImg) return;
+        
+        // 創建飛出的數字效果
+        const rewardText = document.createElement('div');
+        rewardText.textContent = `+${amount}`;
+        
+        // 暴擊時的特殊樣式
+        const color = isCrit ? '#FF6B35' : '#4CAF50';  // 暴擊用橘紅色
+        const fontSize = isCrit ? '22px' : '18px';     // 暴擊字體更大
+        const fontWeight = isCrit ? '900' : 'bold';    // 暴擊更粗
+        
+        rewardText.style.cssText = `
+            position: absolute;
+            color: ${color};
+            font-weight: ${fontWeight};
+            font-size: ${fontSize};
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 1s ease-out;
+            opacity: 1;
+            text-shadow: ${isCrit ? '0 0 10px #FF6B35' : 'none'};
+        `;
+        
+        // 定位在曼德拉草附近
+        const rect = mandrakeImg.getBoundingClientRect();
+        rewardText.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+        rewardText.style.top = (rect.top - 20) + 'px';
+        
+        document.body.appendChild(rewardText);
+        
+        // 動畫效果：向上飛出並淡化
+        setTimeout(() => {
+            const flyDistance = isCrit ? '-70px' : '-50px';  // 暴擊飛得更高
+            rewardText.style.transform = `translateY(${flyDistance})`;
+            rewardText.style.opacity = '0';
+        }, 50);
+        
+        // 清理元素
+        setTimeout(() => {
+            if (rewardText.parentNode) {
+                rewardText.parentNode.removeChild(rewardText);
+            }
+        }, GAME_CONFIG.CLICK_REWARD_SHOW_DURATION);
+    }
+
+    /**
+     * 獲取點擊統計信息
+     */
+    getClickStats() {
+        return {
+            totalClicks: this.data.totalClicks,
+            totalEarned: this.data.clickFruitEarned.toFixed(1),
+            averageReward: this.data.totalClicks > 0 ? 
+                        (this.data.clickFruitEarned / this.data.totalClicks).toFixed(3) : 0,
+            baseReward: GAME_CONFIG.CLICK_BASE_REWARD,
+            critChance: (GAME_CONFIG.CLICK_CRIT_CHANCE * 100).toFixed(1) + '%',
+            critMultiplier: GAME_CONFIG.CLICK_CRIT_MULTIPLIER + 'x'
+        };
+    }
+
 }
+
+
 
 // 創建全局遊戲實例
 console.log('🎮 正在創建 Game 實例...');
