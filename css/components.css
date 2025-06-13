@@ -172,6 +172,7 @@
     justify-content: center;
     overflow: visible;
     position: relative;
+    margin-right: 10px;
 
 }
 
@@ -179,8 +180,8 @@
     background: linear-gradient(45deg, #667eea, #764ba2);
     color: white;
     border: none;
-    padding: 0px 0px;
-    border-radius: 0px;
+    padding: 2px 0px;
+    border-radius: 2px;
     cursor: pointer;
     font-weight: bold;
     font-size: 0.7em;
@@ -983,3 +984,30 @@
         padding: 15px;
     }
 }
+
+
+/* 插槽行的基本樣式（灰色主題） */
+.plant-row[data-slot-id] {
+    background: linear-gradient(90deg, rgba(108,117,125,0.1) 0%, rgba(108,117,125,0.05) 100%);
+    border: 2px dashed #999;
+    opacity: 0.8;
+}
+
+/* 插槽按鈕樣式 */
+.plant-row[data-slot-id] .plant-buy-btn {
+    background: linear-gradient(45deg, #6c757d, #5a6268) !important;
+    border: 2px solid #495057;
+    color: white;
+    font-weight: bold;
+}
+
+.plant-row[data-slot-id] .plant-buy-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #174b72, #103153) !important;
+    transform: translateY(-2px);
+}
+
+.plant-row[data-slot-id] .plant-buy-btn:disabled {
+    background: linear-gradient(45deg, #5a6268, #495057) !important;
+    opacity: 0.6;
+}
+

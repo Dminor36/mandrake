@@ -176,7 +176,7 @@ class UI {
     }
 
     /**
-     * 更新曼德拉草列表
+     * 更新曼德拉草列表（支持插槽顯示）
      */
     static updateMandrakeList() {
         const container = document.getElementById('mandrake-list');
@@ -185,32 +185,43 @@ class UI {
             return;
         }
 
-        if (!game || !game.data || !game.data.unlockedMandrakes) {
+        if (!game || !game.data) {
             console.warn('updateMandrakeList: 遊戲數據不完整');
             return;
         }
 
-        console.log('開始更新曼德拉草列表');
-        console.log('已解鎖的曼德拉草:', game.data.unlockedMandrakes);
-
+        console.log('開始更新曼德拉草列表（包含插槽）');
         container.innerHTML = '';
 
-        // 顯示已解鎖的曼德拉草
-        for (const id of game.data.unlockedMandrakes) {
-            const config = MANDRAKE_CONFIG[id];
-            if (!config) {
-                console.error('找不到曼德拉草配置:', id);
-                continue;
+        // 🔧 先顯示已解鎖的曼德拉草
+        if (game.data.unlockedMandrakes) {
+            for (const id of game.data.unlockedMandrakes) {
+                const config = MANDRAKE_CONFIG[id];
+                if (!config) {
+                    console.error('找不到曼德拉草配置:', id);
+                    continue;
+                }
+
+                const count = game.data.ownedMandrakes[id] || 0;
+                const cost = game.getCurrentCost(id);
+                const production = this.calculateMandrakeProduction(id, count);
+
+                const row = this.createMandrakeRow(id, config, count, cost, production);
+                container.appendChild(row);
             }
-
-            const count = game.data.ownedMandrakes[id] || 0;
-            const cost = game.getCurrentCost(id);
-            const production = this.calculateMandrakeProduction(id, count);
-
-            const row = this.createMandrakeRow(id, config, count, cost, production);
-            container.appendChild(row);
         }
 
+        // 🔧 修正：插槽顯示在最後面
+        if (game.data.unconfirmedTierSlots) {
+            for (const slot of game.data.unconfirmedTierSlots) {
+                if (slot.status === 'pending') {
+                    const slotRow = this.createSlotRow(slot);
+                    if (slotRow) {
+                        container.appendChild(slotRow);
+                    }
+                }
+            }
+        }
     }
 
        /**
@@ -382,14 +393,15 @@ class UI {
     }
 
     /**
-     * 🔧 優化：批量更新進度條，避免重複計算
+     * 批量更新進度條，避免重複計算
      */
     static updateProgressBars() {
         if (!game || !game.data) return;
         
         const currentFruit = game.data.fruit;
-        const rows = document.querySelectorAll('.plant-row[data-mandrake-id]');
         
+        // 曼德拉草進度條
+        const rows = document.querySelectorAll('.plant-row[data-mandrake-id]');
         rows.forEach(row => {
             const mandrakeId = row.getAttribute('data-mandrake-id');
             if (mandrakeId) {
@@ -409,6 +421,46 @@ class UI {
                 }
             }
         });
+
+        // 插槽的進度條
+        const slotRows = document.querySelectorAll('.plant-row[data-slot-id]');
+        slotRows.forEach(row => {
+            const slotId = row.getAttribute('data-slot-id');
+            if (slotId) {
+                const progressWidth = this.calculateSlotProgressWidth(slotId, currentFruit);
+                
+                // 更新進度條
+                const currentWidth = parseFloat(row.style.getPropertyValue('--progress-width')) || 0;
+                if (Math.abs(progressWidth - currentWidth) > 1) {
+                    row.style.setProperty('--progress-width', `${progressWidth}%`);
+                    
+                    // 高進度特效
+                    if (progressWidth > 80) {
+                        row.classList.add('high-progress');
+                    } else {
+                        row.classList.remove('high-progress');
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 計算插槽進度條寬度
+     */
+    static calculateSlotProgressWidth(slotId, currentFruit) {
+        // 找到對應的插槽
+        const slot = game.data.unconfirmedTierSlots.find(s => s.id === slotId);
+        if (!slot) return 0;
+        
+        // 獲取插槽的基礎成本
+        const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
+        
+        if (baseCost === 0) return 100; // 避免除以零
+        
+        // 進度 = 當前果實 ÷ 插槽成本，最大100%
+        const progress = Math.min((currentFruit / baseCost) * 100, 100);
+        return progress;
     }
 
     /**
@@ -491,6 +543,79 @@ class UI {
 
         // 設置進度條寬度
         row.style.setProperty('--progress-width', `${progressWidth}%`);
+
+        return row;
+    }
+
+    /**
+     * 🔧 修正：創建插槽行（支持進度條）
+     */
+    static createSlotRow(slot) {
+        const row = document.createElement('div');
+        row.className = 'plant-row normal'; // 使用普通樣式
+        row.setAttribute('data-slot-id', slot.id);
+
+        // 獲取插槽顯示信息
+        const displayInfo = game.getSlotDisplayInfo(slot.id);
+        if (!displayInfo) {
+            console.error('無法獲取插槽顯示信息:', slot.id);
+            return null;
+        }
+
+        const cost = displayInfo.cost;
+        const canAfford = displayInfo.canAfford;
+        const formattedCost = this.formatNumber(cost);
+        
+        // 工具提示內容
+        const tooltipContent = `
+            <div>
+                種植時隨機決定品種
+            </div>
+        `;
+
+        // 🔧 完全按照原本曼德拉草的格式
+        row.innerHTML = `
+            <!-- 左側：大數字顯示數量 (插槽顯示0) -->
+            <div class="plant-count-section">
+                <div class="plant-count-large">0</div>
+            </div>
+            
+            <!-- 中間：曼德拉草信息 -->
+            <div class="plant-info-section">
+                <div class="plant-name">未確認???</div>
+            </div>
+            
+            <!-- 右側：購買按鈕 -->
+            <div class="plant-buy-section">
+                <button class="plant-buy-btn" onclick="buySlot(this, '${slot.id}')" ${!canAfford ? 'disabled' : ''}>
+                    <div style="font-size: 0.8em; line-height: 0.9;">種植</div>
+                    <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
+                    <div class="hover-tooltip">${tooltipContent}</div>
+                </button>
+            </div>
+        `;
+
+        // 🔧 修正：使用灰色樣式，但保持原本的結構
+        row.style.cssText = `
+            background: linear-gradient(90deg, rgba(108,117,125,0.1) 0%, rgba(108,117,125,0.05) 100%);
+            border: 2px dashed #999;
+            opacity: 0.8;
+        `;
+
+        // 🔧 修改文字顏色為灰色
+        const plantName = row.querySelector('.plant-name');
+        const plantProduction = row.querySelector('.plant-production');
+        if (plantName) plantName.style.color = '#666';
+        if (plantProduction) plantProduction.style.color = '#999';
+
+        // 🔧 新增：計算並設定進度條
+        const progressWidth = this.calculateSlotProgressWidth(slot.id, game.data.fruit);
+        row.style.setProperty('--progress-width', `${progressWidth}%`);
+        
+        // 高進度特效
+        if (progressWidth > 80) {
+            row.classList.add('high-progress');
+        }
 
         return row;
     }
@@ -800,6 +925,31 @@ class UI {
                             
                             
                             tooltip.innerHTML = tooltipContent;
+                        }
+                    }
+                }
+            }
+        });
+
+         // 更新插槽按鈕狀態
+        const slotButtons = document.querySelectorAll('.plant-row[data-slot-id] .plant-buy-btn');
+        slotButtons.forEach(button => {
+            const onclick = button.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/buySlot\(this,\s*'([^']+)'\)/);
+                if (match) {
+                    const slotId = match[1];
+                    const displayInfo = game.getSlotDisplayInfo(slotId);
+                    
+                    if (displayInfo) {
+                        const canAfford = game.data.fruit >= displayInfo.cost;
+                        button.disabled = !canAfford;
+                        
+                        // 更新按鈕文字
+                        const textDivs = button.querySelectorAll('div:not(.hover-tooltip)');
+                        if (textDivs.length >= 2) {
+                            textDivs[0].textContent = '種植';
+                            textDivs[1].textContent = this.formatNumber(displayInfo.cost);
                         }
                     }
                 }
@@ -1511,5 +1661,32 @@ window.hideStats = function() {
     if (modal) {
         modal.classList.remove('show');
         modal.style.display = 'none';
+    }
+};
+
+// 全局函數：購買插槽
+window.buySlot = function(button, slotId) {
+    console.log('嘗試購買插槽:', slotId);
+    
+    if (!game || !game.buyTierSlot) {
+        UI.showNotification('遊戲系統錯誤', 'error');
+        return;
+    }
+
+    const success = game.buyTierSlot(slotId);
+    
+    if (success) {
+        UI.showNotification('插槽購買成功！品種已確定！', 'success');
+        
+        if (button) {
+            UI.addVisualEffect(button, 'bounce');
+        }
+        
+        // 延遲更新UI，讓動畫完成
+        setTimeout(() => {
+            UI.updateAll();
+        }, 300);
+    } else {
+        UI.showNotification('購買失敗，請檢查果實是否足夠', 'warning');
     }
 };

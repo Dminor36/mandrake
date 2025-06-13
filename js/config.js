@@ -41,7 +41,7 @@ const TIER_BASE_COSTS = {
 };
 
 // 解鎖百分比配置 (想改成5%就改成0.05)
-const TIER_UNLOCK_PERCENTAGE = 0.1;  // 10%
+const TIER_UNLOCK_PERCENTAGE = 0.01;  // 10%
 
 // 曼德拉草數據配置 (使用統一成本)
 const MANDRAKE_CONFIG = {

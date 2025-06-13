@@ -10,7 +10,13 @@ class Game {
             tier: 1,           // 上次檢查到的最高階層
             fruitAmount: 0     // 上次檢查時的果實數量
         };
-    }
+        
+        // 🔧 新增：插槽系統支持
+        this.slotSystem = {
+            enabled: true,
+            nextSlotId: 1
+        };
+}
 
     /**
      * 獲取預設遊戲數據
@@ -27,6 +33,9 @@ class Game {
             currentTier: 1,
             unlockedMandrakes: ['original'],
             ownedMandrakes: { original: 0 },
+
+            // 🔧 新增：插槽系統
+            unconfirmedTierSlots: [],  // 未確認品種的階層插槽
             
             // 天氣系統
             weather: 'sunny',
@@ -230,6 +239,9 @@ class Game {
             this.data.fruit += production;
             this.data.totalFruitEarned += production;
         }
+
+         // 檢查階層解鎖
+        this.checkTierUnlock();
 
         // 檢查獎勵時間
         this.checkRewardTime();
@@ -648,7 +660,7 @@ class Game {
         const unlockCondition = TIER_UNLOCK_CONDITIONS[nextTier];
         
         if (unlockCondition && unlockCondition()) {
-            this.unlockNextTier(nextTier);
+            this.unlockTierSlot(nextTier);
         }
     }
 
@@ -706,6 +718,171 @@ class Game {
             UI.updateAll();
         }
     }
+
+    /**
+ * 解鎖階層插槽（而不是直接解鎖曼德拉草）
+ */
+unlockTierSlot(tier) {
+    // 防止重複解鎖
+    const existingSlot = this.data.unconfirmedTierSlots.find(slot => slot.tier === tier);
+    if (existingSlot) {
+        console.warn(`第 ${tier} 階插槽已存在`);
+        return;
+    }
+
+    // 檢查是否已有該階層的曼德拉草
+    const existingMandrake = this.data.unlockedMandrakes.find(id => {
+        const config = MANDRAKE_CONFIG[id];
+        return config && config.tier === tier;
+    });
+
+    if (existingMandrake) {
+        console.warn(`第 ${tier} 階已有曼德拉草: ${existingMandrake}`);
+        return;
+    }
+
+    // 創建新的未確認插槽
+    const newSlot = {
+        tier: tier,
+        unlockTime: Date.now(),
+        id: `tier_${tier}_slot_${Date.now()}`, // 唯一ID
+        status: 'pending' // pending, confirmed
+    };
+
+    this.data.unconfirmedTierSlots.push(newSlot);
+    this.data.currentTier = Math.max(this.data.currentTier, tier);
+
+    // 🎉 解鎖通知
+    if (typeof UI !== 'undefined') {
+        UI.showNotification(`🎉 解鎖第${tier}階插槽！種植第一株時將隨機決定品種`, 'success', 5000);
+    }
+
+    console.log(`✅ 第 ${tier} 階插槽已解鎖`);
+    
+    // 更新UI
+    if (typeof UI !== 'undefined') {
+        setTimeout(() => UI.updateAll(), 100);
+    }
+}
+
+/**
+ * 確認階層插槽的品種（首次購買時）
+ */
+confirmTierSlot(tier) {
+    const slotIndex = this.data.unconfirmedTierSlots.findIndex(slot => 
+        slot.tier === tier && slot.status === 'pending'
+    );
+
+    if (slotIndex === -1) {
+        console.error(`找不到第 ${tier} 階的待確認插槽`);
+        return null;
+    }
+
+    // 獲取該階層的選項
+    const tierOptions = Object.entries(MANDRAKE_CONFIG)
+        .filter(([id, config]) => config.tier === tier)
+        .map(([id, config]) => ({ id, ...config }));
+
+    if (tierOptions.length === 0) {
+        console.error(`第 ${tier} 階沒有可用的曼德拉草選項`);
+        return null;
+    }
+
+    // 應用強制類型（如果有）
+    let availableOptions = tierOptions;
+    if (this.data.forceNextType) {
+        const filteredOptions = tierOptions.filter(option => option.type === this.data.forceNextType);
+        if (filteredOptions.length > 0) {
+            availableOptions = filteredOptions;
+        }
+        delete this.data.forceNextType;
+    }
+
+    // 隨機選擇品種
+    const randomChoice = availableOptions[Math.floor(Math.random() * availableOptions.length)];
+    
+    // 確認插槽
+    this.data.unconfirmedTierSlots[slotIndex].status = 'confirmed';
+    this.data.unconfirmedTierSlots[slotIndex].confirmedId = randomChoice.id;
+    this.data.unconfirmedTierSlots[slotIndex].confirmTime = Date.now();
+
+    // 正式解鎖曼德拉草
+    this.data.unlockedMandrakes.push(randomChoice.id);
+    this.data.ownedMandrakes[randomChoice.id] = 0;
+
+    // 🎉 品種確認通知
+    if (typeof UI !== 'undefined') {
+        UI.showNotification(`🌱 第${tier}階品種確定：${randomChoice.name} ${randomChoice.icon}！`, 'success', 4000);
+    }
+
+    console.log(`✅ 第 ${tier} 階插槽確認為: ${randomChoice.name}`);
+    return randomChoice.id;
+}
+
+/**
+ * 購買階層插槽（首次購買）
+ */
+buyTierSlot(slotId) {
+    const slot = this.data.unconfirmedTierSlots.find(s => s.id === slotId);
+    if (!slot) {
+        console.error('找不到插槽:', slotId);
+        return false;
+    }
+
+    if (slot.status !== 'pending') {
+        console.error('插槽已確認:', slotId);
+        return false;
+    }
+
+    // 計算基礎成本
+    const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
+    
+    if (this.data.fruit < baseCost) {
+        console.log('果實不足購買插槽');
+        return false;
+    }
+
+    // 確認插槽品種
+    const confirmedId = this.confirmTierSlot(slot.tier);
+    if (!confirmedId) {
+        return false;
+    }
+
+    // 執行購買
+    this.data.fruit -= baseCost;
+    this.data.ownedMandrakes[confirmedId] = 1; // 首次購買給1株
+
+    // 更新UI
+    if (typeof UI !== 'undefined') {
+        setTimeout(() => UI.updateAll(), 100);
+    }
+
+    console.log(`插槽購買成功: ${confirmedId}，剩餘果實: ${this.data.fruit}`);
+    this.saveGame();
+    return true;
+}
+
+/**
+ * 獲取插槽的顯示信息
+ */
+getSlotDisplayInfo(slotId) {
+    const slot = this.data.unconfirmedTierSlots.find(s => s.id === slotId);
+    if (!slot) return null;
+
+    const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
+    const canAfford = this.data.fruit >= baseCost;
+
+    return {
+        tier: slot.tier,
+        cost: baseCost,
+        canAfford: canAfford,
+        status: slot.status,
+        name: `第${slot.tier}階曼德拉草`,
+        description: '種植時隨機決定品種',
+        icon: '❓', // 未知品種圖標
+        unlockTime: slot.unlockTime
+    };
+}
 
     /**
      * 檢查獎勵時間
