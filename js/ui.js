@@ -529,7 +529,7 @@ class UI {
             
             <!-- 中間：曼德拉草信息 -->
             <div class="plant-info-section">
-                <div class="plant-name">${config.name}</div>
+                <div class="plant-name">${config.icon} ${config.name}</div>
                 <div class="plant-production">產量：${formattedProduction}/秒</div>
             </div>
             
