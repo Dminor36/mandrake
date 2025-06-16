@@ -27,6 +27,8 @@ class UI {
         this.updateEnhancementStatus();
     }
 
+    // ========== 資源和顯示更新 ==========
+
     /**
      * 🔧 優化：更新資源顯示 - 增加進度條更新
      */
@@ -51,73 +53,46 @@ class UI {
         this.updateNumberWithAnimation('production-rate', productionRate, true);
         this.updateNumberWithAnimation('talent-points', talentPoints, false);
         
-
         // 🔧 新增：更新進度條
         this.updateProgressBars();
 
         this.updateButtonStates();
     }
 
-    // 🔧 修復：獎勵更新函數
-    static updateRewardStatus() {
-        // 🔧 添加安全檢查
-        if (!game || !game.data) {
-            console.warn('updateRewardStatus: 遊戲數據不存在');
-            return;
-        }
-
-        const pendingElement = document.getElementById('pending-rewards');
-        const maxElement = document.getElementById('max-rewards');
-        const buttonElement = document.getElementById('claim-reward-btn');
+    /**
+     * 🔧 修復：添加帶動畫的數字更新函數
+     */
+    static updateNumberWithAnimation(elementId, newValue, formatNumber = true) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
         
-        if (pendingElement) {
-            pendingElement.textContent = game.data.pendingRewards || 0;
+        // 🔧 修復：更嚴格的數值檢查
+        if (newValue === null || newValue === undefined || isNaN(newValue)) {
+            console.warn(`updateNumberWithAnimation: ${elementId} 收到無效數值:`, newValue);
+            newValue = 0; // 設為默認值
         }
         
-        if (maxElement) {
-            maxElement.textContent = game.data.maxPendingRewards || 2;
-        }
+        const displayValue = formatNumber ? this.formatNumber(newValue) : newValue.toString();
         
-        if (buttonElement) {
-            const pendingCount = game.data.pendingRewards || 0;
+        // 如果數值有變化，添加動畫效果
+        if (element.textContent !== displayValue) {
+            element.textContent = displayValue;
             
-            // 更新按鈕狀態
-            if (pendingCount > 0) {
-                buttonElement.disabled = false;
-                buttonElement.classList.add('has-rewards');
-                buttonElement.textContent = `領取獎勵 (${pendingCount})`;
-                
-                // 🔧 修復：確保onclick事件正確綁定
-                if (!buttonElement.onclick && !buttonElement.getAttribute('onclick')) {
-                    buttonElement.onclick = openRewardSelection;
-                }
-                
-                // 添加獎勵徽章
-                let badge = buttonElement.querySelector('.reward-badge');
-                if (!badge) {
-                    badge = document.createElement('div');
-                    badge.className = 'reward-badge';
-                    buttonElement.appendChild(badge);
-                }
-                badge.textContent = pendingCount;
-            } else {
-                buttonElement.disabled = true;
-                buttonElement.classList.remove('has-rewards');
-                buttonElement.textContent = '暫無獎勵';
-                
-                // 移除徽章
-                const badge = buttonElement.querySelector('.reward-badge');
-                if (badge) {
-                    badge.remove();
-                }
-            }
+            // 添加閃爍動畫
+            element.style.animation = 'numberUpdate 0.3s ease-out';
+            
+            // 移除動畫效果
+            setTimeout(() => {
+                element.style.animation = '';
+            }, 300);
         }
     }
+
+    // ========== 天氣系統更新 ==========
 
     /**
      * 更新天氣顯示
      */
-    // 🔧 更新 updateWeather 函數
     static updateWeather() {
         if (!game || !game.data) return;
         
@@ -137,7 +112,7 @@ class UI {
         if (costElement) costElement.textContent = game.data.freeWeatherReroll ? '免費' : '100';
     
         const weatherDisplay = document.getElementById('current-weather');
-    if (!weatherDisplay || !game.data) return;
+        if (!weatherDisplay || !game.data) return;
     
         const weather = WEATHER_CONFIG[game.data.weather];
         if (weather) {
@@ -149,10 +124,11 @@ class UI {
                 </div>
             `;
         }
-
     }
 
-    // 🔧 新增天氣刷新倒數計時功能
+    /**
+     * 🔧 新增天氣刷新倒數計時功能
+     */
     static updateWeatherTimer() {
         const timerElement = document.getElementById('weather-refresh-timer');
         if (!timerElement || !game.data) return;
@@ -174,6 +150,45 @@ class UI {
             timerElement.style.fontWeight = '';
         }
     }
+
+    /**
+     * 更新天氣重骰按鈕狀態
+     */
+    static updateWeatherRerollButton() {
+        const button = document.querySelector('.weather-reroll-btn');
+        if (!button || !game.data) return;
+        
+        const isLocked = game.data.weatherLocked && Date.now() < game.data.weatherLocked;
+        const cost = game.data.freeWeatherReroll ? 0 : 100;
+        const canAfford = game.data.fruit >= cost;
+        
+        if (isLocked) {
+            // 🔧 天氣被鎖定時
+            button.disabled = true;
+            button.textContent = '被鎖定';
+            button.className = 'weather-reroll-btn disabled';
+            
+            // 🔧 顯示剩餘鎖定時間
+            const remainingTime = Math.ceil((game.data.weatherLocked - Date.now()) / 60000);
+            button.title = `天氣被鎖定，剩餘 ${remainingTime} 分鐘`;
+            
+        } else if (!canAfford && cost > 0) {
+            // 🔧 果實不足時
+            button.disabled = true;
+            button.textContent = `重骰 ${cost}`;
+            button.className = 'weather-reroll-btn expensive';
+            button.title = '果實不足';
+            
+        } else {
+            // 🔧 正常狀態
+            button.disabled = false;
+            button.className = cost === 0 ? 'weather-reroll-btn free' : 'weather-reroll-btn';
+            button.textContent = cost === 0 ? '免費重骰' : `重骰 ${cost}`;
+            button.title = cost === 0 ? '免費重骰天氣' : `花費 ${cost} 果實重骰天氣`;
+        }
+    }
+
+    // ========== 曼德拉草列表管理 ==========
 
     /**
      * 更新曼德拉草列表（支持插槽顯示）
@@ -224,9 +239,167 @@ class UI {
         }
     }
 
-       /**
-     * 🔧 完全修正：計算購買指定數量曼德拉草後的產量增加
-     * 關鍵：考慮會影響全局/現有曼德拉草的強化效果
+
+    /**
+     * 🔧 修正：創建插槽行（修復工具提示）
+     */
+    // 在 ui.js 中修改 createMandrakeRow 函數，給整個行添加 title 屬性
+
+    static createMandrakeRow(id, config, count, cost, production) {
+        const row = document.createElement('div');
+        row.className = `plant-row ${config.type}`;
+        
+        // 設置 data 屬性用於進度條更新
+        row.setAttribute('data-mandrake-id', id);
+
+        // 計算批量購買的成本和收益
+        const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
+        
+        // 🔧 修正：使用正確的計算方法
+        const productionIncrease = this.calculateProductionIncrease(id, count, this.currentBulkAmount);
+        
+        // 🔧 新增：獲取詳細分解（用於高級工具提示）
+        const detailedIncrease = this.getDetailedProductionIncrease(id, count, this.currentBulkAmount);
+        
+        const formattedIncrease = this.formatNumber(productionIncrease);
+        const formattedCost = this.formatNumber(bulkCost);
+        const formattedProduction = this.formatNumber(production);
+        
+        // 🔧 調試：檢查成本計算
+        console.log(`${config.name} - 批量成本: ${bulkCost}, 格式化: ${formattedCost}`);
+        
+        // 檢查是否能負擔完整批量
+        const canAfford = game.data.fruit >= bulkCost;
+        
+        // 🔧 修正：工具提示顯示詳細的產量分解
+        let tooltipContent = `總產量增加: +${formattedIncrease}/秒\n`;
+        
+        if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
+            tooltipContent += `├ 新增產量: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒\n`;
+            tooltipContent += `└ 現有提升: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒\n`;
+        }
+        
+        if (bulkCost > 0) {
+            const efficiency = (productionIncrease / bulkCost).toFixed(3);
+            tooltipContent += `效率: ${efficiency}`;
+        }
+
+        // 計算進度條
+        const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
+        const isHighProgress = progressWidth > 80;
+        
+        if (isHighProgress) {
+            row.classList.add('high-progress');
+        }
+
+        // 🔧 修改：整個行添加 title 屬性來顯示提示信息
+        row.title = tooltipContent;
+
+        // 🔧 保持原有的佈局
+        row.innerHTML = `
+            <!-- 左側：大數字顯示數量 -->
+            <div class="plant-count-section">
+                <div class="plant-count-large">${count}</div>
+            </div>
+            
+            <!-- 中間：曼德拉草信息 -->
+            <div class="plant-info-section">
+                <div class="plant-name">${config.icon} ${config.name}</div>
+                <div class="plant-production">產量：${formattedProduction}/秒</div>
+            </div>
+            
+            <!-- 右側：成本顯示 -->
+            <div class="plant-cost-section">
+                <div class="plant-cost" onclick="buyMandrakesBulk(this, '${id}', ${this.currentBulkAmount})" style="cursor: pointer; color: ${canAfford ? '#27ae60' : '#e74c3c'}; font-size: 1.5em; font-weight: bold; text-align: center; ${!canAfford ? 'opacity: 0.6;' : ''}">
+                    ${formattedCost}
+                </div>
+            </div>
+        `;
+
+        // 設置進度條寬度
+        row.style.setProperty('--progress-width', `${progressWidth}%`);
+
+        return row;
+    }
+
+    // 同樣修改插槽行的函數
+    static createSlotRow(slot) {
+        const row = document.createElement('div');
+        row.className = 'plant-row normal';
+        row.setAttribute('data-slot-id', slot.id);
+
+        // 獲取插槽顯示信息
+        const displayInfo = game.getSlotDisplayInfo(slot.id);
+        if (!displayInfo) {
+            console.error('無法獲取插槽顯示信息:', slot.id);
+            return null;
+        }
+
+        const cost = displayInfo.cost;
+        const canAfford = displayInfo.canAfford;
+        const formattedCost = this.formatNumber(cost);
+        
+        // 🔧 修改：插槽也添加 title 屬性
+        const tooltipContent = `種植時隨機決定品種\n成本: ${formattedCost}`;
+        row.title = tooltipContent;
+
+        // 🔧 完全按照原本曼德拉草的格式
+        row.innerHTML = `
+            <!-- 左側：大數字顯示數量 (插槽顯示0) -->
+            <div class="plant-count-section">
+                <div class="plant-count-large">0</div>
+            </div>
+            
+            <!-- 中間：曼德拉草信息 -->
+            <div class="plant-info-section">
+                <div class="plant-name">❓ 第${slot.tier}階曼德拉草</div>
+                <div class="plant-production">種植時隨機決定品種</div>
+            </div>
+            
+            <!-- 右側：購買區域 -->
+            <div class="plant-buy-section">
+                <div class="slot-cost-display" onclick="buySlot(this, '${slot.id}')" style="
+                    cursor: pointer; 
+                    color: ${canAfford ? '#27ae60' : '#e74c3c'}; 
+                    font-size: 1.5em; 
+                    font-weight: bold; 
+                    text-align: center; 
+                    width: 100%; 
+                    height: 100%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    ${!canAfford ? 'opacity: 0.6;' : ''}
+                ">
+                    ${formattedCost}
+                </div>
+            </div>
+        `;
+
+        // 🔧 修改文字顏色為灰色
+        const plantName = row.querySelector('.plant-name');
+        const plantProduction = row.querySelector('.plant-production');
+        if (plantName) plantName.style.color = '#666';
+        if (plantProduction) plantProduction.style.color = '#999';
+
+        // 🔧 新增：計算並設定進度條
+        const progressWidth = this.calculateSlotProgressWidth(slot.id, game.data.fruit);
+        row.style.setProperty('--progress-width', `${progressWidth}%`);
+        
+        // 高進度特效
+        if (progressWidth > 80) {
+            row.classList.add('high-progress');
+        }
+
+        return row;
+    }
+
+
+
+    // ========== 計算和更新函數 ==========
+
+    /**
+     * 計算購買指定數量曼德拉草後的產量增加
      */
     static calculateProductionIncrease(id, currentCount, purchaseAmount) {
         if (!game || !game.data) return 0;
@@ -332,51 +505,12 @@ class UI {
     }
 
     /**
-     * 🔧 新增：獲取遊戲計算的產量
-     */
-    static getGameCalculatedProduction(id, count) {
-        // 如果遊戲有計算個別產量的函數，優先使用
-        if (typeof game.calculateMandrakeProduction === 'function') {
-            return game.calculateMandrakeProduction(id, count);
-        }
-        
-        // 如果有個別產量記錄，使用比例計算
-        if (game.individualProductions && game.individualProductions[id]) {
-            const currentCount = game.data.ownedMandrakes[id] || 1;
-            const singleProduction = game.individualProductions[id] / Math.max(currentCount, 1);
-            return singleProduction * count;
-        }
-        
-        // 最後備用：基礎計算
-        const config = MANDRAKE_CONFIG[id];
-        if (!config) return 0;
-        
-        let production = config.baseProduction * count;
-        
-        // 天氣效果
-        const weatherConfig = WEATHER_CONFIG[game.data.weather];
-        if (weatherConfig && typeof weatherConfig.getMultiplier === 'function') {
-            production *= weatherConfig.getMultiplier(config.type);
-        }
-        
-        return production;
-    }
-
-    /**
      * 🔧 修正：計算當前曼德拉草產量（用於顯示）
      */
     static calculateMandrakeProduction(id, count) {
         // 直接使用遊戲的產量計算函數，確保包含所有效果
         return game.calculateSingleMandrakeProduction(id, count);
     }
-    
-    /**
-     * 🔧 新增：獲取單株曼德拉草的實際產量（用於工具提示）
-     */
-    static getSingleMandrakeProduction(id) {
-        return game.calculateSingleMandrakeProduction(id, 1);
-    }
-
 
     /**
      * 🔧 修正：計算進度條寬度 - 果實 ÷ 購買成本
@@ -389,6 +523,24 @@ class UI {
         
         // 進度 = 當前果實 ÷ 批量購買成本，最大100%
         const progress = Math.min((currentFruit / bulkCost) * 100, 100);
+        return progress;
+    }
+
+    /**
+     * 計算插槽進度條寬度
+     */
+    static calculateSlotProgressWidth(slotId, currentFruit) {
+        // 找到對應的插槽
+        const slot = game.data.unconfirmedTierSlots.find(s => s.id === slotId);
+        if (!slot) return 0;
+        
+        // 獲取插槽的基礎成本
+        const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
+        
+        if (baseCost === 0) return 100; // 避免除以零
+        
+        // 進度 = 當前果實 ÷ 插槽成本，最大100%
+        const progress = Math.min((currentFruit / baseCost) * 100, 100);
         return progress;
     }
 
@@ -446,56 +598,45 @@ class UI {
     }
 
     /**
-     * 計算插槽進度條寬度
+     * 計算批量購買成本
      */
-    static calculateSlotProgressWidth(slotId, currentFruit) {
-        // 找到對應的插槽
-        const slot = game.data.unconfirmedTierSlots.find(s => s.id === slotId);
-        if (!slot) return 0;
-        
-        // 獲取插槽的基礎成本
-        const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
-        
-        if (baseCost === 0) return 100; // 避免除以零
-        
-        // 進度 = 當前果實 ÷ 插槽成本，最大100%
-        const progress = Math.min((currentFruit / baseCost) * 100, 100);
-        return progress;
+    static calculateBulkCost(id, amount) {
+        if (!game || !game.data) return 0;
+
+        const originalCount = game.data.ownedMandrakes[id] || 0;
+        let totalCost = 0;
+
+        for (let i = 0; i < amount; i++) {
+            // 模擬逐一購買計算成本
+            game.data.ownedMandrakes[id] = originalCount + i;
+            totalCost += game.getCurrentCost(id);
+        }
+
+        // 還原原始持有數量
+        game.data.ownedMandrakes[id] = originalCount;
+        return totalCost;
     }
 
     /**
-     * 🔧 修正：創建曼德拉草行 - 使用修正後的計算並顯示詳細信息
+     * 🔧 新增：更新行工具提示內容
      */
-    static createMandrakeRow(id, config, count, cost, production) {
-        const row = document.createElement('div');
-        row.className = `plant-row ${config.type}`;
+    static updateRowTooltip(row, mandrakeId) {
+        const tooltip = row.querySelector('.hover-tooltip');
+        if (!tooltip) return;
         
-        // 設置 data 屬性用於進度條更新
-        row.setAttribute('data-mandrake-id', id);
-
-        // 計算批量購買的成本和收益
-        const bulkCost = this.calculateBulkCost(id, this.currentBulkAmount);
-        
-        // 🔧 修正：使用新的正確計算方法
-        const productionIncrease = this.calculateProductionIncrease(id, count, this.currentBulkAmount);
-        
-        // 🔧 新增：獲取詳細分解（用於高級工具提示）
-        const detailedIncrease = this.getDetailedProductionIncrease(id, count, this.currentBulkAmount);
+        const currentCount = game.data.ownedMandrakes[mandrakeId] || 0;
+        const productionIncrease = this.calculateProductionIncrease(mandrakeId, currentCount, this.currentBulkAmount);
+        const detailedIncrease = this.getDetailedProductionIncrease(mandrakeId, currentCount, this.currentBulkAmount);
+        const bulkCost = this.calculateBulkCost(mandrakeId, this.currentBulkAmount);
         
         const formattedIncrease = this.formatNumber(productionIncrease);
-        const formattedCost = this.formatNumber(bulkCost);
-        const formattedProduction = this.formatNumber(production);
         
-        // 檢查是否能負擔完整批量
-        const canAfford = game.data.fruit >= bulkCost;
-        
-        // 🔧 修正：工具提示顯示詳細的產量分解
         let tooltipContent = `<div>總產量增加: +${formattedIncrease}/秒</div>`;
         
         if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
             tooltipContent += `<div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                <div>├ 新增產量: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
-                <div>└ 現有提升: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
+                <div>├ 本項提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
+                <div>└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
             </div>`;
         }
         
@@ -504,179 +645,247 @@ class UI {
             tooltipContent += `<div style="font-size: 0.8em; color: #999; margin-top: 3px;">效率: ${efficiency}</div>`;
         }
         
-        const buttonHtml = this.currentBulkAmount > 1 ? 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-            <div class="hover-tooltip">${tooltipContent}</div>` : 
-            `<div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-            <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-            <div class="hover-tooltip">${tooltipContent}</div>`;
+        tooltip.innerHTML = tooltipContent;
+    }
 
-        // 計算進度條
-        const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
-        const isHighProgress = progressWidth > 80;
+    // ========== 用戶交互處理 ==========
+
+    /**
+     * 🔧 新增：處理曼德拉草行點擊
+     */
+    static handlePlantRowClick(id, amount) {
+        // 先檢查是否能買得起完整批量
+        const totalCost = this.calculateBulkCost(id, amount);
         
-        if (isHighProgress) {
-            row.classList.add('high-progress');
+        if (game.data.fruit < totalCost) {
+            this.showNotification('果實不足，無法購買完整批量！', 'warning');
+            return;
+        }
+        
+        // 執行批量購買
+        let successCount = 0;
+        for (let i = 0; i < amount; i++) {
+            if (game.buyMandrake(id)) {
+                successCount++;
+            } else {
+                console.warn('批量購買中斷，已購買:', successCount);
+                break;
+            }
+        }
+        
+        if (successCount === amount) {
+            this.showNotification(`成功種植 ${amount} 個 ${MANDRAKE_CONFIG[id].name}！`, 'success');
+        } else {
+            this.showNotification(`只成功種植 ${successCount} 個`, 'warning');
+        }
+        
+        // 視覺反饋和UI更新
+        this.addVisualEffect(document.querySelector(`[data-mandrake-id="${id}"]`), 'bounce');
+        setTimeout(() => {
+            this.updateAll();
+        }, 100);
+    }
+
+    /**
+     * 🔧 新增：處理插槽行點擊
+     */
+    static handleSlotRowClick(slotId) {
+        console.log('嘗試購買插槽:', slotId);
+        
+        if (!game || !game.buyTierSlot) {
+            this.showNotification('遊戲系統錯誤', 'error');
+            return;
         }
 
-        // 🔧 保持原有的佈局
-        row.innerHTML = `
-            <!-- 左側：大數字顯示數量 -->
-            <div class="plant-count-section">
-                <div class="plant-count-large">${count}</div>
-            </div>
+        const success = game.buyTierSlot(slotId);
+        
+        if (success) {
+            this.showNotification('插槽購買成功！品種已確定！', 'success');
             
-            <!-- 中間：曼德拉草信息 -->
-            <div class="plant-info-section">
-                <div class="plant-name">${config.icon} ${config.name}</div>
-                <div class="plant-production">產量：${formattedProduction}/秒</div>
-            </div>
+            // 視覺反饋
+            this.addVisualEffect(document.querySelector(`[data-slot-id="${slotId}"]`), 'bounce');
             
-            <!-- 右側：購買按鈕 -->
-            <div class="plant-buy-section">
-                <button class="plant-buy-btn" onclick="buyMandrakesBulk(this, '${id}', ${this.currentBulkAmount})" ${!canAfford ? 'disabled' : ''}>
-                    ${buttonHtml}
-                </button>
-            </div>
-        `;
-
-        // 設置進度條寬度
-        row.style.setProperty('--progress-width', `${progressWidth}%`);
-
-        return row;
+            // 延遲更新UI，讓動畫完成
+            setTimeout(() => {
+                this.updateAll();
+            }, 300);
+        } else {
+            this.showNotification('購買失敗，請檢查果實是否足夠', 'warning');
+        }
     }
 
     /**
-     * 🔧 修正：創建插槽行（支持進度條）
+     * 🔧 同樣修正 updateButtonStates 中的計算
      */
-    static createSlotRow(slot) {
-        const row = document.createElement('div');
-        row.className = 'plant-row normal'; // 使用普通樣式
-        row.setAttribute('data-slot-id', slot.id);
+    static updateButtonStates() {
+        if (!game || !game.data) return;
 
-        // 獲取插槽顯示信息
-        const displayInfo = game.getSlotDisplayInfo(slot.id);
-        if (!displayInfo) {
-            console.error('無法獲取插槽顯示信息:', slot.id);
-            return null;
+        // 更新曼德拉草行狀態
+        const plantRows = document.querySelectorAll('.plant-row[data-mandrake-id]');
+        plantRows.forEach(row => {
+            const mandrakeId = row.getAttribute('data-mandrake-id');
+            if (mandrakeId) {
+                const totalCost = this.calculateBulkCost(mandrakeId, this.currentBulkAmount);
+                const canAfford = game.data.fruit >= totalCost;
+                
+                // 更新價格顯示
+                const priceElement = row.querySelector('.plant-price');
+                if (priceElement) {
+                    priceElement.textContent = this.formatNumber(totalCost);
+                    priceElement.className = `plant-price ${canAfford ? 'affordable' : 'expensive'}`;
+                }
+                
+                // 更新批量指示器
+                const bulkIndicator = row.querySelector('.bulk-indicator');
+                if (bulkIndicator) {
+                    bulkIndicator.textContent = this.currentBulkAmount > 1 ? `×${this.currentBulkAmount}` : '';
+                }
+                
+                // 更新行狀態
+                if (canAfford) {
+                    row.classList.remove('disabled');
+                    row.onclick = () => this.handlePlantRowClick(mandrakeId, this.currentBulkAmount);
+                } else {
+                    row.classList.add('disabled');
+                    row.onclick = null;
+                }
+                
+                // 更新工具提示
+                this.updateRowTooltip(row, mandrakeId);
+            }
+        });
+
+        // 更新插槽行狀態
+        const slotRows = document.querySelectorAll('.plant-row[data-slot-id]');
+        slotRows.forEach(row => {
+            const slotId = row.getAttribute('data-slot-id');
+            if (slotId) {
+                const displayInfo = game.getSlotDisplayInfo(slotId);
+                
+                if (displayInfo) {
+                    const canAfford = game.data.fruit >= displayInfo.cost;
+                    
+                    // 更新價格顯示
+                    const priceElement = row.querySelector('.plant-price');
+                    if (priceElement) {
+                        priceElement.textContent = this.formatNumber(displayInfo.cost);
+                        priceElement.className = `plant-price ${canAfford ? 'affordable' : 'expensive'}`;
+                    }
+                    
+                    // 更新行狀態
+                    if (canAfford) {
+                        row.classList.remove('disabled');
+                        row.onclick = () => this.handleSlotRowClick(slotId);
+                    } else {
+                        row.classList.add('disabled');
+                        row.onclick = null;
+                    }
+                }
+            }
+        });
+        
+        // 更新重骰天氣按鈕
+        const weatherBtn = document.querySelector('.weather-reroll-btn');
+        if (weatherBtn) {
+            const cost = game.data.freeWeatherReroll ? 0 : 100;
+            const canAfford = cost === 0 || game.data.fruit >= cost;
+            weatherBtn.disabled = !canAfford;
+        }
+    }
+
+    // ========== 批量購買控制 ==========
+
+    /**
+     * 設置批量購買控制
+     */
+    static setupBulkBuyControls() {
+        const bulkButtons = document.querySelectorAll('.bulk-btn');
+        bulkButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const amount = parseInt(e.target.dataset.amount);
+                this.setBulkAmount(amount);
+            });
+        });
+    }
+
+    /**
+     * 設置批量購買數量
+     */
+    static setBulkAmount(amount) {
+        this.currentBulkAmount = amount;
+        
+        // 更新按鈕狀態
+        document.querySelectorAll('.bulk-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (parseInt(btn.dataset.amount) === amount) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // 更新所有購買按鈕的顯示
+        this.updateMandrakeList();
+
+        // 更新進度條以反映新的批量成本
+        this.updateProgressBars();
+    }
+
+    // ========== 獎勵系統更新 ==========
+
+    /**
+     * 🔧 修復：獎勵更新函數
+     */
+    static updateRewardStatus() {
+        // 🔧 添加安全檢查
+        if (!game || !game.data) {
+            console.warn('updateRewardStatus: 遊戲數據不存在');
+            return;
         }
 
-        const cost = displayInfo.cost;
-        const canAfford = displayInfo.canAfford;
-        const formattedCost = this.formatNumber(cost);
+        const pendingElement = document.getElementById('pending-rewards');
+        const maxElement = document.getElementById('max-rewards');
+        const buttonElement = document.getElementById('claim-reward-btn');
         
-        // 工具提示內容
-        const tooltipContent = `
-            <div>
-                種植時隨機決定品種
-            </div>
-        `;
-
-        // 🔧 完全按照原本曼德拉草的格式
-        row.innerHTML = `
-            <!-- 左側：大數字顯示數量 (插槽顯示0) -->
-            <div class="plant-count-section">
-                <div class="plant-count-large">0</div>
-            </div>
-            
-            <!-- 中間：曼德拉草信息 -->
-            <div class="plant-info-section">
-                <div class="plant-name">未確認???</div>
-            </div>
-            
-            <!-- 右側：購買按鈕 -->
-            <div class="plant-buy-section">
-                <button class="plant-buy-btn" onclick="buySlot(this, '${slot.id}')" ${!canAfford ? 'disabled' : ''}>
-                    <div style="font-size: 0.8em; line-height: 0.9;">種植</div>
-                    <div style="font-size: 0.7em; line-height: 1.2;">${formattedCost}</div>
-                    <div class="hover-tooltip">${tooltipContent}</div>
-                </button>
-            </div>
-        `;
-
-        // 🔧 修正：使用灰色樣式，但保持原本的結構
-        row.style.cssText = `
-            background: linear-gradient(90deg, rgba(108,117,125,0.1) 0%, rgba(108,117,125,0.05) 100%);
-            border: 2px dashed #999;
-            opacity: 0.8;
-        `;
-
-        // 🔧 修改文字顏色為灰色
-        const plantName = row.querySelector('.plant-name');
-        const plantProduction = row.querySelector('.plant-production');
-        if (plantName) plantName.style.color = '#666';
-        if (plantProduction) plantProduction.style.color = '#999';
-
-        // 🔧 新增：計算並設定進度條
-        const progressWidth = this.calculateSlotProgressWidth(slot.id, game.data.fruit);
-        row.style.setProperty('--progress-width', `${progressWidth}%`);
-        
-        // 高進度特效
-        if (progressWidth > 80) {
-            row.classList.add('high-progress');
+        if (pendingElement) {
+            pendingElement.textContent = game.data.pendingRewards || 0;
         }
-
-        return row;
-    }
-
-    /**
-     * 添加階層解鎖進度
-     */
-    static addTierUnlockProgress(container) {
-
-    }
-
-    /**
-     * 獲取階層解鎖要求
-     */
-    static getTierRequirement(tier) {
-        const requirements = {
-            2: 10,
-            3: 50,
-            4: 200,
-            5: 500
-        };
-        return requirements[tier] || 1000;
-    }
-
-
-    /**
-     * 創建曼德拉草視覺元素
-     */
-    static createMandrakeVisual(type, config) {
-        const visual = document.createElement('div');
-        visual.className = 'mandrake-visual';
-
-        // 創建圖像或emoji
-        const imageElement = imageManager.createImageElement(config.icon, config.name, 'mandrake-image');
-        visual.appendChild(imageElement);
-
-        // 添加工具提示
-        visual.title = `${config.name} (第${config.tier}階)`;
-
-        return visual;
-    }
-
-    /**
-     * 創建數量徽章
-     */
-    static createCountBadge(count) {
-        const badge = document.createElement('div');
-        badge.className = 'mandrake-count';
-        badge.textContent = count;
-        badge.title = `共有 ${count} 株`;
-        return badge;
-    }
-
-    /**
-     * 更新重生信息
-     */
-    static updateRebirthInfo() {
-        const pointsElement = document.getElementById('rebirth-points');
-        if (pointsElement && game && game.calculateRebirthPoints) {
-            const points = game.calculateRebirthPoints();
-            pointsElement.textContent = points;
+        
+        if (maxElement) {
+            maxElement.textContent = game.data.maxPendingRewards || 2;
+        }
+        
+        if (buttonElement) {
+            const pendingCount = game.data.pendingRewards || 0;
+            
+            // 更新按鈕狀態
+            if (pendingCount > 0) {
+                buttonElement.disabled = false;
+                buttonElement.classList.add('has-rewards');
+                buttonElement.textContent = `領取獎勵 (${pendingCount})`;
+                
+                // 🔧 修復：確保onclick事件正確綁定
+                if (!buttonElement.onclick && !buttonElement.getAttribute('onclick')) {
+                    buttonElement.onclick = openRewardSelection;
+                }
+                
+                // 添加獎勵徽章
+                let badge = buttonElement.querySelector('.reward-badge');
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'reward-badge';
+                    buttonElement.appendChild(badge);
+                }
+                badge.textContent = pendingCount;
+            } else {
+                buttonElement.disabled = true;
+                buttonElement.classList.remove('has-rewards');
+                buttonElement.textContent = '暫無獎勵';
+                
+                // 移除徽章
+                const badge = buttonElement.querySelector('.reward-badge');
+                if (badge) {
+                    badge.remove();
+                }
+            }
         }
     }
 
@@ -722,301 +931,78 @@ class UI {
         }
     }
 
+    // ========== 強化系統 ==========
+
     /**
-     * 顯示通知
+     * 🔧 新增：更新強化系統狀態顯示
      */
-    static showNotification(message, type = 'info', duration = GAME_CONFIG.NOTIFICATION_DURATION) {
-        if (!this.notificationContainer) {
-            this.notificationContainer = document.getElementById('notification-container');
-        }
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-
-        // 添加關閉按鈕
-        const closeBtn = document.createElement('span');
-        closeBtn.textContent = '×';
-        closeBtn.style.cssText = `
-            float: right;
-            margin-left: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        `;
-        closeBtn.onclick = () => notification.remove();
-        notification.appendChild(closeBtn);
-
-        this.notificationContainer.appendChild(notification);
-
-        // 自動移除
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, duration);
-
-        // 限制通知數量
-        const notifications = this.notificationContainer.children;
-        if (notifications.length > 5) {
-            notifications[0].remove();
-        }
+    static updateEnhancementStatus() {
+        // 更新強化按鈕狀態
+        this.updateEnhancementButton();
+        
+        // 更新強化進度顯示
+        this.updateEnhancementProgress();
     }
 
     /**
-     * 顯示載入指示器
+     * 🔧 修改2：更新強化按鈕狀態 - 適配系統按鈕位置
      */
-    static showLoading(element, show = true) {
-        if (show) {
-            element.classList.add('loading');
-            element.disabled = true;
-        } else {
-            element.classList.remove('loading');
-            element.disabled = false;
-        }
-    }
-
-    /**
-     * 顯示確認對話框
-     */
-    static showConfirm(message, callback) {
-        if (confirm(message)) {
-            callback();
-        }
-    }
-
-    /**
-     * 格式化數字顯示
-     */
-    static formatNumber(num) {
-        // 確保是數字
-        const number = parseFloat(num);
-        if (isNaN(number)) return '0';
+    static updateEnhancementButton() {
+        const enhancementButton = document.getElementById('enhancement-btn');
+        if (!enhancementButton || typeof EnhancementSystem === 'undefined') return;
         
-        // 小於1000直接顯示
-        if (number < 1000) {
-            return number.toFixed(1);
-        }   
-    
-        // 定義單位
-        const units = [
-            { value: 1e15, symbol: 'P' },   // Quadrillion 千兆
-            { value: 1e12, symbol: 'T' },   // Trillion 兆
-            { value: 1e9,  symbol: 'B' },   // Billion 十億
-            { value: 1e6,  symbol: 'M' },   // Million 百萬
-            { value: 1e3,  symbol: 'K' }    // Thousand 千
-        ];
+        const status = EnhancementSystem.getEnhancementStatus();
         
-        // 找到合適的單位
-        for (const unit of units) {
-            if (number >= unit.value) {
-                const formatted = (number / unit.value).toFixed(2);
-                // 移除末尾的零
-                return formatted + unit.symbol;
-            }
-        }
-    
-        return Math.floor(number).toString();
-    }
-
-    // 🔧 修復：添加帶動畫的數字更新函數
-    static updateNumberWithAnimation(elementId, newValue, formatNumber = true) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        
-        // 🔧 修復：更嚴格的數值檢查
-        if (newValue === null || newValue === undefined || isNaN(newValue)) {
-            console.warn(`updateNumberWithAnimation: ${elementId} 收到無效數值:`, newValue);
-            newValue = 0; // 設為默認值
-        }
-        
-        const displayValue = formatNumber ? this.formatNumber(newValue) : newValue.toString();
-        
-        // 如果數值有變化，添加動畫效果
-        if (element.textContent !== displayValue) {
-            element.textContent = displayValue;
+        if (status.pendingCount > 0) {
+            enhancementButton.disabled = false;
+            enhancementButton.classList.add('has-enhancement');
+            enhancementButton.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            enhancementButton.textContent = `🔮 強化`;
             
-            // 添加閃爍動畫
-            element.style.animation = 'numberUpdate 0.3s ease-out';
-            
-            // 移除動畫效果
-            setTimeout(() => {
-                element.style.animation = '';
-            }, 300);
-        }
-    }
-
-    /**
-     * 格式化時間顯示
-     */
-    static formatTime(milliseconds) {
-        const seconds = Math.floor(milliseconds / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-
-        if (hours > 0) {
-            return `${hours}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+            // 添加強化數量徽章
+            let badge = enhancementButton.querySelector('.enhancement-badge');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = 'enhancement-badge';
+                badge.style.cssText = `
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background: #ff3838;
+                    color: white;
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    font-size: 11px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    border: 2px solid white;
+                `;
+                enhancementButton.appendChild(badge);
+            }
+            badge.textContent = status.pendingCount;
         } else {
-            return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
-        }
-    }
-
-    /**
-     * 添加視覺效果
-     */
-    static addVisualEffect(element, effect) {
-        switch (effect) {
-            case 'shake':
-                element.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => element.style.animation = '', 500);
-                break;
-            case 'glow':
-                element.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
-                setTimeout(() => element.style.boxShadow = '', 2000);
-                break;
-            case 'bounce':
-                element.style.animation = 'bounce 0.6s ease-out';
-                setTimeout(() => element.style.animation = '', 600);
-                break;
-        }
-    }
-
-    // 🔧 同樣修正 updateButtonStates 中的計算
-    static updateButtonStates() {
-        if (!game || !game.data) return;
-
-        const buyButtons = document.querySelectorAll('.plant-buy-btn');
-        buyButtons.forEach(button => {
-            const onclick = button.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/buyMandrakesBulk\(this,\s*'([^']+)',\s*(\d+)\)/);
-                if (match) {
-                    const id = match[1];
-                    const amount = parseInt(match[2]);
-                    
-                    const totalCost = this.calculateBulkCost(id, amount);
-                    const canAfford = game.data.fruit >= totalCost;
-                    button.disabled = !canAfford;
-                    
-                    // 🔧 修正：使用新的正確計算方法
-                    const currentCount = game.data.ownedMandrakes[id] || 0;
-                    const productionIncrease = this.calculateProductionIncrease(id, currentCount, amount);
-                    
-                    const formattedCost = this.formatNumber(totalCost);
-                    const formattedIncrease = this.formatNumber(productionIncrease);
-                    
-                    // 更新按鈕文字
-                    const textDivs = button.querySelectorAll('div:not(.hover-tooltip)');
-                    if (textDivs.length >= 2) {
-                        textDivs[0].textContent = '種植';
-                        textDivs[1].textContent = formattedCost;
-                        
-                        // 更新工具提示
-                        const tooltip = button.querySelector('.hover-tooltip');
-                        if (tooltip) {
-                            const detailedIncrease = this.getDetailedProductionIncrease(id, currentCount, amount);
-                            let tooltipContent = `<div>總產量增加: +${formattedIncrease}/秒</div>`;
-                            
-                            if (true) {
-                                tooltipContent += `<div style="font-size: 0.8em; color: #666; margin-top: 5px; text-align: left;">
-                                    <div>├ 本項提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
-                                    <div>└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
-                                </div>`;
-                            }
-                            
-                            
-                            tooltip.innerHTML = tooltipContent;
-                        }
-                    }
-                }
+            enhancementButton.disabled = true;
+            enhancementButton.classList.remove('has-enhancement');
+            enhancementButton.style.background = 'linear-gradient(45deg, #9b59b6, #8e44ad)';
+            enhancementButton.textContent = '🔮 強化';
+            
+            // 移除徽章
+            const badge = enhancementButton.querySelector('.enhancement-badge');
+            if (badge) {
+                badge.remove();
             }
-        });
-
-         // 更新插槽按鈕狀態
-        const slotButtons = document.querySelectorAll('.plant-row[data-slot-id] .plant-buy-btn');
-        slotButtons.forEach(button => {
-            const onclick = button.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/buySlot\(this,\s*'([^']+)'\)/);
-                if (match) {
-                    const slotId = match[1];
-                    const displayInfo = game.getSlotDisplayInfo(slotId);
-                    
-                    if (displayInfo) {
-                        const canAfford = game.data.fruit >= displayInfo.cost;
-                        button.disabled = !canAfford;
-                        
-                        // 更新按鈕文字
-                        const textDivs = button.querySelectorAll('div:not(.hover-tooltip)');
-                        if (textDivs.length >= 2) {
-                            textDivs[0].textContent = '種植';
-                            textDivs[1].textContent = this.formatNumber(displayInfo.cost);
-                        }
-                    }
-                }
-            }
-        });
-        
-        // 更新重骰天氣按鈕
-        const weatherBtn = document.querySelector('.weather-reroll-btn');
-        if (weatherBtn) {
-            const cost = game.data.freeWeatherReroll ? 0 : 100;
-            const canAfford = cost === 0 || game.data.fruit >= cost;
-            weatherBtn.disabled = !canAfford;
         }
     }
 
     /**
-     * 設置批量購買控制
+     * 🔧 修改2：簡化強化進度顯示 - 移除進度條相關
      */
-    static setupBulkBuyControls() {
-        const bulkButtons = document.querySelectorAll('.bulk-btn');
-        bulkButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const amount = parseInt(e.target.dataset.amount);
-                this.setBulkAmount(amount);
-            });
-        });
-    }
-
-    /**
-     * 設置批量購買數量
-     */
-    static setBulkAmount(amount) {
-        this.currentBulkAmount = amount;
-        
-        // 更新按鈕狀態
-        document.querySelectorAll('.bulk-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (parseInt(btn.dataset.amount) === amount) {
-                btn.classList.add('active');
-            }
-        });
-        
-        // 更新所有購買按鈕的顯示
-        this.updateMandrakeList();
-
-        // 更新進度條以反映新的批量成本
-        this.updateProgressBars();
-    }
-
-    /**
-     * 計算批量購買成本
-     */
-    static calculateBulkCost(id, amount) {
-        if (!game || !game.data) return 0;
-
-        const originalCount = game.data.ownedMandrakes[id] || 0;
-        let totalCost = 0;
-
-        for (let i = 0; i < amount; i++) {
-            // 模擬逐一購買計算成本
-            game.data.ownedMandrakes[id] = originalCount + i;
-            totalCost += game.getCurrentCost(id);
-        }
-
-        // 還原原始持有數量
-        game.data.ownedMandrakes[id] = originalCount;
-        return totalCost;
+    static updateEnhancementProgress() {
+        // 由於強化系統已移到右上角，不再需要進度條顯示
+        // 保留此函數以免其他地方調用時出錯，但內容為空
     }
 
     /**
@@ -1115,128 +1101,159 @@ class UI {
         this.updateEnhancementStatus();
     }
 
+    // ========== 重生系統 ==========
+
     /**
-     * 🔧 新增：更新強化系統狀態顯示
+     * 更新重生信息
      */
-    static updateEnhancementStatus() {
-        // 更新強化按鈕狀態
-        this.updateEnhancementButton();
+    static updateRebirthInfo() {
+        const pointsElement = document.getElementById('rebirth-points');
+        if (pointsElement && game && game.calculateRebirthPoints) {
+            const points = game.calculateRebirthPoints();
+            pointsElement.textContent = points;
+        }
+    }
+
+    // ========== 輔助函數 ==========
+
+    /**
+     * 格式化數字顯示
+     */
+    static formatNumber(num) {
+        // 確保是數字
+        const number = parseFloat(num);
+        if (isNaN(number)) return '0';
         
-        // 更新強化進度顯示
-        this.updateEnhancementProgress();
+        // 小於1000直接顯示
+        if (number < 1000) {
+            return number.toFixed(1);
+        }   
+    
+        // 定義單位
+        const units = [
+            { value: 1e15, symbol: 'P' },   // Quadrillion 千兆
+            { value: 1e12, symbol: 'T' },   // Trillion 兆
+            { value: 1e9,  symbol: 'B' },   // Billion 十億
+            { value: 1e6,  symbol: 'M' },   // Million 百萬
+            { value: 1e3,  symbol: 'K' }    // Thousand 千
+        ];
+        
+        // 找到合適的單位
+        for (const unit of units) {
+            if (number >= unit.value) {
+                const formatted = (number / unit.value).toFixed(2);
+                // 移除末尾的零
+                return formatted + unit.symbol;
+            }
+        }
+    
+        return Math.floor(number).toString();
     }
 
     /**
-     * 🔧 修改2：更新強化按鈕狀態 - 適配系統按鈕位置
+     * 格式化時間顯示
      */
-    static updateEnhancementButton() {
-        const enhancementButton = document.getElementById('enhancement-btn');
-        if (!enhancementButton || typeof EnhancementSystem === 'undefined') return;
-        
-        const status = EnhancementSystem.getEnhancementStatus();
-        
-        if (status.pendingCount > 0) {
-            enhancementButton.disabled = false;
-            enhancementButton.classList.add('has-enhancement');
-            enhancementButton.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
-            enhancementButton.textContent = `🔮 強化`;
-            
-            // 添加強化數量徽章
-            let badge = enhancementButton.querySelector('.enhancement-badge');
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.className = 'enhancement-badge';
-                badge.style.cssText = `
-                    position: absolute;
-                    top: -5px;
-                    right: -5px;
-                    background: #ff3838;
-                    color: white;
-                    border-radius: 50%;
-                    width: 20px;
-                    height: 20px;
-                    font-size: 11px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: bold;
-                    border: 2px solid white;
-                `;
-                enhancementButton.appendChild(badge);
-            }
-            badge.textContent = status.pendingCount;
+    static formatTime(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) {
+            return `${hours}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
         } else {
-            enhancementButton.disabled = true;
-            enhancementButton.classList.remove('has-enhancement');
-            enhancementButton.style.background = 'linear-gradient(45deg, #9b59b6, #8e44ad)';
-            enhancementButton.textContent = '🔮 強化';
-            
-            // 移除徽章
-            const badge = enhancementButton.querySelector('.enhancement-badge');
-            if (badge) {
-                badge.remove();
-            }
+            return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
         }
     }
 
     /**
-     * 🔧 修改2：簡化強化進度顯示 - 移除進度條相關
+     * 添加視覺效果
      */
-    static updateEnhancementProgress() {
-        // 由於強化系統已移到右上角，不再需要進度條顯示
-        // 保留此函數以免其他地方調用時出錯，但內容為空
+    static addVisualEffect(element, effect) {
+        if (!element) return;
+        
+        switch (effect) {
+            case 'shake':
+                element.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => element.style.animation = '', 500);
+                break;
+            case 'glow':
+                element.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8)';
+                setTimeout(() => element.style.boxShadow = '', 2000);
+                break;
+            case 'bounce':
+                element.style.animation = 'bounce 0.6s ease-out';
+                setTimeout(() => element.style.animation = '', 600);
+                break;
+        }
     }
 
-    static showInlineEnhancementChoice() {
-    const enhancementSection = document.querySelector('.enhancement-options');
-    if (!enhancementSection) return;
-
-    enhancementSection.innerHTML = `
-        <h4>🔮 選擇強化</h4>
-        <div class="inline-enhancement-choices"></div>
-        <div style="text-align: center; margin-top: 15px;">
-            <button onclick="UI.cancelEnhancementChoice()" 
-                    style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
-                稍後選擇
-            </button>
-        </div>
-    `;
-
-    const choicesContainer = enhancementSection.querySelector('.inline-enhancement-choices');
-    const choices = game.data.enhancements.currentChoices;
-
-    choices.forEach((enhancementId) => {
-        const enhancement = ENHANCEMENTS[enhancementId];
-        if (enhancement) {
-            // 創建選項元素（使用內聯樣式）
-            const optionElement = document.createElement('div');
-            optionElement.style.cssText = `
-                padding: 15px; margin: 10px 0; background: white; 
-                border: 2px solid #ddd; border-radius: 8px; cursor: pointer; 
-                transition: all 0.3s ease; display: flex; align-items: center; gap: 15px;
-                border-left: 4px solid #27ae60;
-            `;
-            
-            optionElement.innerHTML = `
-                <div style="font-size: 2em;">${enhancement.icon}</div>
-                <div style="flex: 1;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">${enhancement.name}</div>
-                    <div style="font-size: 0.9em; color: #666;">${enhancement.description()}</div>
-                </div>
-            `;
-
-            optionElement.onclick = () => {
-                EnhancementSystem.selectEnhancement(enhancementId);
-            };
-
-            choicesContainer.appendChild(optionElement);
+    /**
+     * 顯示通知
+     */
+    static showNotification(message, type = 'info', duration = 3000) {
+        if (!this.notificationContainer) {
+            this.notificationContainer = document.getElementById('notification-container');
         }
-    });
-}
 
-    // ========== 簡單獎勵系統修復 ==========
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
 
-    // 顯示內嵌式獎勵選擇
+        // 添加關閉按鈕
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '×';
+        closeBtn.style.cssText = `
+            float: right;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        `;
+        closeBtn.onclick = () => notification.remove();
+        notification.appendChild(closeBtn);
+
+        this.notificationContainer.appendChild(notification);
+
+        // 自動移除
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, duration);
+
+        // 限制通知數量
+        const notifications = this.notificationContainer.children;
+        if (notifications.length > 5) {
+            notifications[0].remove();
+        }
+    }
+
+    /**
+     * 顯示載入指示器
+     */
+    static showLoading(element, show = true) {
+        if (show) {
+            element.classList.add('loading');
+            element.disabled = true;
+        } else {
+            element.classList.remove('loading');
+            element.disabled = false;
+        }
+    }
+
+    /**
+     * 顯示確認對話框
+     */
+    static showConfirm(message, callback) {
+        if (confirm(message)) {
+            callback();
+        }
+    }
+
+    // ========== 內嵌獎勵系統 ==========
+
+    /**
+     * 顯示內嵌式獎勵選擇
+     */
     static showInlineRewardChoice() {
         console.log('showInlineRewardChoice 被呼叫');
         
@@ -1332,7 +1349,9 @@ class UI {
         rewardSection.parentNode.insertBefore(container, rewardSection.nextSibling);
     }
 
-    // 選擇獎勵的方法
+    /**
+     * 選擇獎勵的方法
+     */
     static selectInlineReward(selectedOption, rewardGroupId) {
         try {
             // 直接使用現有的 Rewards 系統
@@ -1359,7 +1378,9 @@ class UI {
         }
     }
 
-    // 簡化的獎勵效果處理
+    /**
+     * 簡化的獎勵效果處理
+     */
     static applyRewardEffectSimple(selectedOption) {
         const { template, tier } = selectedOption;
         
@@ -1433,55 +1454,10 @@ class UI {
                 this.showNotification(`獲得了 ${template.name}，但效果尚未實作`, 'warning');
         }
     }
-
-        // 重置強化區域
-    static resetEnhancementSection() {
-        // 🔧 修改2：由於強化按鈕已移到遊戲區右上角，此函數不再需要重置UI
-        // 保留函數以免其他地方調用時出錯
-    }
-
-    // 取消強化選擇
-    static cancelEnhancementChoice() {
-        // 🔧 修改2：同樣簡化，不再需要重置區域
-    }
-
-    // 更新天氣重骰按鈕狀態
-    static updateWeatherRerollButton() {
-        const button = document.getElementById('reroll-weather-btn');
-        if (!button || !game.data) return;
-        
-        const isLocked = game.data.weatherLocked && Date.now() < game.data.weatherLocked;
-        const cost = game.data.freeWeatherReroll ? 0 : 100;
-        const canAfford = game.data.fruit >= cost;
-        
-        if (isLocked) {
-            // 🔧 天氣被鎖定時
-            button.disabled = true;
-            button.textContent = '被鎖定';
-            button.className = 'btn btn-secondary btn-sm';
-            
-            // 🔧 顯示剩餘鎖定時間
-            const remainingTime = Math.ceil((game.data.weatherLocked - Date.now()) / 60000);
-            button.title = `天氣被鎖定，剩餘 ${remainingTime} 分鐘`;
-            
-        } else if (!canAfford && cost > 0) {
-            // 🔧 果實不足時
-            button.disabled = true;
-            button.textContent = `重骰 (${cost})`;
-            button.className = 'btn btn-outline-danger btn-sm';
-            button.title = '果實不足';
-            
-        } else {
-            // 🔧 正常狀態
-            button.disabled = false;
-            button.className = cost === 0 ? 'btn btn-success btn-sm' : 'btn btn-primary btn-sm';
-            button.textContent = cost === 0 ? '免費重骰' : `重骰 (${cost})`;
-            button.title = cost === 0 ? '免費重骰天氣' : `花費 ${cost} 果實重骰天氣`;
-        }
-    }
 }
 
-// 全局函數（供HTML onclick調用）
+// ========== 全局函數（供HTML onclick調用）==========
+
 window.buyMandrake = function(button, id) {
     if (game.buyMandrake(id)) {
         if (button) {
@@ -1560,9 +1536,6 @@ window.openRewardSelection = function() {
         UI.showNotification('獎勵系統未載入', 'error');
     }
 };
-
-// 暴露UI類供其他模組使用
-window.UI = UI;
 
 // 🔧 新增：統計功能
 window.showStats = function() {
@@ -1690,3 +1663,6 @@ window.buySlot = function(button, slotId) {
         UI.showNotification('購買失敗，請檢查果實是否足夠', 'warning');
     }
 };
+
+// 暴露UI類供其他模組使用
+window.UI = UI;
