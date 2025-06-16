@@ -1,6 +1,4 @@
-
-
-/* ==========  基礎樣式 ========== */
+/* ========== 簡化版基礎樣式 ========== */
 * {
     margin: 0;
     padding: 0;
@@ -8,314 +6,373 @@
 }
 
 body {
-    font-family: 'Taipei Sans TC Beta', 'Microsoft JhengHei', Arial, sans-serif; /* 🎯 使用台北黑體 */
-    margin: 0;
-    padding: 15px;
+    font-family: 'Taipei Sans TC Beta', 'Microsoft JhengHei', Arial, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #333;
     min-height: 100vh;
-    line-height: 1.6;
+    color: #333;
 }
 
 /* ========== 遊戲主容器 ========== */
 .game-container {
-    max-width: 1600px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    display: flex;
-    gap: 0px;
-    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    height: 100vh;
+    gap: 0;
 }
 
 /* ========== 左側面板 ========== */
 .left-panel {
-    width: 350px;
-    min-width: 350px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-radius: 0px;
-    padding: 0px;
+    background: rgba(255, 255, 255, 0.95);
+    border-right: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    overflow: visible;
-    margin-right: 10px; /* 🔧 增加右邊距離 */
+    gap: 20px;
+    overflow-y: auto;
 }
 
 .game-title {
     text-align: center;
-    font-size: 2em;
-    color: #2c3e50;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    margin: 0;
-    padding: 15px;
-    background: rgba(255,255,255,0.8);
-    border-radius: 0px;
+    color: #4a5568;
+    font-size: 1.4em;
+    margin-bottom: 10px;
 }
 
 /* ========== 資源顯示區 ========== */
 .main-resources {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
 }
 
 .resource-combined {
     display: flex;
-    background: rgba(255,255,255,0.8);
-    border-radius: 0px;
-    border: 2px solid rgba(255,255,255,0.3);
-    overflow: hidden;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .fruit-section {
-    flex: 2;
-    text-align: center;
-    padding: 10px;
-    background: rgba(39, 174, 95, 0.126);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-
-.resource-combined .resource-label {
-    font-size: 1em;
-    color: #666;
-    margin-bottom: 0px;
-}
-
-.fruit-section .resource-value {
-    font-size: 2.5em;
-    font-weight: bold;
-    color: #e67e22;  
-}
-
-.fruit-section .production-label {
+.resource-label {
     font-size: 0.9em;
-    color: #666;
-    margin-top: 0px;
+    opacity: 0.9;
 }
 
-.fruit-section .production-value {
-    font-size: 1.5em;
+.resource-value {
+    font-size: 2em;
     font-weight: bold;
-    color: #27ae60;
 }
 
+.production-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 10px;
+}
+
+.production-value {
+    font-size: 1.3em;
+    font-weight: bold;
+}
 
 /* ========== 購買區域 ========== */
 .purchase-section {
     flex: 1;
-    background: rgba(255,255,255,0.6);
-    border-radius: 0px;
-    padding: 0px;
     display: flex;
     flex-direction: column;
-    overflow: visible;
-}
-
-.purchase-section h3 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    text-align: center;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 10px;
+    gap: 15px;
+    margin: 0 -20px; /* 向外擴展，填滿整個左側面板 */
 }
 
 /* ========== 底部系統區域 ========== */
 .bottom-systems {
-    background: rgba(255,255,255,0.6);
-    border-radius: 10px;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #8b4513;
     padding: 15px;
-}
-
-.talent-points-section {
-    margin-top: 15px;
+    border-radius: 10px;
+    text-align: center;
 }
 
 .talent-points-section h4 {
-    margin-bottom: 10px;
-}
-
-.talent-points-section > div {
-    text-align: center;
-    padding: 15px;
-    background: rgba(255,255,255,0.8);
-    border-radius: 10px;
+    margin-bottom: 5px;
 }
 
 .talent-points-section .resource-value {
-    font-size: 2em;
-    font-weight: bold;
+    font-size: 1.8em;
     color: #d63031;
 }
 
-.talent-points-section .resource-label {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 5px;
+.rebirth-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+.rebirth-info {
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.rebirth-points {
+    color: #d63031;
+    font-size: 1.2em;
+}
+
+.rebirth-btn {
+    background: rgba(139, 69, 19, 0.2);
+    color: #8b4513;
+    border: 2px solid #8b4513;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.rebirth-btn:hover {
+    background: #8b4513;
+    color: white;
 }
 
 /* ========== 右側面板 ========== */
 .right-panel {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    min-height: 0;
-    /* 移除 height: 100% 限制 */
-    box-sizing: border-box;
+    gap: 0;
 }
 
 /* ========== 上方橫幅 ========== */
 .top-bar {
-    display: grid;
-    grid-template-columns: 300px 1fr 240px;
-    gap: 5px;
-    height: 140px;
-    margin-bottom: 0px;
-    flex-shrink: 0;
-    position: relative; 
-    z-index: 10; 
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 /* ========== 獎勵領取區 ========== */
 .reward-section {
-    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
-    border-radius: 0px;
-    padding: 20px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    height: 100%; /* 🔧 限制高度 */
-    box-sizing: border-box; /* 🔧 確保 padding 計算正確 */
-    overflow: hidden; /* 🔧 防止內容溢出 */
+    align-items: center;
+    gap: 15px;
 }
 
-/* ========== 輪播區 ========== */
-.carousel-section {
-    background: linear-gradient(135deg, #a8e6cf, #88d8a3);
-    border-radius: 0px;
-    padding: 20px;
+.reward-count {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.pending-count {
+    color: #e53e3e;
+    font-size: 1.2em;
+}
+
+.reward-timer {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.claim-reward-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.claim-reward-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+}
+
+.claim-reward-btn.has-rewards {
+    background: #e53e3e;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.reward-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    height: 100%; /* 🔧 限制高度 */
-    box-sizing: border-box; /* 🔧 確保 padding 計算正確 */
-}
-
-.carousel-text {
-    font-size: 1.1em;
-    text-align: center;
-    color: #2c3e50;
-    animation: fadeInOut 6s infinite;
-}
-
-@keyframes fadeInOut {
-    0%, 20% { opacity: 0; transform: translateY(20px); }
-    30%, 70% { opacity: 1; transform: translateY(0); }
-    80%, 100% { opacity: 0; transform: translateY(-20px); }
+    font-weight: bold;
 }
 
 /* ========== 系統按鈕區 ========== */
 .system-buttons {
-    background: linear-gradient(135deg, #e8f4fd, #c3e9ff);
-    border-radius: 0px;
-    padding: 10px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    height: 100%; /* 🔧 限制高度 */
-    box-sizing: border-box; /* 🔧 確保 padding 計算正確 */
-    overflow: hidden; /* 🔧 防止內容溢出 */
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .system-btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: #667eea;
     color: white;
     border: none;
-    border-radius: 4px;
+    padding: 8px 12px;
+    border-radius: 5px;
     cursor: pointer;
-    font-weight: bold;
     font-size: 0.9em;
-    transition: all 0.3s ease;
-    display: flex !important; /* 🔧 強制 flex 佈局 */
-    align-items: center !important; /* 🔧 垂直置中 */
-    justify-content: center !important; /* 🔧 水平置中 */
-    text-align: center !important; /* 🔧 文字置中 */
-    min-height: 25px;
-    padding: 3px;
+    font-weight: bold;
+    transition: all 0.2s;
     position: relative;
 }
 
 .system-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    background: #5a67d8;
+    transform: translateY(-1px);
 }
 
 .system-btn:disabled {
-    background: #bdc3c7;
+    background: #9ca3af;
     cursor: not-allowed;
     transform: none;
 }
 
-.system-btn.placeholder {
-    background: #ecf0f1;
-    color: #95a5a6;
-    cursor: default;
+.enhancement-btn.has-enhancement {
+    background: #e53e3e;
+    animation: pulse 2s infinite;
+}
+
+.enhancement-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff3838;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid white;
 }
 
 /* ========== 主要遊戲區域 ========== */
 .main-game-area {
     flex: 1;
-    background: linear-gradient(to bottom, 
-        #87CEEB 0%, 
-        #87CEEB 30%, 
-        #32CD32 30%, 
-        #228B22 32%, 
-        #654321 32%, 
-        #8B4513 100%
-    );
-    border-radius: 0px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     position: relative;
-    overflow: visible;
-    min-height: 300px;
-    max-height: 600px; /* 🔧 限制最大高度 */
-    z-index: 1; /* 🔧 確保在橫幅之下 */
 }
 
+/* ========== 天氣系統 ========== */
+.weather-display-container {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    padding: 15px 20px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #8b4513;
+    font-weight: bold;
+    max-width: 100%;
+    flex-wrap: wrap;
+}
 
+.weather-name-diamond {
+    font-size: 1.5em;
+}
+
+.weather-right-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.weather-timer-section {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.weather-effect-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.weather-effect-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.weather-effect-text {
+    font-size: 0.9em;
+}
+
+.weather-reroll-btn {
+    background: rgba(139, 69, 19, 0.2);
+    color: #8b4513;
+    border: 2px solid #8b4513;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: bold;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.weather-reroll-btn:hover {
+    background: #8b4513;
+    color: white;
+}
+
+.weather-reroll-btn:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
 /* ========== 曼德拉草顯示 ========== */
 .mandrake-display {
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .mandrake-image {
-    width: 400px;
-    height: 400px;
+    width: 300px;
+    height: 300px;
     object-fit: contain;
     cursor: pointer;
     transition: transform 0.2s ease;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-    transform-origin: center center;
-    background: none;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0;
-    margin: 0;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
 }
 
 .mandrake-image:hover {
@@ -326,256 +383,37 @@ body {
     transform: scale(0.95);
 }
 
-/* ========== 天氣系統 ========== */
-.weather-display-container {
-    position: absolute;
-    top: 30px; /* 🔧 改回原本比較偏上方的位置 */
-    left: 30px;
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    z-index: 10;
-}
-
-.weather-name-diamond {
-    width: 80px;
-    height: 80px;
-    transform: rotate(45deg);
-    background: linear-gradient(135deg, #74b9ff, #0984e3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border: 2px solid rgba(255,255,255,0.3);
-    margin-left: -10px; /* 🔧 調整位置 */
-}
-
-.diamond-content {
-    transform: rotate(-45deg);
-    color: white;
-    font-weight: bold;
-    font-size: 1.8em;
-    text-align: center;
-    line-height: 1.2;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-}
-
-.weather-right-section {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: -10px; /* 🔧 調整位置 */
-    margin-left: 10px; /* 🔧 增加左邊距離 */
-}
-
-.weather-timer-section {
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-    padding: 4px 4px;
-    font-size: 0.8em;
-    color: #666;
-    text-align: center;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255,255,255,0.5);
-    min-width: 150px;
-    max-width: 150px;
-    width: 150px;
-}
-
-.weather-effect-box {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 12px 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255,255,255,0.5);
-    min-width: 270px;
-    max-width: 270px;       
-    width: 270px;         
-}
-
-.weather-effect-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px;
-}
-
-.weather-effect-text {
-    flex: 1;
-    font-size: 0.8em;
-    color: #2c3e50;
-    font-weight: bold;
-}
-
-.weather-reroll-btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.8em;
-    transition: none;
-    white-space: nowrap;
-}
-
-.weather-reroll-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-}
-
-.weather-reroll-btn:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-
-/* ========== 基礎按鈕樣式 ========== */
-button {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9em;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-button:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-
 /* ========== 響應式設計 ========== */
-@media (max-width: 1400px) {
-    .game-container {
-        flex-direction: column;
-    }
-    
-    .left-panel {
-        width: 100%;
-        min-width: auto;
-        overflow: visible;
-    }
-    
-    .top-bar {
-        grid-template-columns: 1fr 1fr 1fr;
-    }
-
-    .main-game-area {
-        height: 350px; /* 🎯 平板版固定高度 - 你可以改這個數值 */
-    }
-}
-
-@media (max-width: 1024px) {
-    .top-bar {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        height: auto;
-        margin-bottom: 20px; /* 🔧 平板版保持原間距 */
-    }
-    
-    .system-buttons {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-    }
-}
-
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
     .game-container {
-        padding: 15px;
-    }
-    
-    .left-panel {
-        padding: 15px;
-    }
-    
-    .resource-combined {
-        flex-direction: column;
-    }
-    
-    .fruit-section {
-        border-right: none;
-        border-bottom: 2px solid rgba(0,0,0,0.1);
-    }
-    
-    .mandrake-image {
-        width: 250px;
-        height: 250px;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+        min-height: 100vh;
     }
 
-    .main-game-area {
-        height: 280px; /* 🎯 手機版固定高度 - 你可以改這個數值 */
+    .left-panel {
+        border-right: none;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .top-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .system-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .weather-display-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        top: 25px; /* 🔧 手機版也改回偏上方的位置 */
+        font-size: 0.9em;
+        padding: 12px 15px;
     }
-    
-    .weather-name-diamond {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .diamond-content {
-        font-size: 0.8em;
-    }
-    
-    .weather-timer-section,
-    .weather-effect-box {
-        min-width: 200px;
-    }
-    
-    .weather-effect-content {
-        flex-direction: column;
-        gap: 8px;
-    }
-}
 
-@media (max-width: 480px) {
-    .game-container {
-        padding: 10px;
-    }
-    
-    .left-panel {
-        padding: 10px;
-        gap: 15px;
-    }
-    
     .mandrake-image {
         width: 200px;
         height: 200px;
-    }
-    
-    .header h1 {
-        font-size: 1.8em;
     }
 }

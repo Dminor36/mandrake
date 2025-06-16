@@ -1,45 +1,168 @@
-/* ========== 曼德拉草項目 ========== */
+/* ========== 懸停提示 - 增強版 ========== */
+.hover-tooltip {
+    position: absolute;
+    top: -15px;
+    right: 110%;
+    background: linear-gradient(135deg, rgba(45, 45, 45, 0.98), rgba(30, 30, 30, 0.98));
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.75em;
+    white-space: nowrap;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    min-width: 280px;
+    max-width: 400px;
+    white-space: normal; /* 允許換行以顯示詳細內容 */
+    line-height: 1.4;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.hover-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-left-color: rgba(45, 45, 45, 0.98);
+    filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.2));
+}
+
+.hover-tooltip::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 101%;
+    transform: translateY(-50%);
+    border: 7px solid transparent;
+    border-left-color: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+
+.plant-row:hover .hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-8px); /* 稍微向左移動增強效果 */
+}
+
+/* 🔧 工具提示內部樣式 */
+.hover-tooltip div {
+    margin-bottom: 2px;
+}
+
+.hover-tooltip div:last-child {
+    margin-bottom: 0;
+}/* ========== 曼德拉草項目 - 按鈕化設計 ========== */
 .mandrake-list {
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
-    margin-bottom: 20px;
+    max-height: 400px;
+    margin: 0; /* 移除邊距 */
 }
 
 .plant-row {
     display: flex;
     align-items: center;
-    padding: 15px;
-    margin: 0px 0;
-    background: rgba(255,255,255,0.9);
-    border-radius: 0px;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
+    padding: 15px 20px; /* 調整內邊距 */
+    margin: 0; /* 移除邊距，讓行貼合 */
+    background: linear-gradient(135deg, #ffffff, #f8f9fa); /* 漸層背景增加立體感 */
+    border-radius: 0; /* 移除圓角，變成方形 */
+    border-left: 4px solid #27ae60;
+    border-bottom: 1px solid #e2e8f0; /* 添加底部邊框作為分隔 */
+    border-right: 1px solid #e2e8f0; /* 添加右邊框 */
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1), /* 底部陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5); /* 內部高光 */
     position: relative;
     overflow: hidden;
-    gap: 10px;
+    gap: 15px;
+    transition: all 0.2s ease;
+    cursor: pointer; /* 整行變成可點擊 */
+    width: 100%; /* 確保填滿寬度 */
+    box-sizing: border-box;
+    /* 按鈕感覺的重要屬性 */
+    user-select: none; /* 防止文字選取 */
+    transform: translateY(0); /* 初始位置 */
 }
 
 .plant-row:hover {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe); /* 懸停時的漸層 */
+    transform: translateY(-1px); /* 向上浮起效果 */
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15), /* 加深陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.8); /* 增強內部高光 */
+    border-bottom-color: #bfdbfe; /* 邊框顏色變化 */
+    border-right-color: #bfdbfe;
 }
 
-.plant-row.locked {
+.plant-row:active {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe); /* 點擊時更深的顏色 */
+    transform: translateY(1px); /* 向下按壓效果 */
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.2), /* 減少陰影模擬按下 */
+        inset 0 2px 4px rgba(0, 0, 0, 0.1); /* 內部陰影 */
+}
+
+.plant-row:last-child {
+    border-bottom: 1px solid #e2e8f0; /* 最後一行也保持底邊框 */
+}
+
+.plant-row.disabled {
     opacity: 0.6;
-    background: linear-gradient(135deg, #e9ecef, #dee2e6);
-    border-left-color: #6c757d;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* 禁用狀態的漸層 */
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.05), /* 減少陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.3); /* 減少內部高光 */
+    transform: none;
+}
+
+.plant-row.disabled:hover {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* 不可購買時懸停不變色 */
+    transform: none; /* 不可購買時無浮起效果 */
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.05), /* 保持原陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.plant-row.disabled:active {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* 不可購買時點擊不變色 */
+    transform: none; /* 不可購買時無按壓效果 */
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .plant-row.normal {
     border-left-color: #28a745;
 }
 
+.plant-row.normal:hover {
+    border-left-color: #34ce57; /* 懸停時邊框顏色變亮 */
+}
+
 .plant-row.element {
     border-left-color: #dc3545;
 }
 
+.plant-row.element:hover {
+    border-left-color: #e55467; /* 懸停時邊框顏色變亮 */
+}
+
 .plant-row.animal {
     border-left-color: #ffc107;
+}
+
+.plant-row.animal:hover {
+    border-left-color: #ffcd3a; /* 懸停時邊框顏色變亮 */
 }
 
 /* 進度條效果 */
@@ -50,10 +173,9 @@
     left: 0;
     height: 100%;
     background: rgba(39, 174, 96, 0.15);
+    width: var(--progress-width, 0%);
     transition: width 0.5s ease;
     z-index: 1;
-    border-radius: 0px 0 0 0px;
-    width: var(--progress-width, 0%);
 }
 
 .plant-row.normal::before {
@@ -94,12 +216,11 @@
 .plant-row > * {
     position: relative;
     z-index: 2;
-    overflow: visible;
 }
 
 /* ========== 植物信息區域 ========== */
 .plant-count-section {
-    flex: 0 0 40px;
+    flex: 0 0 60px; /* 增加寬度 */
     text-align: center;
     display: flex;
     align-items: center;
@@ -107,135 +228,83 @@
 }
 
 .plant-count-large {
-    font-size: 2em;
+    font-size: 1.8em;
     font-weight: bold;
     color: #2c3e50;
     font-family: 'Courier New', monospace;
-    line-height: 1;
 }
 
 .plant-info-section {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0px;
-    min-width: 0;
-    padding-right: 8px;
+    gap: 3px;
+    min-width: 0; /* 防止文字溢出 */
 }
 
 .plant-name {
     font-weight: bold;
-    font-size: 1.2em;
-    margin-bottom: 2px;
+    font-size: 1.1em;
     color: #2c3e50;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    line-height: 1.3;
-    max-height: 2.6em;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-}
-
-.plant-icon {
-    font-size: 1.3em;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-overflow: ellipsis;
 }
 
 .plant-production {
     color: #27ae60;
     font-size: 0.9em;
-    margin-top: 0px;
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* ========== 購買按鈕區域 ========== */
-.plant-buy-section {
-    flex: 0 0 50px;
-    max-width: 50px;
-    min-width: 50px;
-    width: 50px;
+/* ========== 價格顯示區域 ========== */
+.plant-price-section {
+    flex: 0 0 80px; /* 新增價格顯示區域 */
+    text-align: right;
     display: flex;
     flex-direction: column;
-    align-items: right;
+    align-items: flex-end;
     justify-content: center;
-    overflow: visible;
-    position: relative;
-    margin-right: 10px;
+    gap: 2px;
+}
 
+.plant-price {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.plant-price.affordable {
+    color: #27ae60; /* 買得起時顯示綠色 */
+}
+
+.plant-price.expensive {
+    color: #e53e3e; /* 買不起時顯示紅色 */
+}
+
+.bulk-indicator {
+    font-size: 0.8em;
+    color: #666;
+    opacity: 0.8;
+}
+
+/* ========== 購買按鈕區域 - 移除獨立按鈕 ========== */
+.plant-buy-section {
+    display: none; /* 隱藏原本的購買按鈕區域 */
 }
 
 .plant-buy-btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    padding: 2px 0px;
-    border-radius: 2px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.7em;
-    transition: all 0.3s ease;
-    width: 70px;
-    height: 100%;
-    min-width: 70px;
-    max-width: 80px;
-    position: relative;
-    line-height: 1;
-    text-align: center;
-    white-space: normal;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-}
-
-.plant-buy-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 20;
-    position: relative;
-}
-
-.plant-buy-btn:disabled {
-    background: #bdc3c7;
-    color: #151818;
-    cursor: not-allowed;
-    opacity: 0.6;
-    transform: none;
-    box-shadow: none;
-    border: 1px solid #95a5a6;
-}
-
-.plant-buy-btn:disabled:hover {
-    background: #bdc3c7;
-    transform: none;
-    box-shadow: none;
-    opacity: 1;
-}
-
-.plant-buy-btn div {
-    font-size: 0.85em;
-    line-height: 1;
-    margin: 3px 0;
+    display: none; /* 隱藏原本的購買按鈕 */
 }
 
 /* ========== 懸停提示 ========== */
 .hover-tooltip {
     position: absolute;
-    top: 0;
-    right: 120%;
+    top: -10px;
+    right: 110%;
     background: rgba(53, 53, 53, 0.95);
     color: white;
     padding: 8px 12px;
@@ -265,13 +334,18 @@
     visibility: visible;
 }
 
-/* ========== 批量購買控制 ========== */
+/* ========== 批量購買控制 - 按鈕化 ========== */
 .bulk-buy-controls {
     display: flex;
+    gap: 8px;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 0px;
-    margin-top: 10px;
+    padding: 15px 20px; /* 添加左右邊距匹配行的邊距 */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.9)); /* 與按鈕一致的漸層 */
+    border-bottom: 1px solid #e2e8f0; /* 添加底邊框 */
+    border-right: 1px solid #e2e8f0; /* 添加右邊框 */
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1), /* 底部陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5); /* 內部高光 */
 }
 
 .bulk-label {
@@ -282,224 +356,72 @@
 
 .bulk-buttons {
     display: flex;
-    background: rgba(255,255,255,0.8);
-    border-radius: 0px;
-    padding: 0px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    gap: 5px;
 }
 
 .bulk-btn {
-    background: transparent;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 0px;
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa); /* 按鈕漸層 */
+    border-radius: 5px;
     cursor: pointer;
     font-size: 0.9em;
-    font-weight: bold;
-    color: #666;
-    transition: all 0.3s ease;
-    min-width: 50px;
+    transition: all 0.2s ease;
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.1), /* 小陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5); /* 內部高光 */
+    user-select: none; /* 防止文字選取 */
+    transform: translateY(0);
 }
 
 .bulk-btn:hover {
-    background: rgba(102, 126, 234, 0.1);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(102, 126, 234, 0.05));
     color: #667eea;
+    transform: translateY(-1px); /* 浮起效果 */
+    box-shadow: 
+        0 3px 8px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-color: #667eea;
+}
+
+.bulk-btn:active {
+    transform: translateY(1px); /* 按壓效果 */
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .bulk-btn.active {
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #4299e1, #3182ce); /* 激活狀態漸層 */
     color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border-color: #4299e1;
+    box-shadow: 
+        0 2px 6px rgba(66, 153, 225, 0.3), /* 藍色陰影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(0); /* 激活狀態不浮起 */
 }
 
-/* ========== 重生系統 ========== */
-.rebirth-section {
-    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    border: 2px solid rgba(255,255,255,0.3);
-    margin-bottom: 20px;
+.bulk-btn.active:hover {
+    background: linear-gradient(135deg, #3182ce, #2b77cb);
+    transform: translateY(0); /* 激活狀態懸停也不浮起 */
+    box-shadow: 
+        0 3px 8px rgba(66, 153, 225, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.rebirth-section h4 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-}
-
-.rebirth-section p {
-    color: #666;
-    margin-bottom: 15px;
-    font-size: 0.9em;
-}
-
-.rebirth-info {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 15px;
-}
-
-.rebirth-points {
-    color: #d63031;
-    font-size: 1.2em;
-}
-
-.rebirth-btn {
-    background: linear-gradient(45deg, #e17055, #d63031);
-    font-size: 1em;
-    padding: 12px 30px;
-}
-
-/* ========== 獎勵系統 ========== */
-.reward-count {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.pending-count {
-    color: #d63031;
-    font-size: 1.2em;
-}
-
-.reward-timer {
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 10px;
-}
-
-.claim-reward-btn {
-    background: linear-gradient(45deg, #00b894, #00a085);
-    padding: 10px 15px;
-    font-size: 0.9em;
-    min-width: 100px;
-    position: relative;
-}
-
-.claim-reward-btn:disabled {
-    background: #bdc3c7;
-    cursor: not-allowed;
-}
-
-.claim-reward-btn.has-rewards {
-    animation: rewardPulse 2s infinite;
-}
-
-@keyframes rewardPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-.reward-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff6b6b;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-}
-
-/* ========== 強化系統 ========== */
-
-
-.enhancement-btn.has-enhancement {
-    background: linear-gradient(45deg, #e74c3c, #c0392b) 
-}
-
-.enhancement-btn.has-enhancement:hover {
-    background: linear-gradient(45deg, #ec7063, #d5454d) 
-}
-
-.enhancement-badge {
-    position: absolute;
-    top: -8px; /* 🔧 稍微調高一點 */
-    right: -8px; /* 🔧 稍微調右一點 */
-    background: #ff3838;
-    color: white;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    z-index: 10; /* 🔧 確保在最上層 */
-    pointer-events: none; /* 🔧 不影響按鈕點擊 */
-}
-
-@keyframes enhancementPulse {
-    0%, 100% { 
-        transform: scale(1); 
-        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
-    }
-    50% { 
-        transform: scale(1.05); 
-        box-shadow: 0 0 25px rgba(231, 76, 60, 0.8);
-    }
-}
-
-.enhancement-progress {
-    margin-bottom: 15px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.progress-label {
-    margin-bottom: 8px;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-}
-
-.enhancement-hint {
-    font-size: 0.85em;
-    color: #666;
-    text-align: center;
-    margin: 10px 0 0 0;
-    font-style: italic;
-}
-
-
-/* ========== 彈窗系統 ========== */
+/* ========== 模態框系統 ========== */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 2000;
-    backdrop-filter: blur(0px);
 }
 
 .modal-overlay.show {
@@ -523,7 +445,6 @@
     overflow-y: auto;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
-    margin-left: 300px;
 }
 
 @keyframes modalSlideIn {
@@ -545,6 +466,69 @@
     color: #2c3e50;
     font-size: 1.5em;
     margin: 0;
+}
+
+/* ========== 統計系統 ========== */
+.stats-modal {
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.stats-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    color: #666;
+    font-size: 20px;
+    padding: 5px;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.stats-close-btn:hover {
+    color: #333;
+    transform: none;
+    box-shadow: none;
+}
+
+.stats-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats-section h4 {
+    margin: 0 0 10px 0;
+    color: #4CAF50;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+    padding-bottom: 5px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.stats-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-item:last-child {
+    border-bottom: none;
+}
+
+.stats-value {
+    font-weight: bold;
+    color: #FFD700;
 }
 
 /* ========== 獎勵選擇 ========== */
@@ -722,86 +706,6 @@
     border-color: #9b59b6;
 }
 
-/* ========== 統計模態框關閉按鈕 ========== */
-.stats-close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    color: #666;
-    font-size: 20px;
-    padding: 5px;
-    border: none;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.stats-close-btn:hover {
-    color: #333;
-    transform: none;
-    box-shadow: none;
-}
-
-/* ========== 統計系統 ========== */
-.stats-modal {
-    max-width: 800px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.stats-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stats-section h4 {
-    margin: 0 0 10px 0;
-    color: #4CAF50;
-    border-bottom: 1px solid rgba(76, 175, 80, 0.3);
-    padding-bottom: 5px;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
-}
-
-.stats-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.stats-item:last-child {
-    border-bottom: none;
-}
-
-.stats-value {
-    font-weight: bold;
-    color: #FFD700;
-}
-
-.enhancement-list {
-    max-height: 200px;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.enhancement-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 3px 0;
-    font-size: 0.9em;
-}
-
 /* ========== 通知系統 ========== */
 .notification-container {
     position: fixed;
@@ -813,7 +717,7 @@
 }
 
 .notification {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
+    background: #4CAF50;
     color: white;
     padding: 12px 16px;
     border-radius: 8px;
@@ -823,6 +727,7 @@
     pointer-events: auto;
     font-size: 0.9em;
     line-height: 1.3;
+    position: relative;
 }
 
 @keyframes notificationSlideIn {
@@ -873,32 +778,12 @@
 }
 
 .mandrake-list::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: #667eea;
     border-radius: 4px;
 }
 
 .mandrake-list::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #5a6fd8, #6a4190);
-}
-
-/* ========== 載入動畫 ========== */
-.loading {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-
-.number-update {
-    animation: numberUpdate 0.5s ease-out;
+    background: #5a67d8;
 }
 
 /* ========== 響應式組件調整 ========== */
@@ -985,29 +870,32 @@
     }
 }
 
-
-/* 插槽行的基本樣式（灰色主題） */
+/* ========== 插槽系統樣式 ========== */
 .plant-row[data-slot-id] {
     background: linear-gradient(90deg, rgba(108,117,125,0.1) 0%, rgba(108,117,125,0.05) 100%);
-    border: 2px dashed #999;
+    border: none; /* 移除虛線邊框 */
+    border-left: 4px solid #6c757d; /* 保持左側邊框 */
+    border-bottom: 1px solid #e2e8f0; /* 保持底部邊框 */
     opacity: 0.8;
 }
 
-/* 插槽按鈕樣式 */
-.plant-row[data-slot-id] .plant-buy-btn {
-    background: linear-gradient(45deg, #368f66, #0c472c) !important;
-    border: 2px solid #495057;
-    color: white;
-    font-weight: bold;
+.plant-row[data-slot-id]:hover {
+    background: rgba(108,117,125,0.15);
 }
 
-.plant-row[data-slot-id] .plant-buy-btn:hover:not(:disabled) {
-    background: linear-gradient(45deg, #174b72, #103153) !important;
-    transform: translateY(-2px);
+.plant-row[data-slot-id]:active {
+    background: rgba(108,117,125,0.25);
 }
 
-.plant-row[data-slot-id] .plant-buy-btn:disabled {
-    background: linear-gradient(45deg, #5a6268, #495057) !important;
-    opacity: 0.6;
+/* 插槽的價格顯示 */
+.plant-row[data-slot-id] .plant-price {
+    color: #6c757d;
 }
 
+.plant-row[data-slot-id] .plant-price.affordable {
+    color: #28a745;
+}
+
+.plant-row[data-slot-id] .plant-price.expensive {
+    color: #dc3545;
+}

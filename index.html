@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>曼德拉草農場</title>
-     
+    
     <!-- 台北黑體字體 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Light/TaipeiSansTCBeta-Light.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Regular/TaipeiSansTCBeta-Regular.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Bold/TaipeiSansTCBeta-Bold.css">
-       
-    <!-- 整理後的CSS檔案 -->
+    
+    <!-- 簡化後的CSS檔案 -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
+</head>
 </head>
 <body>
     <div class="game-container">
@@ -52,6 +53,15 @@
             
             <!-- 底部系統區域 -->
             <div class="bottom-systems">
+                <!-- 天賦點顯示 -->
+                <div class="talent-points-section">
+                    <h4>⭐ 天賦點數</h4>
+                    <div>
+                        <span class="resource-value" id="talent-points">0</span>
+                        <div class="resource-label">累積天賦點數</div>
+                    </div>
+                </div>
+                
                 <!-- 重生系統 -->
                 <div class="rebirth-section">
                     <h4>🔄 重生系統</h4>
@@ -60,15 +70,6 @@
                         預計獲得：<span class="rebirth-points" id="rebirth-points">0</span> 天賦點
                     </div>
                     <button class="rebirth-btn" onclick="rebirth()">重生</button>
-                </div>
-                
-                <!-- 天賦點顯示 -->
-                <div class="talent-points-section">
-                    <h4>⭐ 天賦點數</h4>
-                    <div>
-                        <span class="resource-value" id="talent-points">0</span>
-                        <div class="resource-label">累積天賦點數</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -90,45 +91,32 @@
                     </button>
                 </div>
                 
-                <!-- 輪播區 -->
-                <div class="carousel-section">
-                    <div class="carousel-text" id="carousel-text">
-                        歡迎來到曼德拉草農場！開始你的魔法種植之旅吧！
-                    </div>
-                </div>
-                
                 <!-- 系統按鈕區 -->
                 <div class="system-buttons">
                     <button class="system-btn" onclick="showStats()">📊 統計</button>
                     <button class="system-btn enhancement-btn" id="enhancement-btn" onclick="openEnhancementSelection()" disabled>
                         🔮 強化
                     </button>
-                    <button class="system-btn placeholder">成就</button>
-                    <button class="system-btn placeholder">商店</button>
-                    <button class="system-btn placeholder">圖鑑</button>
-                    <button class="system-btn placeholder">幫助</button>
                 </div>
             </div>
             
             <!-- 主要遊戲區域 -->
             <div class="main-game-area">
-                <!-- 天氣顯示 -->
+                <!-- 天氣顯示 - 移到左上角 -->
                 <div class="weather-display-container">
-                    <!-- 左側：菱形天氣名稱 -->
+                    <!-- 天氣名稱 -->
                     <div class="weather-name-diamond">
-                        <div class="diamond-content">
-                            <span id="current-weather-name">暴雨</span>
-                        </div>
+                        <span id="current-weather-name">暴雨</span>
                     </div>
                     
-                    <!-- 右側：時間和效果的垂直排列 -->
+                    <!-- 右側：時間和效果 -->
                     <div class="weather-right-section">
-                        <!-- 獨立的刷新時間區域 -->
+                        <!-- 刷新時間 -->
                         <div class="weather-timer-section">
                             下次刷新：<span id="weather-refresh-timer">04:23</span>
                         </div>
                         
-                        <!-- 效果框 -->
+                        <!-- 效果和按鈕 -->
                         <div class="weather-effect-box">
                             <div class="weather-effect-content">
                                 <div class="weather-effect-text">
@@ -217,7 +205,7 @@
             // 檢查 HTML 元素
             console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
             
-        // 初始化輪播系統
+            // 初始化輪播系統
             if (typeof initCarousel === 'function') {
                 initCarousel();
             }
