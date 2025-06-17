@@ -15,7 +15,7 @@ body {
 /* ========== 遊戲主容器 ========== */
 .game-container {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 400px 1fr;
     height: 100vh;
     gap: 0;
 }
