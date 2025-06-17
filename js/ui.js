@@ -275,15 +275,10 @@ class UI {
         let tooltipContent = `總產量增加: +${formattedIncrease}/秒\n`;
         
         if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
-            tooltipContent += `├ 新增產量: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒\n`;
-            tooltipContent += `└ 現有提升: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒\n`;
+            tooltipContent += `├ 基礎提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒\n`;
+            tooltipContent += `└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒\n`;
         }
         
-        if (bulkCost > 0) {
-            const efficiency = (productionIncrease / bulkCost).toFixed(3);
-            tooltipContent += `效率: ${efficiency}`;
-        }
-
         // 計算進度條
         const progressWidth = this.calculateProgressWidth(id, game.data.fruit);
         const isHighProgress = progressWidth > 80;
@@ -639,12 +634,7 @@ class UI {
                 <div>└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
             </div>`;
         }
-        
-        if (bulkCost > 0) {
-            const efficiency = (productionIncrease / bulkCost).toFixed(3);
-            tooltipContent += `<div style="font-size: 0.8em; color: #999; margin-top: 3px;">效率: ${efficiency}</div>`;
-        }
-        
+             
         tooltip.innerHTML = tooltipContent;
     }
 

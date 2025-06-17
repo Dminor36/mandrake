@@ -10,6 +10,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     color: #333;
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
 }
 
 /* ========== 遊戲主容器 ========== */
@@ -18,6 +19,8 @@ body {
     grid-template-columns: 400px 1fr;
     height: 100vh;
     gap: 0;
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
+    max-width: 100vw; /* 🔧 限制最大寬度 */
 }
 
 /* ========== 左側面板 ========== */
@@ -29,6 +32,7 @@ body {
     flex-direction: column;
     gap: 0px;
     overflow-y: auto;
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
 }
 
 .game-title {
@@ -147,30 +151,119 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0;
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
 }
 
 /* ========== 上方橫幅 ========== */
 .top-bar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 252, 214, 0.95);
     border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-    padding: 15px;
+    padding: 20px 20px; /* 🔧 調整左右內邊距 */
+    min-height: 120px; /* 設定最小高度 */
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 15px; /* 🔧 增加間距 */
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
+}
+
+/* ========== 上方橫幅中間的輪播文字區 ========== */
+.carousel-text-section {
+    flex: 1;
+    width: 400px; /* 🔧 固定寬度 */
+    height: 70px; /* 🔧 固定高度 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 10px; /* 🔧 調整邊距 */
+}
+
+.carousel-text-container {
+    background: linear-gradient(135deg, rgba(168, 230, 207, 0.8), rgba(127, 205, 205, 0.8));
+    padding: 15px 20px;
+    border-radius: 20px;
+    border: 2px solid rgba(44, 85, 48, 0.3);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 70px; /* 🔧 固定高度而非最小高度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-text-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(44, 85, 48, 0.5);
+}
+
+.carousel-text-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.carousel-text-container:hover::before {
+    left: 100%;
+}
+
+#carousel-text {
+    color: #2c5530;
+    font-weight: bold;
+    font-size: 0.95em;
+    display: block;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    line-height: 1.4;
+    word-wrap: break-word;
+    animation: fadeIn 0.5s ease-in-out;
+    overflow-wrap: break-word; /* 🔧 防止長文字溢出 */
+    word-break: break-word; /* 🔧 強制換行 */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ========== 獎勵領取區 ========== */
 .reward-section {
     display: flex;
+    flex-direction: column; /* 🔧 改為垂直排列 */
+    align-items: flex-start; /* 🔧 左對齊 */
+    gap: 8px; /* 🔧 減少間距 */
+    min-width: 180px; /* 🔧 設定最小寬度 */
+    max-width: 200px; /* 🔧 限制最大寬度 */
+}
+
+/* 🔧 新增：獎勵數量行 */
+.reward-count-row {
+    display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
+    width: 100%;
 }
 
 .reward-count {
     font-weight: bold;
     color: #2c3e50;
+    font-size: 0.9em; /* 🔧 調整字體大小 */
 }
 
 .pending-count {
@@ -178,21 +271,32 @@ body {
     font-size: 1.2em;
 }
 
+/* 🔧 新增：按鈕和倒數行 */
+.reward-button-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
 .reward-timer {
     color: #666;
-    font-size: 0.9em;
+    font-size: 0.85em; /* 🔧 調整字體大小 */
+    flex: 1; /* 🔧 占用剩餘空間 */
 }
 
 .claim-reward-btn {
     background: #48bb78;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 12px; /* 🔧 調整按鈕大小 */
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.2s;
     position: relative;
+    font-size: 0.85em; /* 🔧 調整字體大小 */
+    white-space: nowrap; /* 🔧 防止文字換行 */
 }
 
 .claim-reward-btn:disabled {
@@ -217,9 +321,9 @@ body {
     background: #ff6b6b;
     color: white;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
+    width: 18px; /* 🔧 調整大小 */
+    height: 18px;
+    font-size: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -231,6 +335,8 @@ body {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center; /* 🔧 垂直居中對齊 */
+    min-width: 160px; /* 🔧 設定最小寬度 */
 }
 
 .system-btn {
@@ -244,6 +350,7 @@ body {
     font-weight: bold;
     transition: all 0.2s;
     position: relative;
+    white-space: nowrap; /* 🔧 防止文字換行 */
 }
 
 .system-btn:hover {
@@ -283,11 +390,12 @@ body {
 .main-game-area {
     flex: 1;
     background: rgba(255, 255, 255, 0.95);
-    padding: 20px;
+    padding: 0; /* 🔧 移除所有內邊距 */
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 0; /* 🔧 移除間距 */
     position: relative;
+    overflow-x: hidden; /* 🔧 防止橫向滾動 */
 }
 
 /* ========== 天氣系統 ========== */
@@ -303,6 +411,9 @@ body {
     font-weight: bold;
     max-width: 100%;
     flex-wrap: wrap;
+    position: relative; /* 🔧 確保在背景之上 */
+    z-index: 10; /* 🔧 確保天氣系統在背景之上 */
+    margin: 20px; /* 🔧 給天氣系統一些邊距 */
 }
 
 .weather-name-diamond {
@@ -366,6 +477,81 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute; /* 🔧 改為絕對定位以填滿整個區域 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 🔧 確保背景不會溢出 */
+}
+
+/* 🔧 新增：完整環境背景（天空+土壤橫切面） */
+.mandrake-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        /* 天空層 */
+        #87ceeb 0%,      /* 天藍色 */
+        #b0e0e6 20%,     /* 淺藍色 */
+        #e0f6ff 35%,     /* 很淺的藍色 */
+        #f0f8ff 40%,     /* 接近白色的藍 */
+        /* 地平線過渡 */
+        #90ee90 40%,     /* 淺綠色地平線 */
+        #7fb069 42%,     /* 草地綠 */
+        #6a994e 45%,     /* 深一點的草地 */
+        /* 土壤層開始 */
+        #8b5a3c 45%,     /* 表土 */
+        #a0522d 55%,     /* 棕色表土 */
+        #654321 55%,     /* 深土層 */
+        #4a3728 70%,     /* 更深的土 */
+        #3d2914 70%,     /* 底土層 */
+        #2f1b0c 85%,     /* 深底土 */
+        /* 岩石層 */
+        #555555 85%,     /* 岩石 */
+        #404040 95%,     /* 深岩石 */
+        #2a2a2a 100%     /* 最深處 */
+    );
+    z-index: 1;
+}
+
+/* 🔧 修復：土壤紋理效果（只在土壤區域，45%以下） */
+.mandrake-display::after {
+    content: '';
+    position: absolute;
+    top: 45%; /* 🔧 只從土壤開始的位置顯示紋理 */
+    left: 0;
+    width: 100%;
+    height: 55%; /* 🔧 只覆蓋土壤部分 */
+    background-image: 
+        /* 土壤中的石子和顆粒 */
+        radial-gradient(circle at 20% 30%, rgba(139, 90, 60, 0.8) 3px, transparent 3px),
+        radial-gradient(circle at 70% 20%, rgba(160, 82, 45, 0.6) 2px, transparent 2px),
+        radial-gradient(circle at 50% 50%, rgba(101, 67, 33, 0.7) 2px, transparent 2px),
+        radial-gradient(circle at 85% 40%, rgba(74, 55, 40, 0.5) 2.5px, transparent 2.5px),
+        radial-gradient(circle at 15% 80%, rgba(42, 42, 42, 0.8) 3px, transparent 3px),
+        radial-gradient(circle at 35% 90%, rgba(64, 64, 64, 0.6) 2px, transparent 2px),
+        radial-gradient(circle at 65% 60%, rgba(139, 90, 60, 0.7) 2px, transparent 2px),
+        radial-gradient(circle at 25% 45%, rgba(101, 67, 33, 0.5) 1.5px, transparent 1.5px),
+        
+        /* 土壤細顆粒 */
+        radial-gradient(circle at 30% 35%, rgba(139, 90, 60, 0.4) 1px, transparent 1px),
+        radial-gradient(circle at 80% 65%, rgba(101, 67, 33, 0.3) 1px, transparent 1px),
+        radial-gradient(circle at 60% 85%, rgba(64, 64, 64, 0.5) 1px, transparent 1px),
+        radial-gradient(circle at 45% 70%, rgba(74, 55, 40, 0.4) 0.8px, transparent 0.8px);
+    
+    background-size: 
+        /* 土壤石子大小 */
+        80px 60px, 100px 50px, 60px 80px, 90px 55px, 70px 65px, 85px 70px, 75px 55px, 95px 60px,
+        /* 土壤細顆粒大小 */
+        30px 25px, 35px 30px, 40px 35px, 32px 28px;
+    
+    opacity: 0.6;
+    z-index: 2;
 }
 
 .mandrake-image {
@@ -374,7 +560,9 @@ body {
     object-fit: contain;
     cursor: pointer;
     transition: transform 0.2s ease;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+    position: relative;
+    z-index: 5; /* 🔧 確保曼德拉草在環境背景之上，但在天氣系統之下 */
 }
 
 .mandrake-image:hover {
@@ -384,6 +572,29 @@ body {
 .mandrake-image:active {
     transform: scale(0.95);
 }
+
+/* 🔧 移除：點擊環境震動效果 */
+/* .mandrake-display.clicked::before {
+    animation: environmentShake 0.6s ease-out;
+}
+
+@keyframes environmentShake {
+    0% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-2px);
+    }
+    50% {
+        transform: translateY(1px);
+    }
+    75% {
+        transform: translateY(-1px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+} */
 
 /* ========== 響應式設計 ========== */
 @media (max-width: 768px) {
@@ -401,21 +612,89 @@ body {
 
     .top-bar {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        min-height: 140px; /* 🔧 手機版增加高度以容納新佈局 */
+        padding: 15px;
+    }
+
+    .carousel-text-section {
+        order: 1;
+        width: 100%;
+        height: 60px; /* 🔧 手機版固定高度 */
+        margin: 10px 0;
+    }
+
+    .carousel-text-container {
+        margin: 0 10px;
+        height: 50px; /* 🔧 手機版固定高度 */
+    }
+
+    #carousel-text {
+        font-size: 0.9em;
+    }
+
+    .reward-section {
+        order: 2;
+        width: 100%;
+        max-width: none; /* 🔧 移除最大寬度限制 */
+        align-items: center; /* 🔧 手機版居中對齊 */
+    }
+
+    .reward-count-row,
+    .reward-button-row {
+        justify-content: center; /* 🔧 手機版居中對齊 */
     }
 
     .system-buttons {
+        order: 3;
         flex-wrap: wrap;
         justify-content: center;
+        min-width: auto; /* 🔧 移除最小寬度限制 */
+    }
+
+    .main-game-area {
+        padding: 0; /* 🔧 手機版也移除內邊距 */
     }
 
     .weather-display-container {
         font-size: 0.9em;
         padding: 12px 15px;
+        margin: 15px; /* 🔧 手機版調整邊距 */
     }
 
     .mandrake-image {
         width: 200px;
         height: 200px;
+    }
+
+    /* 🔧 手機版土壤紋理調整 */
+    .mandrake-display::after {
+        background-size: 
+            /* 土壤石子大小 - 手機版縮小 */
+            50px 40px, 60px 35px, 40px 50px, 55px 40px, 45px 45px, 50px 50px, 48px 38px, 58px 42px,
+            /* 土壤細顆粒大小 */
+            20px 18px, 25px 22px, 28px 25px, 22px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-text-container {
+        padding: 12px 15px;
+        border-radius: 15px;
+        height: 45px; /* 🔧 小屏幕固定高度 */
+    }
+
+    #carousel-text {
+        font-size: 0.85em;
+    }
+
+    .claim-reward-btn {
+        padding: 5px 10px; /* 🔧 進一步縮小按鈕 */
+        font-size: 0.8em;
+    }
+
+    .system-btn {
+        padding: 6px 10px; /* 🔧 縮小系統按鈕 */
+        font-size: 0.85em;
     }
 }

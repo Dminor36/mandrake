@@ -10,10 +10,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Regular/TaipeiSansTCBeta-Regular.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Bold/TaipeiSansTCBeta-Bold.css">
     
-    <!-- 簡化後的CSS檔案 -->
+    <!-- CSS檔案 -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
-</head>
 </head>
 <body>
     <div class="game-container">
@@ -80,15 +79,29 @@
             <div class="top-bar">
                 <!-- 獎勵領取區 -->
                 <div class="reward-section reward-info-container">
-                    <div class="reward-count">
-                        🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
+                    <!-- 🔧 新增：獎勵數量行 -->
+                    <div class="reward-count-row">
+                        <div class="reward-count">
+                            🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
+                        </div>
                     </div>
-                    <div class="reward-timer">
-                        下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
+                    
+                    <!-- 🔧 新增：按鈕和倒數行 -->
+                    <div class="reward-button-row">
+                        <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
+                            領取獎勵
+                        </button>
+                        <div class="reward-timer">
+                            下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
+                        </div>
                     </div>
-                    <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
-                        領取獎勵
-                    </button>
+                </div>
+                
+                <!-- 中間輪播區 -->
+                <div class="carousel-text-section">
+                    <div class="carousel-text-container">
+                        <span id="carousel-text">歡迎來到曼德拉草農場！</span>
+                    </div>
                 </div>
                 
                 <!-- 系統按鈕區 -->
@@ -102,21 +115,15 @@
             
             <!-- 主要遊戲區域 -->
             <div class="main-game-area">
-                <!-- 天氣顯示 - 移到左上角 -->
+                <!-- 天氣顯示 -->
                 <div class="weather-display-container">
-                    <!-- 天氣名稱 -->
                     <div class="weather-name-diamond">
                         <span id="current-weather-name">暴雨</span>
                     </div>
-                    
-                    <!-- 右側：時間和效果 -->
                     <div class="weather-right-section">
-                        <!-- 刷新時間 -->
                         <div class="weather-timer-section">
                             下次刷新：<span id="weather-refresh-timer">04:23</span>
                         </div>
-                        
-                        <!-- 效果和按鈕 -->
                         <div class="weather-effect-box">
                             <div class="weather-effect-content">
                                 <div class="weather-effect-text">
@@ -204,10 +211,21 @@
             
             // 檢查 HTML 元素
             console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
+            console.log('carousel-text 元素存在:', !!document.getElementById('carousel-text'));
             
-            // 初始化輪播系統
+            // 初始化輪播系統（使用原有的 carousel.js）
             if (typeof initCarousel === 'function') {
+                console.log('🚀 初始化輪播系統');
                 initCarousel();
+            } else {
+                console.log('⚠️ initCarousel 函數不存在，等待載入...');
+                // 延遲初始化，等待 carousel.js 載入
+                setTimeout(() => {
+                    if (typeof initCarousel === 'function') {
+                        console.log('🚀 延遲初始化輪播系統');
+                        initCarousel();
+                    }
+                }, 1000);
             }
                    
             // 啟動優化的遊戲循環
@@ -240,6 +258,15 @@
             // 呼叫遊戲的點擊方法
             if (game && game.clickMandrake) {
                 game.clickMandrake();
+            }
+            
+            // 🔧 新增：點擊時土壤震動效果
+            const mandrakeDisplay = document.querySelector('.mandrake-display');
+            if (mandrakeDisplay) {
+                mandrakeDisplay.classList.add('clicked');
+                setTimeout(() => {
+                    mandrakeDisplay.classList.remove('clicked');
+                }, 600);
             }
         }
     </script>
