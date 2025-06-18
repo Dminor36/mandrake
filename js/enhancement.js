@@ -281,8 +281,6 @@ class EnhancementSystem {
             }, 100);
             UI.showNotification(`獲得強化：${ENHANCEMENTS[enhancementId].name}！`, 'success');
             
-            // 🔧 新增：重置強化區域UI
-            UI.resetEnhancementSection();
         }
     }
     
