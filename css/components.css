@@ -15,9 +15,10 @@
     transition: all 0.3s ease;
     transition-delay: 0ms;
     pointer-events: none;
-    min-width: 280px;
-    max-width: 400px;
-    white-space: normal; /* 允許換行以顯示詳細內容 */
+    /* 🔧 調整寬度設定 */
+    min-width: 200px;        /* 增加最小寬度 */
+    max-width: 350px;        /* 增加最大寬度 */
+    white-space: normal;     /* 允許換行 */
     line-height: 1.4;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
@@ -896,4 +897,376 @@
 
 .plant-row[data-slot-id] .plant-price.expensive {
     color: #dc3545;
+}
+
+/* 圖鑑系統 CSS 樣式 */
+
+/* 模態框樣式 */
+.encyclopedia-modal {
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 1000px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.encyclopedia-modal .modal-header {
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px;
+}
+
+.encyclopedia-modal .modal-header h3 {
+    margin: 5px 20px;
+    font-size: 1.5em;
+}
+
+/* 🔧 確保工具提示在模態框內正確顯示 */
+.encyclopedia-modal .encyclopedia-species-card::before {
+    /* 在模態框內時，確保不會超出模態框邊界 */
+    max-width: 250px; /* 稍微縮小以適應模態框 */
+}
+
+.encyclopedia-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2em;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.encyclopedia-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 圖鑑內容容器 */
+.encyclopedia-content {
+    padding: 0px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+
+/* 類型區塊 */
+.encyclopedia-type-section {
+    margin-bottom: 0px;
+    background: white;
+    border-radius: 0px;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.encyclopedia-type-section h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 0px;
+}
+
+/* 類型標題顏色 */
+.type-header.normal {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border: none;
+}
+
+.type-header.element {
+    background: linear-gradient(45deg, #dc3545, #fd7e14);
+    color: white;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border: none;
+}
+
+.type-header.animal {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: white;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border: none;
+}
+
+/* 物種網格 */
+.encyclopedia-species-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 5px;
+    margin-top: 10px;
+    row-gap: 10px;
+}
+
+/* 物種卡片 */
+.encyclopedia-species-card {
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    border-radius: 10px;          /* 🔧 圓角大小 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 3px solid transparent; /* 🔧 邊框粗細 */
+}
+
+/* 不同狀態的卡片樣式 */
+.encyclopedia-species-card.owned {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-color: #28a745;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.encyclopedia-species-card.discovered {
+    background: linear-gradient(135deg, #17a2b8, #6f42c1);
+    border-color: #17a2b8;
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+.encyclopedia-species-card.unknown {
+    background: linear-gradient(135deg, #6c757d, #adb5bd);
+    border-color: #6c757d;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    opacity: 0.7;
+}
+
+/* 懸停效果 */
+.encyclopedia-species-card:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+
+/* 物種圖標 */
+.species-icon {
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 自定義工具提示 (可選，用於更豐富的懸停效果) */
+.encyclopedia-species-card::before {
+    content: attr(title);
+    position: absolute;
+    /* 🔧 移除固定定位，改用動態計算 */
+    background: linear-gradient(135deg, rgba(45, 45, 45, 0.98), rgba(30, 30, 30, 0.98));
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 2000; /* 🔧 提高層級確保顯示在最上層 */
+    
+    /* 🔧 動態定位的基礎設定 */
+    min-width: 180px;
+    max-width: 280px;
+    width: max-content;
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: center;
+    line-height: 1.4;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    
+    /* 🔧 預設位置（會被 JavaScript 覆蓋） */
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 🔧 定義不同方向的工具提示位置 */
+.encyclopedia-species-card.tooltip-top::before {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+}
+
+.encyclopedia-species-card.tooltip-bottom::before {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+}
+
+.encyclopedia-species-card.tooltip-left::before {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+}
+
+.encyclopedia-species-card.tooltip-right::before {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+}
+
+/* 🔧 響應式調整 */
+@media (max-width: 768px) {
+    .encyclopedia-species-card::before {
+        max-width: 200px;
+        font-size: 0.8em;
+        padding: 10px 12px;
+    }
+    
+    .encyclopedia-modal .encyclopedia-species-card::before {
+        max-width: 180px;
+    }
+}
+
+@media (max-width: 480px) {
+    .encyclopedia-species-card::before {
+        max-width: 150px;
+        font-size: 0.75em;
+        padding: 8px 10px;
+        min-width: 120px;
+    }
+}
+
+/* 滾動條美化 */
+.encyclopedia-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.encyclopedia-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.encyclopedia-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
+
+.encyclopedia-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a67d8, #6b46c1);
+}
+
+/* 狀態指示器 */
+.encyclopedia-species-card.owned::after {
+    content: "✓";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+.encyclopedia-species-card.discovered::after {
+    content: "👁";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #17a2b8;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    border: 2px solid white;
+}
+
+/* 動畫效果 */
+@keyframes cardGlow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+    }
+}
+
+.encyclopedia-species-card.owned {
+    animation: cardGlow 2s ease-in-out infinite;
+}
+
+/* 工具提示增強版 */
+.species-tooltip {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    max-width: 300px;
+}
+
+.species-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #f39c12;
+}
+
+.species-description {
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.species-tier {
+    font-size: 0.8em;
+    color: #bdc3c7;
+    margin-bottom: 8px;
+}
+
+.species-unlock-condition {
+    font-size: 0.8em;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    padding: 5px 8px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+}
+
+.species-owned-count {
+    font-size: 0.8em;
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-weight: bold;
 }

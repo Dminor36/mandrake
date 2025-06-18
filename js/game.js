@@ -106,6 +106,13 @@ class Game {
                 savedCostVariance: null
             },
 
+            // 曼德拉草圖鑑
+            encyclopedia: {
+            discoveredSpecies: new Set(), // 曾經擁有過的品種名稱
+            unlockedEntries: new Set(),   // 圖鑑中已解鎖的條目
+            viewedConditions: new Set()   // 已查看過解鎖條件的品種
+            },
+
             // 點擊統計數據
             totalClicks: 0,             // 總點擊次數
             clickFruitEarned: 0,        // 通過點擊獲得的總果實
@@ -775,25 +782,21 @@ selectRandomMandrakeForTier(tier) {
         this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames || ['曼德拉草']);
     }
     
-    // 嘗試從名稱池中選擇
-    const selectedMandrake = selectRandomMandrake(tier, this.data.usedMandrakeNames);
+    // 🔧 使用新的前置條件檢查函數
+    const selectedMandrake = EncyclopediaSystem.selectRandomMandrakeWithPrerequisites(tier, this.data.usedMandrakeNames);
     
     if (selectedMandrake) {
         // 成功選到名稱，記錄使用
         this.data.usedMandrakeNames.add(selectedMandrake.name);
         return selectedMandrake;
     } else {
-        // 名稱池用完，生成備用名稱
-        console.warn(`第${tier}階名稱池已用完，生成備用名稱`);
+        // 備用邏輯保持不變...
+        console.warn(`第${tier}階無符合條件的名稱，生成備用名稱`);
         
-        // 選擇一個隨機屬性
         const types = ['normal', 'element', 'animal'];
         const randomType = types[Math.floor(Math.random() * types.length)];
-        
-        // 生成備用名稱
         const backupName = generateBackupName(tier, randomType, this.data.nameGenerationIndex++);
         
-        // 確保備用名稱也不重複
         let finalName = backupName.name;
         let counter = 1;
         while (this.data.usedMandrakeNames.has(finalName)) {
@@ -802,7 +805,7 @@ selectRandomMandrakeForTier(tier) {
         }
         
         const backupMandrake = {
-            id: `${randomType}_t${tier}_backup${this.data.nameGenerationIndex}`, // 🔧 穩定ID格式
+            id: `${randomType}_t${tier}_backup${this.data.nameGenerationIndex}`,
             tier: tier,
             type: randomType,
             name: finalName,
@@ -1271,14 +1274,21 @@ getSlotDisplayInfo(slotId) {
             // 記錄重生次數
             this.data.rebirthCount++;
             
-            // 重置遊戲狀態
+            // 🔧 修改：保留圖鑑數據
             const preservedData = {
                 talentPoints: this.data.talentPoints,
                 rebirthCount: this.data.rebirthCount,
-                version: this.data.version
+                version: this.data.version,
+                // 🔧 新增：保留圖鑑數據
+                encyclopedia: this.data.encyclopedia
             };
             
             this.data = { ...this.getDefaultGameData(), ...preservedData };
+            
+            // 🔧 新增：確保初始曼德拉草在圖鑑中被標記為已發現
+            if (typeof EncyclopediaSystem !== 'undefined') {
+                EncyclopediaSystem.discoverSpecies('曼德拉草');
+            }
             
             // 清理圖片快取
             if (typeof imageManager !== 'undefined') {
@@ -1287,13 +1297,13 @@ getSlotDisplayInfo(slotId) {
             }
             
             if (typeof UI !== 'undefined') {
-                UI.showNotification(`重生完成！獲得 ${points} 天賦點數！`, 'success');
+                UI.showNotification(`重生完成！獲得 ${points} 天賦點數！圖鑑數據已保留`, 'success');
                 UI.updateAll();
             }
             
             this.saveGame();
         }
-    }
+}
 
     /**
      * 計算重生點數
@@ -1316,10 +1326,14 @@ getSlotDisplayInfo(slotId) {
             if (saveData.usedMandrakeNames instanceof Set) {
                 saveData.usedMandrakeNames = Array.from(saveData.usedMandrakeNames);
             }
-
-            // 🔧 確保 confirmedMandrakes 被正確保存
-            if (!saveData.confirmedMandrakes) {
-                saveData.confirmedMandrakes = {};
+            
+            // 🔧 新增：處理圖鑑數據的序列化
+            if (saveData.encyclopedia) {
+                saveData.encyclopedia = {
+                    discoveredSpecies: Array.from(saveData.encyclopedia.discoveredSpecies || []),
+                    unlockedEntries: Array.from(saveData.encyclopedia.unlockedEntries || []),
+                    viewedConditions: Array.from(saveData.encyclopedia.viewedConditions || [])
+                };
             }
             
             const saveDataString = JSON.stringify(saveData);
@@ -1622,6 +1636,27 @@ getSlotDisplayInfo(slotId) {
 
         // 🔧 修復：在驗證完成後重建強化效果
         this.rebuildEnhancementEffects();
+
+        // 🔧 新增：驗證圖鑑數據
+        if (!this.data.encyclopedia || typeof this.data.encyclopedia !== 'object') {
+            this.data.encyclopedia = {
+                discoveredSpecies: new Set(),
+                unlockedEntries: new Set(),
+                viewedConditions: new Set()
+        };
+    }
+    
+    // 確保數據類型正確（從存檔載入時可能是數組）
+    if (Array.isArray(this.data.encyclopedia.discoveredSpecies)) {
+        this.data.encyclopedia.discoveredSpecies = new Set(this.data.encyclopedia.discoveredSpecies);
+    }
+    if (Array.isArray(this.data.encyclopedia.unlockedEntries)) {
+        this.data.encyclopedia.unlockedEntries = new Set(this.data.encyclopedia.unlockedEntries);
+    }
+    if (Array.isArray(this.data.encyclopedia.viewedConditions)) {
+        this.data.encyclopedia.viewedConditions = new Set(this.data.encyclopedia.viewedConditions);
+    }
+
         }
 
 

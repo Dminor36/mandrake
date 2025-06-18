@@ -58,6 +58,11 @@ async function initGame() {
             console.log('✅ 調試功能初始化完成');
         }
         
+        // 6. 圖鑑系統初始化
+        if (typeof EncyclopediaSystem !== 'undefined') {
+            EncyclopediaSystem.initializeEncyclopedia();
+        }
+        
         console.log('🎉 遊戲啟動成功！');
         
         // 顯示歡迎訊息

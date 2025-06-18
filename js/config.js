@@ -38,7 +38,11 @@ const TIER_BASE_COSTS = {
     3: 1000,      // 第3階基礎成本
     4: 12000,     // 第4階基礎成本
     5: 100000,    // 第5階基礎成本
-    6: 1200000    // 第6階基礎成本
+    6: 1200000,   // 第6階基礎成本
+    7: 14000000,   // 第7階基礎成本
+    8: 160000000, // 第8階基礎成本
+    9: 1800000000, // 第9階基礎成本
+    10: 20000000000 // 第10階基礎成本
 };
 
 // 🔧 每個階層的數值模板
@@ -78,172 +82,181 @@ const TIER_STATS = {
         baseProduction: 10000, 
         costGrowth: 1.12, 
         prodGrowth: 1 
+    },
+    7: { 
+        baseCost: TIER_BASE_COSTS[7], 
+        baseProduction: 100000, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
+    },
+    8: { 
+        baseCost: TIER_BASE_COSTS[8], 
+        baseProduction: 1000000, 
+        costGrowth: 1.12,
+        prodGrowth: 1 
+    },
+    9: { 
+        baseCost: TIER_BASE_COSTS[9], 
+        baseProduction: 10000000, 
+        costGrowth: 1.12,
+        prodGrowth: 1 
+    },
+    10: { 
+        baseCost: TIER_BASE_COSTS[10], 
+        baseProduction: 100000000, 
+        costGrowth: 1.12,
+        prodGrowth: 1 
     }
+
+    
 };
 
 // 解鎖百分比配置
-const TIER_UNLOCK_PERCENTAGE = 0.01;  // 1%
+const TIER_UNLOCK_PERCENTAGE = 0.05;  // 5%
 
 // 🔧 按屬性分類的名稱池（包含描述）
-const NAME_POOLS = {
+const EXTENDED_NAME_POOLS = {
     normal: [
+        { name: '曼德拉草', icon: '🌱', description: '常見的曼德拉草' },
+        { name: '胖曼德拉草', icon: '🟢', description: '比一般的曼德拉草更加圓潤' },
+        { name: '枯乾曼德拉草', icon: '🟤', description: '好幾天沒喝水' },
+        { name: '迷你曼德拉草', icon: '🟡', description: '體型嬌小但產量驚人' },
+        { name: '恐懼曼德拉草', icon: '😨', description: '散發著不安氣息的曼德拉草' },
+        { name: '白曼德拉草', icon: '⚪', description: '純白無瑕的神秘曼德拉草' },
+        { name: '苗條曼德拉草', icon: '🌿', description: '身材修長的優雅曼德拉草' },
+        { name: '古老曼德拉草', icon: '🗿', description: '存在了數百年的智慧曼德拉草' },
+        { name: '閃亮曼德拉草', icon: '✨', description: '表面散發著微弱光芒' },
+        // 🆕 新增的普通系曼德拉草
+        { name: '透明曼德拉草', icon: '👻', description: '幾乎看不見的神秘曼德拉草' },
+        { name: '糖霜曼德拉草', icon: '🧁', description: '表面覆蓋著甜美糖霜的曼德拉草' },
+        { name: '綠茶曼德拉草', icon: '🍵', description: '散發著淡雅茶香的曼德拉草' },
+        { name: '碳曼德拉草', icon: '⚫', description: '漆黑如炭，質地堅硬的曼德拉草' },
         { 
-            name: '曼德拉草', 
-            icon: '🌱', 
-            description: '常見的曼德拉草' 
-        },
-        { 
-            name: '胖曼德拉草', 
-            icon: '🟢', 
-            description: '比一般的曼德拉草更加圓潤' 
-        },
-        { 
-            name: '枯乾曼德拉草', 
-            icon: '🟤', 
-            description: '好幾天沒喝水' 
-        },
-        { 
-            name: '迷你曼德拉草', 
-            icon: '🟡', 
-            description: '體型嬌小但產量驚人' 
-        },
-        { 
-            name: '恐懼曼德拉草', 
-            icon: '😨', 
-            description: '散發著不安氣息的曼德拉草' 
-        },
-        { 
-            name: '白曼德拉草', 
-            icon: '⚪', 
-            description: '純白無瑕的神秘曼德拉草' 
-        },
-        { 
-            name: '苗條曼德拉草', 
-            icon: '🌿', 
-            description: '身材修長的優雅曼德拉草' 
-        },
-        { 
-            name: '古老曼德拉草', 
-            icon: '🗿', 
-            description: '存在了數百年的智慧曼德拉草' 
-        },
-        { 
-            name: '閃亮曼德拉草', 
-            icon: '✨', 
-            description: '表面散發著微弱光芒' 
-        },
-        { 
-            name: '神秘曼德拉草', 
-            icon: '🔮', 
-            description: '來歷不明的神秘品種' 
+            name: '平衡曼德拉草', 
+            icon: '⚖️', 
+            description: '三系和諧的完美體現',
+            prerequisites: ['胖曼德拉草', '火曼德拉草', '貓曼德拉草'] // 需要三系各一個
         }
     ],
     
     element: [
-        { 
-            name: '火曼德拉草', 
-            icon: '🔥', 
-            description: '看起來很燙' 
-        },
-        { 
-            name: '水曼德拉草', 
-            icon: '💧', 
-            description: '不知道為什麼很受歡迎' 
-        },
-        { 
-            name: '風曼德拉草', 
-            icon: '💨', 
-            description: '覺得自己是一種反向噴射器' 
-        },
-        { 
-            name: '電曼德拉草', 
-            icon: '⚡', 
-            description: '帶有強烈電流的曼德拉草' 
-        },
+        { name: '火曼德拉草', icon: '🔥', description: '看起來很燙' },
+        { name: '水曼德拉草', icon: '💧', description: '不知道為什麼很受歡迎' },
+        { name: '風曼德拉草', icon: '💨', description: '覺得自己是一種反向噴射器' },
+        { name: '電曼德拉草', icon: '⚡', description: '帶有強烈電流的曼德拉草' },
         { 
             name: '冰曼德拉草', 
-            icon: '🧊', 
-            description: '散發著極寒氣息的曼德拉草' 
-        },
-        { 
-            name: '土曼德拉草', 
-            icon: '⛰️', 
-            description: '堅實如岩石的土系曼德拉草' 
-        },
-        { 
-            name: '光曼德拉草', 
-            icon: '☀️', 
-            description: '自帶光環的神聖曼德拉草' 
-        },
-        { 
-            name: '暗曼德拉草', 
-            icon: '🌑', 
-            description: '吸收光線的黑暗曼德拉草' 
-        },
-        { 
-            name: '毒曼德拉草', 
-            icon: '☣️', 
-            description: '散發危險毒素的曼德拉草' 
-        },
+            icon: '🧊', description: '散發著極寒氣息的曼德拉草', 
+            prerequisites: ['水曼德拉草', '風曼德拉草'] // 需要水+風
+        }, 
+        { name: '土曼德拉草', icon: '⛰️', description: '堅實如岩石的土系曼德拉草' },
+        { name: '光曼德拉草', icon: '☀️', description: '自帶光環的神聖曼德拉草' },
+        { name: '暗曼德拉草', icon: '🌑', description: '吸收光線的黑暗曼德拉草' },
         { 
             name: '雷曼德拉草', 
             icon: '⛈️', 
-            description: '能召喚雷暴的強力曼德拉草' 
-        }
+            description: '能召喚雷暴的強力曼德拉草',
+            prerequisites: ['火曼德拉草', '風曼德拉草'] // 需要火+風
+        },
+        { 
+            name: '暴風雪曼德拉草', 
+            icon: '🌨️', 
+            description: '冰與風的完美結合',
+            prerequisites: ['冰曼德拉草', '風曼德拉草'] // 需要冰+風
+        },
+        { 
+            name: '蒸汽曼德拉草', 
+            icon: '💨', 
+            description: '水火相容的神奇存在',
+            prerequisites: ['水曼德拉草', '火曼德拉草'] // 需要水+火
+        },
+        {
+            name: '毒曼德拉草',
+            icon: '☠️',
+            description: '散發著致命氣息的曼德拉草',
+            prerequisites: ['火曼德拉草'] // 需要火
+        },
+        {
+            name: '熔岩曼德拉草',
+            icon: '🌋',
+            description: '火與土的極致結合',
+            prerequisites: ['火曼德拉草', '土曼德拉草'] // 需要火+土
+        },
+        // 🆕 新增的元素系曼德拉草
+        { name: '燈泡曼德拉草', icon: '💡', description: '會發光的電系曼德拉草，照亮周圍環境' },
+        { name: '鋰曼德拉草', icon: '🔋', description: '充滿電能的高科技曼德拉草，可儲存大量電力' }
     ],
     
     animal: [
-        { 
-            name: '貓曼德拉草', 
-            icon: '🐱', 
-            description: '睡著會發出呼嚕呼嚕聲' 
-        },
-        { 
-            name: '兔曼德拉草', 
-            icon: '🐰', 
-            description: '主食是牧草' 
-        },
-        { 
-            name: '鼠曼德拉草', 
-            icon: '🐭', 
-            description: '小巧靈活的曼德拉草' 
-        },
-        { 
-            name: '熊曼德拉草', 
-            icon: '🐻', 
-            description: '體型巨大且力大無窮' 
-        },
-        { 
-            name: '蝙蝠曼德拉草', 
-            icon: '🦇', 
-            description: '夜行性的神秘曼德拉草' 
-        },
-        { 
-            name: '狗曼德拉草', 
-            icon: '🐕', 
-            description: '忠誠友善的好夥伴' 
-        },
-        { 
-            name: '狐狸曼德拉草', 
-            icon: '🦊', 
-            description: '狡猾機智的橘色曼德拉草' 
-        },
+        { name: '貓曼德拉草', icon: '🐱', description: '睡著會發出呼嚕呼嚕聲' },
+        { name: '兔曼德拉草', icon: '🐰', description: '主食是牧草' },
+        { name: '鼠曼德拉草', icon: '🐭', description: '小巧靈活的曼德拉草' },
+        { name: '熊曼德拉草', icon: '🐻', description: '體型巨大且力大無窮' },
+        { name: '蝙蝠曼德拉草', icon: '🦇', description: '夜行性的神秘曼德拉草' },
+        { name: '狗曼德拉草', icon: '🐕', description: '忠誠友善的好夥伴' },
+        { name: '狐狸曼德拉草', icon: '🦊', description: '狡猾機智的橘色曼德拉草' },
+        { name: '鳥曼德拉草', icon: '🐦', description: '喜歡在枝頭歌唱的曼德拉草' },
+        { name: '魚曼德拉草', icon: '🐠', description: '需要生長在水中的奇特品種' },
+        // 🆕 新增的動物系曼德拉草
+        { name: '幽靈曼德拉草', icon: '👻', description: '來自異世界的神秘生物，只在夜晚現身' },
+        { name: '浣熊曼德拉草', icon: '🦝', description: '喜歡洗東西的可愛曼德拉草，有著標誌性的黑眼圈' },
         { 
             name: '龍曼德拉草', 
             icon: '🐉', 
-            description: '擁有遠古血脈的傳說曼德拉草' 
-        },
-        { 
-            name: '鳥曼德拉草', 
-            icon: '🐦', 
-            description: '喜歡在枝頭歌唱的曼德拉草' 
-        },
-        { 
-            name: '魚曼德拉草', 
-            icon: '🐠', 
-            description: '需要生長在水中的奇特品種' 
+            description: '擁有遠古血脈的傳說曼德拉草',
+            prerequisites: ['蝙蝠曼德拉草', '火曼德拉草'] // 需要蝙蝠+火
         }
     ]
+};
+
+// 🔧 更新NAME_TO_ID_MAP，包含新增的曼德拉草
+const NAME_TO_ID_MAP = {
+    // Normal
+    '曼德拉草': 'original',
+    '胖曼德拉草': 'fat',
+    '枯乾曼德拉草': 'dried',
+    '迷你曼德拉草': 'mini',
+    '恐懼曼德拉草': 'fear',
+    '白曼德拉草': 'white',
+    '苗條曼德拉草': 'slim',
+    '古老曼德拉草': 'ancient',
+    '閃亮曼德拉草': 'shiny',
+    '透明曼德拉草': 'transparent',
+    '糖霜曼德拉草': 'frosted',
+    '綠茶曼德拉草': 'green_tea',
+    '碳曼德拉草': 'carbon',
+    '平衡曼德拉草': 'balance',
+    
+    // Element
+    '火曼德拉草': 'fire',
+    '水曼德拉草': 'water',
+    '風曼德拉草': 'wind',
+    '電曼德拉草': 'electric',
+    '冰曼德拉草': 'ice',
+    '土曼德拉草': 'earth',
+    '光曼德拉草': 'light',
+    '暗曼德拉草': 'dark',
+    '雷曼德拉草': 'thunder',
+    '暴風雪曼德拉草': 'blizzard',
+    '蒸汽曼德拉草': 'steam',
+    '毒曼德拉草': 'poison',
+    '熔岩曼德拉草': 'lava',
+    '燈泡曼德拉草': 'bulb',
+    '鋰曼德拉草': 'lithium',
+    
+    // Animal
+    '貓曼德拉草': 'cat',
+    '兔曼德拉草': 'rabbit',
+    '鼠曼德拉草': 'mouse',
+    '熊曼德拉草': 'bear',
+    '蝙蝠曼德拉草': 'bat',
+    '狗曼德拉草': 'dog',
+    '狐狸曼德拉草': 'fox',
+    '鳥曼德拉草': 'bird',
+    '魚曼德拉草': 'fish',
+    '幽靈曼德拉草': 'ghost',
+    '浣熊曼德拉草': 'raccoon',
+    '龍曼德拉草': 'dragon'
 };
 
 // 🔧 保留：第一個曼德拉草固定為原始品種
@@ -259,6 +272,7 @@ const FIXED_FIRST_MANDRAKE = {
     costGrowth: TIER_STATS[1].costGrowth,
     prodGrowth: TIER_STATS[1].prodGrowth
 };
+
 
 // 🔧 修改：動態生成 MANDRAKE_CONFIG 的函數
 function generateMandrakeConfig(id, tier, type, nameData) {
@@ -282,8 +296,11 @@ const MANDRAKE_CONFIG = {
 
 // 解鎖條件配置
 const TIER_UNLOCK_CONDITIONS = {};
-for (let tier = 2; tier <= 6; tier++) {
+for (let tier = 2; tier <= 50; tier++) {
     TIER_UNLOCK_CONDITIONS[tier] = () => {
+        const baseCost = TIER_BASE_COSTS[tier];
+        if (!baseCost) return false;  // 🔧 添加這個安全檢查
+
         const requiredFruit = TIER_BASE_COSTS[tier] * TIER_UNLOCK_PERCENTAGE;
         return window.game && window.game.data && window.game.data.fruit >= requiredFruit;
     };
@@ -530,7 +547,7 @@ const ENHANCEMENT_UNLOCK_CONDITIONS = [
     { threshold: 200, description: '任意曼德拉草達到 200 株' }
 ];
 
-// 🔧 隨機選擇曼德拉草的函數
+/* 🔧 隨機選擇曼德拉草的函數
 function selectRandomMandrake(tier, usedNames = new Set()) {
     const types = ['normal', 'element', 'animal'];
     
@@ -584,6 +601,7 @@ function selectRandomMandrake(tier, usedNames = new Set()) {
     console.warn(`第${tier}階無法找到未使用的名稱！`);
     return null;
 }
+*/
 
 // 🔧 程序生成備用名稱的函數（當名稱池用完時）
 function generateBackupName(tier, type, index) {

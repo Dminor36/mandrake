@@ -107,6 +107,7 @@
                 <!-- 系統按鈕區 -->
                 <div class="system-buttons">
                     <button class="system-btn" onclick="showStats()">📊 統計</button>
+                    <button class="system-btn" onclick="showEncyclopedia()">📖 圖鑑</button>
                     <button class="system-btn enhancement-btn" id="enhancement-btn" onclick="openEnhancementSelection()" disabled>
                         🔮 強化
                     </button>
@@ -160,6 +161,21 @@
         </div>
     </div>
 
+    <!-- 圖鑑模態框 -->
+    <div id="encyclopedia-modal" class="modal-overlay">
+        <div class="modal-content encyclopedia-modal">
+            <div class="modal-header">
+                <h3>📖 曼德拉草圖鑑</h3>
+                <button onclick="hideEncyclopedia()" class="encyclopedia-close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="encyclopedia-content" class="encyclopedia-content">
+                    <!-- 圖鑑內容將由 JavaScript 生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 獎勵選擇彈窗 -->
     <div class="modal-overlay" id="reward-modal">
         <div class="modal-content reward-modal-content">
@@ -199,6 +215,7 @@
     <script src="js/enhancement.js"></script>
     <script src="js/carousel.js"></script>  
     <script src="js/main.js"></script>
+    <script src="js/encyclopedia.js"></script>
     <script>
         console.log('HTML 已載入');
         window.addEventListener('DOMContentLoaded', () => {
