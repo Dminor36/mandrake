@@ -36,6 +36,10 @@ class Game {
 
             // 🔧 新增：插槽系統
             unconfirmedTierSlots: [],  // 未確認品種的階層插槽
+
+            usedMandrakeNames: new Set(['曼德拉草']), // 🔧 新增：已使用的名稱
+            nameGenerationIndex: 1,  // 🔧 新增：備用名稱生成索引
+            confirmedMandrakes: {},  // 🔧 新增：已確定的曼德拉草配置（存檔用）
             
             // 天氣系統
             weather: 'sunny',
@@ -741,20 +745,20 @@ unlockTierSlot(tier) {
         return;
     }
 
-    // 創建新的未確認插槽
+    // 🔧 修正：創建穩定的插槽ID（不包含時間戳）
     const newSlot = {
         tier: tier,
         unlockTime: Date.now(),
-        id: `tier_${tier}_slot_${Date.now()}`, // 唯一ID
-        status: 'pending' // pending, confirmed
+        id: `tier_${tier}_slot`, // 🔧 穩定ID，不會每次重新生成
+        status: 'pending' // pending = 等待購買確定品種
     };
 
     this.data.unconfirmedTierSlots.push(newSlot);
     this.data.currentTier = Math.max(this.data.currentTier, tier);
 
-    // 🎉 解鎖通知
+    // 解鎖通知
     if (typeof UI !== 'undefined') {
-        UI.showNotification(`🎉 解鎖第${tier}階插槽！種植第一株時將隨機決定品種`, 'success', 5000);
+        UI.showNotification(`🎉 解鎖第${tier}階插槽！種植時將隨機決定品種`, 'success', 5000);
     }
 
     console.log(`✅ 第 ${tier} 階插槽已解鎖`);
@@ -762,6 +766,53 @@ unlockTierSlot(tier) {
     // 更新UI
     if (typeof UI !== 'undefined') {
         setTimeout(() => UI.updateAll(), 100);
+    }
+}
+
+selectRandomMandrakeForTier(tier) {
+    // 確保 usedMandrakeNames 是 Set
+    if (!(this.data.usedMandrakeNames instanceof Set)) {
+        this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames || ['曼德拉草']);
+    }
+    
+    // 嘗試從名稱池中選擇
+    const selectedMandrake = selectRandomMandrake(tier, this.data.usedMandrakeNames);
+    
+    if (selectedMandrake) {
+        // 成功選到名稱，記錄使用
+        this.data.usedMandrakeNames.add(selectedMandrake.name);
+        return selectedMandrake;
+    } else {
+        // 名稱池用完，生成備用名稱
+        console.warn(`第${tier}階名稱池已用完，生成備用名稱`);
+        
+        // 選擇一個隨機屬性
+        const types = ['normal', 'element', 'animal'];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+        
+        // 生成備用名稱
+        const backupName = generateBackupName(tier, randomType, this.data.nameGenerationIndex++);
+        
+        // 確保備用名稱也不重複
+        let finalName = backupName.name;
+        let counter = 1;
+        while (this.data.usedMandrakeNames.has(finalName)) {
+            finalName = `${backupName.name} (${counter})`;
+            counter++;
+        }
+        
+        const backupMandrake = {
+            id: `${randomType}_t${tier}_backup${this.data.nameGenerationIndex}`, // 🔧 穩定ID格式
+            tier: tier,
+            type: randomType,
+            name: finalName,
+            icon: backupName.icon,
+            description: backupName.description,
+            ...TIER_STATS[tier]
+        };
+        
+        this.data.usedMandrakeNames.add(finalName);
+        return backupMandrake;
     }
 }
 
@@ -778,45 +829,43 @@ confirmTierSlot(tier) {
         return null;
     }
 
-    // 獲取該階層的選項
-    const tierOptions = Object.entries(MANDRAKE_CONFIG)
-        .filter(([id, config]) => config.tier === tier)
-        .map(([id, config]) => ({ id, ...config }));
-
-    if (tierOptions.length === 0) {
-        console.error(`第 ${tier} 階沒有可用的曼德拉草選項`);
+    // 🔧 使用新的隨機選擇函數
+    const selectedMandrake = this.selectRandomMandrakeForTier(tier);
+    
+    if (!selectedMandrake) {
+        console.error(`第 ${tier} 階無法生成曼德拉草`);
         return null;
     }
 
-    // 應用強制類型（如果有）
-    let availableOptions = tierOptions;
-    if (this.data.forceNextType) {
-        const filteredOptions = tierOptions.filter(option => option.type === this.data.forceNextType);
-        if (filteredOptions.length > 0) {
-            availableOptions = filteredOptions;
-        }
-        delete this.data.forceNextType;
-    }
-
-    // 隨機選擇品種
-    const randomChoice = availableOptions[Math.floor(Math.random() * availableOptions.length)];
-    
-    // 確認插槽
+    // 🔧 修正：確認插槽狀態
     this.data.unconfirmedTierSlots[slotIndex].status = 'confirmed';
-    this.data.unconfirmedTierSlots[slotIndex].confirmedId = randomChoice.id;
+    this.data.unconfirmedTierSlots[slotIndex].confirmedId = selectedMandrake.id;
     this.data.unconfirmedTierSlots[slotIndex].confirmTime = Date.now();
 
-    // 正式解鎖曼德拉草
-    this.data.unlockedMandrakes.push(randomChoice.id);
-    this.data.ownedMandrakes[randomChoice.id] = 0;
+    // 🔧 將新曼德拉草添加到全局配置中
+    MANDRAKE_CONFIG[selectedMandrake.id] = selectedMandrake;
 
-    // 🎉 品種確認通知
+     // 🔧 新增：將配置保存到存檔中，確保重啟後能恢復
+    if (!this.data.confirmedMandrakes) {
+        this.data.confirmedMandrakes = {};
+    }
+    this.data.confirmedMandrakes[selectedMandrake.id] = selectedMandrake;
+
+    // 正式解鎖曼德拉草
+    this.data.unlockedMandrakes.push(selectedMandrake.id);
+    this.data.ownedMandrakes[selectedMandrake.id] = 0;
+
+    // 品種確認通知
     if (typeof UI !== 'undefined') {
-        UI.showNotification(`🌱 第${tier}階品種確定：${randomChoice.name} ${randomChoice.icon}！`, 'success', 4000);
+        UI.showNotification(
+            `🌱 第${tier}階品種確定：${selectedMandrake.name} ${selectedMandrake.icon}！`, 
+            'success', 
+            4000
+        );
     }
 
-    console.log(`✅ 第 ${tier} 階插槽確認為: ${randomChoice.name}`);
-    return randomChoice.id;
+    console.log(`✅ 第 ${tier} 階插槽確認為: ${selectedMandrake.name} (${selectedMandrake.type})`);
+    return selectedMandrake.id;
 }
 
 /**
@@ -842,7 +891,7 @@ buyTierSlot(slotId) {
         return false;
     }
 
-    // 確認插槽品種
+    // 🔧 關鍵：這裡才真正隨機確定品種
     const confirmedId = this.confirmTierSlot(slot.tier);
     if (!confirmedId) {
         return false;
@@ -851,6 +900,9 @@ buyTierSlot(slotId) {
     // 執行購買
     this.data.fruit -= baseCost;
     this.data.ownedMandrakes[confirmedId] = 1; // 首次購買給1株
+
+    // 🔧 修正：移除插槽（因為已經確定了）
+    this.data.unconfirmedTierSlots = this.data.unconfirmedTierSlots.filter(s => s.id !== slotId);
 
     // 更新UI
     if (typeof UI !== 'undefined') {
@@ -872,16 +924,34 @@ getSlotDisplayInfo(slotId) {
     const baseCost = TIER_BASE_COSTS[slot.tier] || 100;
     const canAfford = this.data.fruit >= baseCost;
 
-    return {
-        tier: slot.tier,
-        cost: baseCost,
-        canAfford: canAfford,
-        status: slot.status,
-        name: `第${slot.tier}階曼德拉草`,
-        description: '種植時隨機決定品種',
-        icon: '❓', // 未知品種圖標
-        unlockTime: slot.unlockTime
-    };
+    // 🔧 修正：根據狀態顯示不同信息
+    if (slot.status === 'pending') {
+        return {
+            tier: slot.tier,
+            cost: baseCost,
+            canAfford: canAfford,
+            status: slot.status,
+            name: `第${slot.tier}階曼德拉草`, // 🔧 未確定時顯示通用名稱
+            description: '種植時隨機決定品種',
+            icon: '❓', // 🔧 未知品種圖標
+            unlockTime: slot.unlockTime
+        };
+    } else if (slot.status === 'confirmed' && slot.confirmedId) {
+        // 如果已確認，顯示具體信息
+        const config = MANDRAKE_CONFIG[slot.confirmedId];
+        return {
+            tier: slot.tier,
+            cost: baseCost,
+            canAfford: canAfford,
+            status: slot.status,
+            name: config?.name || '未知曼德拉草',
+            description: config?.description || '已確認的曼德拉草',
+            icon: config?.icon || '🌱',
+            unlockTime: slot.unlockTime
+        };
+    }
+
+    return null;
 }
 
     /**
@@ -1240,8 +1310,20 @@ getSlotDisplayInfo(slotId) {
     saveGame() {
         try {
             this.data.lastSaveTime = Date.now();
-            const saveData = JSON.stringify(this.data);
-            localStorage.setItem(GAME_CONFIG.SAVE_KEY, saveData);
+            
+            // 🔧 處理 Set 類型的序列化
+            const saveData = { ...this.data };
+            if (saveData.usedMandrakeNames instanceof Set) {
+                saveData.usedMandrakeNames = Array.from(saveData.usedMandrakeNames);
+            }
+
+            // 🔧 確保 confirmedMandrakes 被正確保存
+            if (!saveData.confirmedMandrakes) {
+                saveData.confirmedMandrakes = {};
+            }
+            
+            const saveDataString = JSON.stringify(saveData);
+            localStorage.setItem(GAME_CONFIG.SAVE_KEY, saveDataString);
         } catch (error) {
             console.error('保存遊戲失敗:', error);
             if (typeof UI !== 'undefined') {
@@ -1263,6 +1345,11 @@ getSlotDisplayInfo(slotId) {
                 // 版本兼容性檢查
                 if (this.isCompatibleSave(parsedData)) {
                     this.data = { ...this.getDefaultGameData(), ...parsedData };
+                    
+                    // 🔧 恢復 Set 類型
+                    if (Array.isArray(this.data.usedMandrakeNames)) {
+                        this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames);
+                    }
                     
                     // 數據完整性檢查
                     this.validateGameData();
@@ -1297,10 +1384,16 @@ getSlotDisplayInfo(slotId) {
         return majorVersion === currentMajorVersion;
     }
 
+    
+
     /**
      * 🔧 修復：驗證遊戲數據完整性
      */
     validateGameData() {
+        if (Array.isArray(this.data.usedMandrakeNames)) {
+            this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames);
+        }
+
         const defaultData = this.getDefaultGameData();
 
         // 🔧 修復：優先確保核心數據結構存在
@@ -1506,35 +1599,116 @@ getSlotDisplayInfo(slotId) {
             return reward;
         });
 
+
+        // 🔧 新增：驗證隨機名稱系統數據
+        if (!this.data.usedMandrakeNames) {
+            this.data.usedMandrakeNames = new Set(['曼德拉草']);
+        } else if (!(this.data.usedMandrakeNames instanceof Set)) {
+            // 如果存檔中是陣列，轉換為 Set
+            this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames);
+        }
+
+        if (typeof this.data.nameGenerationIndex !== 'number') {
+            this.data.nameGenerationIndex = 1;
+        }
+
+        // 🔧 新增：驗證 confirmedMandrakes 數據
+        if (!this.data.confirmedMandrakes || typeof this.data.confirmedMandrakes !== 'object') {
+            this.data.confirmedMandrakes = {};
+        }
+
+        // 🔧 新增：重建已解鎖曼德拉草的配置
+        this.rebuildMandrakeConfigs();
+
         // 🔧 修復：在驗證完成後重建強化效果
         this.rebuildEnhancementEffects();
-    }
+        }
 
-    /**
-     * 🔧 修復：重建強化效果
-     */
-    rebuildEnhancementEffects() {
-        // 保存隨機值
-        const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
-        const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
+
+    rebuildMandrakeConfigs() {
+        // 確保原始曼德拉草始終存在
+        if (!MANDRAKE_CONFIG.original) {
+            MANDRAKE_CONFIG.original = FIXED_FIRST_MANDRAKE;
+        }
         
-        // 重置所有效果到默認值
-        const defaultEffects = this.getDefaultGameData().enhancementEffects;
-        this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
+        // 🔧 關鍵修正：從存檔中恢復已確定的曼德拉草配置
+        if (this.data.confirmedMandrakes) {
+            for (const [mandrakeId, config] of Object.entries(this.data.confirmedMandrakes)) {
+                MANDRAKE_CONFIG[mandrakeId] = config;
+            }
+            console.log(`✅ 從存檔恢復了 ${Object.keys(this.data.confirmedMandrakes).length} 個曼德拉草配置`);
+        }
         
-        // 恢復保存的隨機值
-        this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
-        this.data.enhancementEffects.savedCostVariance = savedCostVariance;
-        
-        // 重新應用所有已獲得的強化
-        for (const [enhancementId, level] of Object.entries(this.data.enhancements.obtained)) {
-            for (let i = 0; i < level; i++) {
-                if (typeof EnhancementSystem !== 'undefined') {
-                    EnhancementSystem.applyEnhancement(enhancementId);
+        // 重建已解鎖曼德拉草的配置
+        if (this.data.unlockedMandrakes) {
+            for (const mandrakeId of this.data.unlockedMandrakes) {
+                if (mandrakeId === 'original') continue; // 跳過原始曼德拉草
+                
+                if (!MANDRAKE_CONFIG[mandrakeId]) {
+                    console.warn(`⚠️ 找不到曼德拉草配置: ${mandrakeId}，可能是舊版存檔`);
+                    // 🔧 不再自動重建，而是提示玩家
+                    if (typeof UI !== 'undefined') {
+                        UI.showNotification(`⚠️ 檢測到不完整的存檔數據`, 'warning');
+                    }
                 }
             }
         }
     }
+
+    rebuildLostMandrakeConfig(mandrakeId) {
+    // 嘗試從ID解析信息
+    const parts = mandrakeId.split('_');
+    let tier = 1, type = 'normal';
+    
+    if (parts.length >= 2) {
+        type = parts[0];
+        if (parts[1].startsWith('t')) {
+            tier = parseInt(parts[1].substring(1)) || 1;
+        } else {
+            tier = parseInt(parts[1]) || 1;
+        }
+    }
+    
+    // 生成一個備用配置
+    const backupName = generateBackupName(tier, type, this.data.nameGenerationIndex++);
+    
+    MANDRAKE_CONFIG[mandrakeId] = {
+        tier: tier,
+        type: type,
+        name: `${backupName.name} (已恢復)`,
+        icon: backupName.icon,
+        description: `${backupName.description} (此配置已自動恢復)`,
+        ...TIER_STATS[tier]
+    };
+    
+    console.log(`✅ 已恢復曼德拉草配置: ${mandrakeId}`);
+    }
+
+        /**
+         * 🔧 修復：重建強化效果
+         */
+        rebuildEnhancementEffects() {
+            // 保存隨機值
+            const savedProductionVariance = this.data.enhancementEffects.savedProductionVariance;
+            const savedCostVariance = this.data.enhancementEffects.savedCostVariance;
+            
+            // 重置所有效果到默認值
+            const defaultEffects = this.getDefaultGameData().enhancementEffects;
+            this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
+            
+            // 恢復保存的隨機值
+            this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;
+            this.data.enhancementEffects.savedCostVariance = savedCostVariance;
+            
+            // 重新應用所有已獲得的強化
+            for (const [enhancementId, level] of Object.entries(this.data.enhancements.obtained)) {
+                for (let i = 0; i < level; i++) {
+                    if (typeof EnhancementSystem !== 'undefined') {
+                        EnhancementSystem.applyEnhancement(enhancementId);
+                    }
+                }
+            }
+        }
 
     /**
      * 重置遊戲（調試用）

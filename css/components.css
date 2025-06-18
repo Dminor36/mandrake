@@ -97,7 +97,6 @@
 
 .plant-row:hover {
     background: linear-gradient(135deg, #f0f9ff, #e0f2fe); /* 懸停時的漸層 */
-    transform: translateY(-1px); /* 向上浮起效果 */
     box-shadow: 
         0 4px 12px rgba(0, 0, 0, 0.15), /* 加深陰影 */
         inset 0 1px 0 rgba(255, 255, 255, 0.8); /* 增強內部高光 */

@@ -1,4 +1,4 @@
-// ========== 遊戲配置文件 ==========
+// ========== 遊戲配置文件 - 隨機名稱系統修正版 ==========
 
 console.log('📋 config.js 開始載入...');
 
@@ -20,8 +20,8 @@ const GAME_CONFIG = {
     ANIMATION_SPEED: 300,          // 動畫速度
     
     // 版本信息
-    VERSION: "1.0.0",
-    SAVE_KEY: "mandrakeGameSave",
+    VERSION: "1.1.0",              // 🔧 更新版本號
+    SAVE_KEY: "mandrakeGameSave_v1_1", // 🔧 新存檔KEY，強制重置
 
     // 點擊系統配置
     CLICK_BASE_REWARD: 1,          // 基礎點擊獎勵
@@ -31,6 +31,7 @@ const GAME_CONFIG = {
     CLICK_REWARD_SHOW_DURATION: 1000 // 獎勵數字顯示時間
 };
 
+// 階層數值配置
 const TIER_BASE_COSTS = {
     1: 10,        // 第1階基礎成本
     2: 80,        // 第2階基礎成本
@@ -40,102 +41,243 @@ const TIER_BASE_COSTS = {
     6: 1200000    // 第6階基礎成本
 };
 
-// 解鎖百分比配置 (想改成5%就改成0.05)
-const TIER_UNLOCK_PERCENTAGE = 0.01;  // 10%
-
-// 曼德拉草數據配置 (使用統一成本)
-const MANDRAKE_CONFIG = {
-    // 第1階 - 
-    original: { 
-        tier: 1, type: 'normal', name: '曼德拉草', icon: '🌱',
-        baseCost: TIER_BASE_COSTS[1], baseProduction: 0.1, costGrowth: 1.12, prodGrowth: 1,
-        description: '常見的曼德拉草'
+// 🔧 每個階層的數值模板
+const TIER_STATS = {
+    1: { 
+        baseCost: TIER_BASE_COSTS[1], 
+        baseProduction: 0.1, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     },
-    
-    // 第2階 - 
-    fire: { 
-        tier: 2, type: 'element', name: '火曼德拉草', icon: '🔥',
-        baseCost: TIER_BASE_COSTS[2], baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
-        description: '看起來很燙'
+    2: { 
+        baseCost: TIER_BASE_COSTS[2], 
+        baseProduction: 1, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     },
-    cat: { 
-        tier: 2, type: 'animal', name: '貓曼德拉草', icon: '🐱',
-        baseCost: TIER_BASE_COSTS[2], baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
-        description: '睡著會發出呼嚕呼嚕聲'
+    3: { 
+        baseCost: TIER_BASE_COSTS[3], 
+        baseProduction: 10, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     },
-    fat: { 
-        tier: 2, type: 'normal', name: '胖曼德拉草', icon: '🟢',
-        baseCost: TIER_BASE_COSTS[2], baseProduction: 1, costGrowth: 1.12, prodGrowth: 1,
-        description: '比一般的曼德拉草更加圓潤'
+    4: { 
+        baseCost: TIER_BASE_COSTS[4], 
+        baseProduction: 100, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     },
-    
-    // 第3階 - 
-    water: { 
-        tier: 3, type: 'element', name: '水曼德拉草', icon: '💧',
-        baseCost: TIER_BASE_COSTS[3], baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
-        description: '不知道為什麼很受歡迎'
+    5: { 
+        baseCost: TIER_BASE_COSTS[5], 
+        baseProduction: 1000, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     },
-    dried: { 
-        tier: 3, type: 'normal', name: '枯乾曼德拉草', icon: '🟤',
-        baseCost: TIER_BASE_COSTS[3], baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
-        description: '好幾天沒喝水'
-    },
-    rabbit: { 
-        tier: 3, type: 'animal', name: '兔曼德拉草', icon: '🐰',
-        baseCost: TIER_BASE_COSTS[3], baseProduction: 10, costGrowth: 1.12, prodGrowth: 1,
-        description: '主食是牧草'
-    },
-    
-    // 第4階 - 
-    wind: { 
-        tier: 4, type: 'element', name: '風曼德拉草', icon: '💨',
-        baseCost: TIER_BASE_COSTS[4], baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
-        description: '覺得自己是一種反向噴射器'
-    },
-    mouse: { 
-        tier: 4, type: 'animal', name: '鼠曼德拉草', icon: '🐭',
-        baseCost: TIER_BASE_COSTS[4], baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
-        description: '小巧靈活的曼德拉草'
-    },
-    mini: { 
-        tier: 4, type: 'normal', name: '迷你曼德拉草', icon: '🟡',
-        baseCost: TIER_BASE_COSTS[4], baseProduction: 100, costGrowth: 1.12, prodGrowth: 1,
-        description: '體型嬌小但產量驚人'
-    },
-    
-    // 第5階 - 
-    electric: { 
-        tier: 5, type: 'element', name: '電曼德拉草', icon: '⚡',
-        baseCost: TIER_BASE_COSTS[5], baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
-        description: '帶有強烈電流的曼德拉草'
-    },
-    fear: { 
-        tier: 5, type: 'normal', name: '恐懼曼德拉草', icon: '😨',
-        baseCost: TIER_BASE_COSTS[5], baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
-        description: '散發著不安氣息的曼德拉草'
-    },
-    bear: { 
-        tier: 5, type: 'animal', name: '熊曼德拉草', icon: '🐻',
-        baseCost: TIER_BASE_COSTS[5], baseProduction: 1000, costGrowth: 1.12, prodGrowth: 1,
-        description: '體型巨大且力大無窮'
-    },
-    
-    // 第6階 - 
-    ice: { 
-        tier: 6, type: 'element', name: '冰曼德拉草', icon: '🧊',
-        baseCost: TIER_BASE_COSTS[6], baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
-        description: '散發著極寒氣息的曼德拉草'
-    },
-    white: { 
-        tier: 6, type: 'normal', name: '白曼德拉草', icon: '⚪',
-        baseCost: TIER_BASE_COSTS[6], baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
-        description: '純白無瑕的神秘曼德拉草'
-    },
-    bat: { 
-        tier: 6, type: 'animal', name: '蝙蝠曼德拉草', icon: '🦇',
-        baseCost: TIER_BASE_COSTS[6], baseProduction: 10000, costGrowth: 1.12, prodGrowth: 1,
-        description: '夜行性的神秘曼德拉草'
+    6: { 
+        baseCost: TIER_BASE_COSTS[6], 
+        baseProduction: 10000, 
+        costGrowth: 1.12, 
+        prodGrowth: 1 
     }
+};
+
+// 解鎖百分比配置
+const TIER_UNLOCK_PERCENTAGE = 0.01;  // 1%
+
+// 🔧 按屬性分類的名稱池（包含描述）
+const NAME_POOLS = {
+    normal: [
+        { 
+            name: '曼德拉草', 
+            icon: '🌱', 
+            description: '常見的曼德拉草' 
+        },
+        { 
+            name: '胖曼德拉草', 
+            icon: '🟢', 
+            description: '比一般的曼德拉草更加圓潤' 
+        },
+        { 
+            name: '枯乾曼德拉草', 
+            icon: '🟤', 
+            description: '好幾天沒喝水' 
+        },
+        { 
+            name: '迷你曼德拉草', 
+            icon: '🟡', 
+            description: '體型嬌小但產量驚人' 
+        },
+        { 
+            name: '恐懼曼德拉草', 
+            icon: '😨', 
+            description: '散發著不安氣息的曼德拉草' 
+        },
+        { 
+            name: '白曼德拉草', 
+            icon: '⚪', 
+            description: '純白無瑕的神秘曼德拉草' 
+        },
+        { 
+            name: '苗條曼德拉草', 
+            icon: '🌿', 
+            description: '身材修長的優雅曼德拉草' 
+        },
+        { 
+            name: '古老曼德拉草', 
+            icon: '🗿', 
+            description: '存在了數百年的智慧曼德拉草' 
+        },
+        { 
+            name: '閃亮曼德拉草', 
+            icon: '✨', 
+            description: '表面散發著微弱光芒' 
+        },
+        { 
+            name: '神秘曼德拉草', 
+            icon: '🔮', 
+            description: '來歷不明的神秘品種' 
+        }
+    ],
+    
+    element: [
+        { 
+            name: '火曼德拉草', 
+            icon: '🔥', 
+            description: '看起來很燙' 
+        },
+        { 
+            name: '水曼德拉草', 
+            icon: '💧', 
+            description: '不知道為什麼很受歡迎' 
+        },
+        { 
+            name: '風曼德拉草', 
+            icon: '💨', 
+            description: '覺得自己是一種反向噴射器' 
+        },
+        { 
+            name: '電曼德拉草', 
+            icon: '⚡', 
+            description: '帶有強烈電流的曼德拉草' 
+        },
+        { 
+            name: '冰曼德拉草', 
+            icon: '🧊', 
+            description: '散發著極寒氣息的曼德拉草' 
+        },
+        { 
+            name: '土曼德拉草', 
+            icon: '⛰️', 
+            description: '堅實如岩石的土系曼德拉草' 
+        },
+        { 
+            name: '光曼德拉草', 
+            icon: '☀️', 
+            description: '自帶光環的神聖曼德拉草' 
+        },
+        { 
+            name: '暗曼德拉草', 
+            icon: '🌑', 
+            description: '吸收光線的黑暗曼德拉草' 
+        },
+        { 
+            name: '毒曼德拉草', 
+            icon: '☣️', 
+            description: '散發危險毒素的曼德拉草' 
+        },
+        { 
+            name: '雷曼德拉草', 
+            icon: '⛈️', 
+            description: '能召喚雷暴的強力曼德拉草' 
+        }
+    ],
+    
+    animal: [
+        { 
+            name: '貓曼德拉草', 
+            icon: '🐱', 
+            description: '睡著會發出呼嚕呼嚕聲' 
+        },
+        { 
+            name: '兔曼德拉草', 
+            icon: '🐰', 
+            description: '主食是牧草' 
+        },
+        { 
+            name: '鼠曼德拉草', 
+            icon: '🐭', 
+            description: '小巧靈活的曼德拉草' 
+        },
+        { 
+            name: '熊曼德拉草', 
+            icon: '🐻', 
+            description: '體型巨大且力大無窮' 
+        },
+        { 
+            name: '蝙蝠曼德拉草', 
+            icon: '🦇', 
+            description: '夜行性的神秘曼德拉草' 
+        },
+        { 
+            name: '狗曼德拉草', 
+            icon: '🐕', 
+            description: '忠誠友善的好夥伴' 
+        },
+        { 
+            name: '狐狸曼德拉草', 
+            icon: '🦊', 
+            description: '狡猾機智的橘色曼德拉草' 
+        },
+        { 
+            name: '龍曼德拉草', 
+            icon: '🐉', 
+            description: '擁有遠古血脈的傳說曼德拉草' 
+        },
+        { 
+            name: '鳥曼德拉草', 
+            icon: '🐦', 
+            description: '喜歡在枝頭歌唱的曼德拉草' 
+        },
+        { 
+            name: '魚曼德拉草', 
+            icon: '🐠', 
+            description: '需要生長在水中的奇特品種' 
+        }
+    ]
+};
+
+// 🔧 保留：第一個曼德拉草固定為原始品種
+const FIXED_FIRST_MANDRAKE = {
+    id: 'original',
+    tier: 1,
+    type: 'normal',
+    name: '曼德拉草',
+    icon: '🌱',
+    description: '常見的曼德拉草',
+    baseCost: TIER_STATS[1].baseCost,
+    baseProduction: TIER_STATS[1].baseProduction,
+    costGrowth: TIER_STATS[1].costGrowth,
+    prodGrowth: TIER_STATS[1].prodGrowth
+};
+
+// 🔧 修改：動態生成 MANDRAKE_CONFIG 的函數
+function generateMandrakeConfig(id, tier, type, nameData) {
+    return {
+        tier: tier,
+        type: type,
+        name: nameData.name,
+        icon: nameData.icon,
+        description: nameData.description,
+        baseCost: TIER_STATS[tier].baseCost,
+        baseProduction: TIER_STATS[tier].baseProduction,
+        costGrowth: TIER_STATS[tier].costGrowth,
+        prodGrowth: TIER_STATS[tier].prodGrowth
+    };
+}
+
+// 🔧 初始化時只包含第一個曼德拉草
+const MANDRAKE_CONFIG = {
+    original: FIXED_FIRST_MANDRAKE
 };
 
 // 解鎖條件配置
@@ -212,9 +354,8 @@ const RARITY_CONFIG = {
     }
 };
 
-// ========== 新的獎勵系統配置 ==========
+// ========== 獎勵系統配置 ==========
 
-// ✅ 新的獎勵模板配置 - 8種平衡獎勵
 const REWARD_TEMPLATES = {
     // 💪 強力檔 - 流派導向
     harvest_burst: {
@@ -341,23 +482,12 @@ const REWARD_TEMPLATES = {
     }
 };
 
-
 // 類型顏色配置
 const TYPE_COLORS = {
     normal: '#28a745',   // 綠色
     element: '#dc3545',  // 紅色
     animal: '#ffc107'    // 黃色
 };
-
-// ✅ 驗證配置是否正確載入
-console.log('✅ GAME_CONFIG 載入:', typeof GAME_CONFIG !== 'undefined');
-console.log('✅ MANDRAKE_CONFIG 載入:', typeof MANDRAKE_CONFIG !== 'undefined');
-console.log('✅ WEATHER_CONFIG 載入:', typeof WEATHER_CONFIG !== 'undefined');
-console.log('✅ RARITY_CONFIG 載入:', typeof RARITY_CONFIG !== 'undefined');
-console.log('✅ REWARD_TEMPLATES 載入:', typeof REWARD_TEMPLATES !== 'undefined');
-console.log('✅ REWARD_TEMPLATES 內容:', Object.keys(REWARD_TEMPLATES));
-
-console.log('📋 config.js 載入完成！');
 
 // ========== 強化系統配置 ==========
 
@@ -400,5 +530,93 @@ const ENHANCEMENT_UNLOCK_CONDITIONS = [
     { threshold: 200, description: '任意曼德拉草達到 200 株' }
 ];
 
+// 🔧 隨機選擇曼德拉草的函數
+function selectRandomMandrake(tier, usedNames = new Set()) {
+    const types = ['normal', 'element', 'animal'];
+    
+    // 隨機打亂屬性順序，避免總是優先選擇 normal
+    const shuffledTypes = types.sort(() => Math.random() - 0.5);
+    
+    for (const type of shuffledTypes) {
+        // 篩選該屬性中未使用的名稱
+        const availableNames = NAME_POOLS[type].filter(
+            nameData => !usedNames.has(nameData.name)
+        );
+        
+        if (availableNames.length > 0) {
+            // 隨機選擇一個可用名稱
+            const selectedName = availableNames[Math.floor(Math.random() * availableNames.length)];
+            
+            // 🔧 修正：生成真正穩定的ID（基於名稱內容）
+            const nameMapping = {
+                '曼德拉草': 'original',
+                '胖曼德拉草': 'fat', '枯乾曼德拉草': 'dried', '迷你曼德拉草': 'mini',
+                '恐懼曼德拉草': 'fear', '白曼德拉草': 'white', '苗條曼德拉草': 'slim',
+                '古老曼德拉草': 'ancient', '閃亮曼德拉草': 'shiny', '神秘曼德拉草': 'mystery',
+                
+                '火曼德拉草': 'fire', '水曼德拉草': 'water', '風曼德拉草': 'wind',
+                '電曼德拉草': 'electric', '冰曼德拉草': 'ice', '土曼德拉草': 'earth',
+                '光曼德拉草': 'light', '暗曼德拉草': 'dark', '毒曼德拉草': 'poison',
+                '雷曼德拉草': 'thunder',
+                
+                '貓曼德拉草': 'cat', '兔曼德拉草': 'rabbit', '鼠曼德拉草': 'mouse',
+                '熊曼德拉草': 'bear', '蝙蝠曼德拉草': 'bat', '狗曼德拉草': 'dog',
+                '狐狸曼德拉草': 'fox', '龍曼德拉草': 'dragon', '鳥曼德拉草': 'bird',
+                '魚曼德拉草': 'fish'
+            };
+            
+            const nameKey = nameMapping[selectedName.name] || selectedName.name.replace(/[^a-zA-Z0-9]/g, '');
+            const uniqueId = `${type}_t${tier}_${nameKey}`;
+            
+            return {
+                id: uniqueId,
+                tier: tier,
+                type: type,
+                name: selectedName.name,
+                icon: selectedName.icon,
+                description: selectedName.description,
+                ...TIER_STATS[tier]
+            };
+        }
+    }
+    
+    // 如果所有屬性都沒有可用名稱，返回null
+    console.warn(`第${tier}階無法找到未使用的名稱！`);
+    return null;
+}
+
+// 🔧 程序生成備用名稱的函數（當名稱池用完時）
+function generateBackupName(tier, type, index) {
+    const typeNames = {
+        normal: '普通',
+        element: '元素', 
+        animal: '動物'
+    };
+    
+    const icons = {
+        normal: ['🌱', '🟢', '🟡', '⚪', '🔘'],
+        element: ['🔥', '💧', '⚡', '💨', '🧊'],
+        animal: ['🐱', '🐭', '🐰', '🐻', '🦊']
+    };
+    
+    const randomIcon = icons[type][Math.floor(Math.random() * icons[type].length)];
+    
+    return {
+        name: `${typeNames[type]}曼德拉草 #${String(index).padStart(3, '0')}`,
+        icon: randomIcon,
+        description: `程序生成的第${tier}階${typeNames[type]}系曼德拉草`
+    };
+}
+
+// ✅ 驗證配置載入
+console.log('✅ GAME_CONFIG 載入:', typeof GAME_CONFIG !== 'undefined');
+console.log('✅ TIER_STATS 載入:', typeof TIER_STATS !== 'undefined');
+console.log('✅ NAME_POOLS 載入:', typeof NAME_POOLS !== 'undefined');
+console.log('✅ MANDRAKE_CONFIG 載入:', typeof MANDRAKE_CONFIG !== 'undefined');
+console.log('✅ WEATHER_CONFIG 載入:', typeof WEATHER_CONFIG !== 'undefined');
+console.log('✅ RARITY_CONFIG 載入:', typeof RARITY_CONFIG !== 'undefined');
+console.log('✅ REWARD_TEMPLATES 載入:', typeof REWARD_TEMPLATES !== 'undefined');
 console.log('✅ ENHANCEMENT_VALUES 載入完成');
 console.log('✅ ENHANCEMENT_UNLOCK_CONDITIONS 載入完成');
+
+console.log('📋 config.js 載入完成！');

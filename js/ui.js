@@ -91,7 +91,7 @@ class UI {
     // ========== 天氣系統更新 ==========
 
     /**
-     * 更新天氣顯示
+     * 🌤️ 更新天氣顯示（含動態天空）
      */
     static updateWeather() {
         if (!game || !game.data) return;
@@ -110,6 +110,9 @@ class UI {
         // 更新重骰成本
         const costElement = document.getElementById('weather-cost');
         if (costElement) costElement.textContent = game.data.freeWeatherReroll ? '免費' : '100';
+
+        // 🌤️ 新增：更新動態天空背景
+        this.updateSkyWeather(game.data.weather);
     
         const weatherDisplay = document.getElementById('current-weather');
         if (!weatherDisplay || !game.data) return;
@@ -123,6 +126,48 @@ class UI {
                     <small class="weather-effect">${weather.effect}</small>
                 </div>
             `;
+        }
+    }
+
+    /**
+     * 🌤️ 新增：根據天氣更新天空狀態
+     */
+    static updateSkyWeather(weatherType) {
+        const gameContainer = document.querySelector('.game-container');
+        if (!gameContainer) {
+            console.warn('找不到 game-container 元素');
+            return;
+        }
+
+        // 移除所有天氣類
+        gameContainer.classList.remove(
+            'weather-sunny', 'weather-rainy', 'weather-stormy', 
+            'weather-misty', 'weather-perfect'
+        );
+
+        // 根據天氣類型添加對應的類
+        const weatherClassMap = {
+            'sunny': 'weather-sunny',
+            'rainy': 'weather-rainy', 
+            'stormy': 'weather-stormy',
+            'misty': 'weather-misty',
+            'perfect': 'weather-perfect'
+        };
+
+        const weatherClass = weatherClassMap[weatherType];
+        if (weatherClass) {
+            gameContainer.classList.add(weatherClass);
+            
+            // 🔧 可選：添加天氣變化通知
+            const weatherConfig = WEATHER_CONFIG[weatherType];
+            if (weatherConfig) {
+                console.log(`天空已切換為：${weatherConfig.name}`);
+                
+                // 顯示天氣變化通知（可選）
+                // this.showNotification(`天空變為${weatherConfig.name}`, 'info', 2000);
+            }
+        } else {
+            console.warn('未知的天氣類型:', weatherType);
         }
     }
 
@@ -191,7 +236,7 @@ class UI {
     // ========== 曼德拉草列表管理 ==========
 
     /**
-     * 更新曼德拉草列表（支持插槽顯示）
+     * 更新曼德拉草列表（支持插槽顯示，按階層排序）
      */
     static updateMandrakeList() {
         const container = document.getElementById('mandrake-list');
@@ -208,15 +253,30 @@ class UI {
         console.log('開始更新曼德拉草列表（包含插槽）');
         container.innerHTML = '';
 
-        // 🔧 先顯示已解鎖的曼德拉草
+        // 🔧 修正：先按階層排序已解鎖的曼德拉草
         if (game.data.unlockedMandrakes) {
-            for (const id of game.data.unlockedMandrakes) {
+            // 創建一個包含曼德拉草ID和其階層信息的數組
+            const mandrakeWithTiers = game.data.unlockedMandrakes.map(id => {
                 const config = MANDRAKE_CONFIG[id];
-                if (!config) {
-                    console.error('找不到曼德拉草配置:', id);
-                    continue;
-                }
+                return {
+                    id: id,
+                    tier: config ? config.tier : 999, // 如果找不到配置，放到最後
+                    config: config
+                };
+            }).filter(item => item.config); // 過濾掉沒有配置的項目
 
+            // 按階層排序
+            mandrakeWithTiers.sort((a, b) => {
+                if (a.tier !== b.tier) {
+                    return a.tier - b.tier; // 先按階層排序
+                }
+                // 如果階層相同，按名稱排序（可選）
+                return a.config.name.localeCompare(b.config.name);
+            });
+
+            // 按排序後的順序顯示曼德拉草
+            for (const item of mandrakeWithTiers) {
+                const { id, config } = item;
                 const count = game.data.ownedMandrakes[id] || 0;
                 const cost = game.getCurrentCost(id);
                 const production = this.calculateMandrakeProduction(id, count);
@@ -226,19 +286,21 @@ class UI {
             }
         }
 
-        // 🔧 修正：插槽顯示在最後面
+        // 🔧 修正：插槽也按階層排序顯示在最後面
         if (game.data.unconfirmedTierSlots) {
-            for (const slot of game.data.unconfirmedTierSlots) {
-                if (slot.status === 'pending') {
-                    const slotRow = this.createSlotRow(slot);
-                    if (slotRow) {
-                        container.appendChild(slotRow);
-                    }
+            // 將待確認的插槽按階層排序
+            const sortedSlots = game.data.unconfirmedTierSlots
+                .filter(slot => slot.status === 'pending')
+                .sort((a, b) => a.tier - b.tier); // 按階層排序
+
+            for (const slot of sortedSlots) {
+                const slotRow = this.createSlotRow(slot);
+                if (slotRow) {
+                    container.appendChild(slotRow);
                 }
             }
         }
     }
-
 
     /**
      * 🔧 修正：創建插槽行（修復工具提示）
