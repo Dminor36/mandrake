@@ -1896,7 +1896,7 @@ getSlotDisplayInfo(slotId) {
         
         // 暴擊時的特殊樣式
         const color = isCrit ? '#FF6B35' : '#4CAF50';  // 暴擊用橘紅色
-        const fontSize = isCrit ? '22px' : '18px';     // 暴擊字體更大
+        const fontSize = isCrit ? '40px' : '35px';     // 暴擊字體更大
         const fontWeight = isCrit ? '900' : 'bold';    // 暴擊更粗
         
         rewardText.style.cssText = `
@@ -1914,17 +1914,17 @@ getSlotDisplayInfo(slotId) {
         // 定位在曼德拉草附近
         const rect = mandrakeImg.getBoundingClientRect();
         rewardText.style.left = (rect.left + rect.width / 2 - 20) + 'px';
-        rewardText.style.top = (rect.top - 20) + 'px';
+        rewardText.style.top = (rect.top - 40) + 'px';
         
         document.body.appendChild(rewardText);
         
         // 動畫效果：向上飛出並淡化
         setTimeout(() => {
-            const flyDistance = isCrit ? '-70px' : '-50px';  // 暴擊飛得更高
+            const flyDistance = isCrit ? '-80px' : '-40px';  // 暴擊飛得更高
             rewardText.style.transform = `translateY(${flyDistance})`;
             rewardText.style.opacity = '0';
         }, 50);
-        
+
         // 清理元素
         setTimeout(() => {
             if (rewardText.parentNode) {
