@@ -400,7 +400,7 @@ class UI {
         const tooltipContent = `種植時隨機決定品種\n成本: ${formattedCost}`;
         row.title = tooltipContent;
 
-        // 🔧 完全按照原本曼德拉草的格式
+        // 🔧 修正：改用與已解鎖曼德拉草相同的三欄式布局
         row.innerHTML = `
             <!-- 左側：大數字顯示數量 (插槽顯示0) -->
             <div class="plant-count-section">
@@ -413,21 +413,9 @@ class UI {
                 <div class="plant-production">種植時隨機決定品種</div>
             </div>
             
-            <!-- 右側：購買區域 -->
-            <div class="plant-buy-section">
-                <div class="slot-cost-display" onclick="buySlot(this, '${slot.id}')" style="
-                    cursor: pointer; 
-                    color: ${canAfford ? '#27ae60' : '#e74c3c'}; 
-                    font-size: 1.5em; 
-                    font-weight: bold; 
-                    text-align: center; 
-                    width: 100%; 
-                    height: 100%; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center;
-                    ${!canAfford ? 'opacity: 0.6;' : ''}
-                ">
+            <!-- 右側：成本顯示 - 改用與已解鎖相同的樣式 -->
+            <div class="plant-cost-section">
+                <div class="plant-cost ${canAfford ? 'affordable' : 'expensive'}" onclick="buySlot(this, '${slot.id}')" style="cursor: pointer; font-size: 1.5em; font-weight: bold; text-align: center; ${!canAfford ? 'opacity: 0.6;' : ''}">
                     ${formattedCost}
                 </div>
             </div>
