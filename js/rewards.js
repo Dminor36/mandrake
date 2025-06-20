@@ -162,18 +162,30 @@ static applyRewardEffect(selectedOption) {
     switch (template.name) {
         case '生產力提升':
             game.applyTempBoost('production', 1 + tier.bonus/100, tier.duration);
+            if (game.forceProductionUpdate) {
+            game.forceProductionUpdate('reward_boost');
+            }
             break;
             
         case '元素共鳴':
             game.applyTempBoost('element', 1 + tier.bonus/100, tier.duration);
+            if (game.forceElementUpdate) {
+                game.forceElementUpdate('reward_boost');
+            }
             break;
             
         case '野性爆發':
             game.applyTempBoost('animal', 1 + tier.bonus/100, tier.duration);
+            if (game.forceAnimalUpdate) {
+                game.forceAnimalUpdate('reward_boost');
+            }
             break;
             
         case '返璞歸真':
             game.applyTempBoost('normal', 1 + tier.bonus/100, tier.duration);
+            if (game.forceNormalUpdate) {
+                game.forceNormalUpdate('reward_boost');
+            }
             break;
             
         case '即時果實':

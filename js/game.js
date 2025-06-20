@@ -16,6 +16,14 @@ class Game {
             enabled: true,
             nextSlotId: 1
         };
+
+        // 🔧 新增：產量快取系統
+        this.productionCache = {
+            value: 0,
+            isDirty: true,
+            lastUpdate: 0
+        };
+        
 }
 
     /**
@@ -371,19 +379,22 @@ class Game {
             );
             
             if (hasNormal && hasElement && hasAnimal) {
+                const level = gameEffects.diversityBonusLevel || 1; // 預設等級1
+                const bonusMultiplier = ENHANCEMENT_VALUES.combo.three_type_bonus * level;
                 const oldProduction = production;
-                production *= (1 + ENHANCEMENT_VALUES.combo.three_type_bonus);
+                production *= (1 + bonusMultiplier);
                 const increase = production - oldProduction;
+                
                 if (showDetails) {
                     breakdown.push({
                         name: '多元發展',
                         value: increase,
-                        detail: `三系齊全 +${(ENHANCEMENT_VALUES.combo.three_type_bonus * 100).toFixed(1)}%`
+                        detail: `三系齊全 × Lv.${level} +${(bonusMultiplier * 100).toFixed(1)}%`
                     });
                     effects.push({
                         source: '多元發展',
-                        level: this.data.enhancements.obtained['combo_diversity_bonus'] || 0,
-                        effect: `三系齊全時全體 +${(ENHANCEMENT_VALUES.combo.three_type_bonus * 100).toFixed(1)}%`
+                        level: level,
+                        effect: `三系齊全時全體 +${(ENHANCEMENT_VALUES.combo.three_type_bonus * level * 100).toFixed(1)}%`
                     });
                 }
             }
@@ -392,7 +403,8 @@ class Game {
         // 規模效應加成
         if (gameEffects.hasQuantityBonus) {
             const totalMandrakes = Game.getTotalMandrakeCount();
-            const bonusMultiplier = Math.floor(totalMandrakes / 10) * ENHANCEMENT_VALUES.combo.per_10_bonus;
+            const level = gameEffects.quantityBonusLevel || 1; // 預設等級1
+            const bonusMultiplier = Math.floor(totalMandrakes / 10) * ENHANCEMENT_VALUES.combo.per_10_bonus * level;
             
             if (bonusMultiplier > 0) {
                 const oldProduction = production;
@@ -403,12 +415,12 @@ class Game {
                     breakdown.push({
                         name: '規模效應',
                         value: increase,
-                        detail: `${totalMandrakes}株 → ${Math.floor(totalMandrakes / 10)}×10株 +${(bonusMultiplier * 100).toFixed(1)}%`
+                        detail: `${totalMandrakes}株 → ${Math.floor(totalMandrakes / 10)}×10株 × Lv.${level} +${(bonusMultiplier * 100).toFixed(1)}%`
                     });
                     effects.push({
                         source: '規模效應',
-                        level: this.data.enhancements.obtained['combo_quantity_bonus'] || 0,
-                        effect: `每10株全體產量 +${(ENHANCEMENT_VALUES.combo.per_10_bonus * 100).toFixed(1)}%`
+                        level: level,
+                        effect: `每10株全體產量 +${(ENHANCEMENT_VALUES.combo.per_10_bonus * level * 100).toFixed(1)}%`
                     });
                 }
             }
@@ -416,7 +428,6 @@ class Game {
 
         // 同系協同加成
         if (gameEffects.hasTypeSynergy) {
-            // 計算同類型的總數量
             const sameTypeCount = Object.entries(this.data.ownedMandrakes)
                 .filter(([mandrakeId, mandrakeCount]) => 
                     mandrakeCount > 0 && MANDRAKE_CONFIG[mandrakeId]?.type === config.type
@@ -424,7 +435,8 @@ class Game {
                 .reduce((sum, [, mandrakeCount]) => sum + mandrakeCount, 0);
             
             if (sameTypeCount > 1) {
-                const bonusMultiplier = (sameTypeCount - 1) * ENHANCEMENT_VALUES.combo.same_type_bonus;
+                const level = gameEffects.typeSynergyLevel || 1; // 預設等級1
+                const bonusMultiplier = (sameTypeCount - 1) * ENHANCEMENT_VALUES.combo.same_type_bonus * level;
                 const oldProduction = production;
                 production *= (1 + bonusMultiplier);
                 const increase = production - oldProduction;
@@ -434,12 +446,12 @@ class Game {
                     breakdown.push({
                         name: '同系協同',
                         value: increase,
-                        detail: `${typeName}系${sameTypeCount}株 +${(bonusMultiplier * 100).toFixed(1)}%`
+                        detail: `${typeName}系${sameTypeCount}株 × Lv.${level} +${(bonusMultiplier * 100).toFixed(1)}%`
                     });
                     effects.push({
                         source: '同系協同',
-                        level: this.data.enhancements.obtained['combo_type_synergy'] || 0,
-                        effect: `同類型每額外1株 +${(ENHANCEMENT_VALUES.combo.same_type_bonus * 100).toFixed(1)}%`
+                        level: level,
+                        effect: `同類型每額外1株 +${(ENHANCEMENT_VALUES.combo.same_type_bonus * level * 100).toFixed(1)}%`
                     });
                 }
             }
@@ -504,9 +516,22 @@ class Game {
      * 獲取總產量
      */
     getTotalProduction() {
-        // 🔧 添加安全檢查
+        const now = Date.now();
+        
+        // 如果標記為dirty或超過1秒，重新計算
+        if (this.productionCache.isDirty || (now - this.productionCache.lastUpdate) > 1000) {
+
+            this.productionCache.value = this.calculateFreshProduction();
+            this.productionCache.lastUpdate = now;
+            this.productionCache.isDirty = false;
+            console.log(`🔄 產量重算: ${this.productionCache.value.toFixed(2)}/秒`);
+        }
+        
+        return this.productionCache.value;
+    }
+
+    calculateFreshProduction() {
         if (!this.data || !this.data.ownedMandrakes || !this.data.enhancementEffects) {
-            console.warn('getTotalProduction: 遊戲數據不完整');
             return 0;
         }
 
@@ -515,7 +540,7 @@ class Game {
         }
         
         let total = 0;
-        this.individualProductions = {}; // 儲存每個品種的產量
+        this.individualProductions = {};
         
         for (const [id, count] of Object.entries(this.data.ownedMandrakes)) {
             const production = this.calculateSingleMandrakeProduction(id, count);
@@ -525,6 +550,24 @@ class Game {
         
         return total;
     }
+
+    // 🔧 新增：標記產量需要重算（1行代碼）
+    markProductionDirty(reason) {
+        this.productionCache.isDirty = true;
+        console.log(`📊 產量標記重算: ${reason}`);
+    }
+
+    // 🔧 新增：強制立即更新產量和UI（關鍵操作用）
+    forceProductionUpdate(reason) {
+        this.markProductionDirty(reason);
+        const newProduction = this.getTotalProduction(); // 立即重算
+        
+        // 立即更新UI顯示
+        if (typeof UI !== 'undefined') {
+            UI.updateProductionDisplay(newProduction);
+        }
+    }
+
 
     /**
      * 獲取天氣倍率
@@ -644,6 +687,8 @@ class Game {
             // 應用購買數量
             this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + purchaseAmount;
 
+            // 🔧 新增：購買後立即更新產量顯示（1行）
+            this.forceProductionUpdate('purchase');
 
             // 檢查階層解鎖
             this.checkTierUnlock();
@@ -1165,6 +1210,10 @@ getSlotDisplayInfo(slotId) {
         
         if (newWeather !== this.data.weather) {
             this.data.weather = newWeather;
+
+            // 🔧 新增：天氣改變後立即更新產量顯示（1行）
+            this.forceProductionUpdate('weather_change');
+
             const weatherConfig = WEATHER_CONFIG[newWeather];
             
             // 🔧 重置倒數計時器

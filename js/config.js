@@ -126,7 +126,6 @@ const EXTENDED_NAME_POOLS = {
         { name: '苗條曼德拉草', icon: '🌿', description: '身材修長的優雅曼德拉草' },
         { name: '古老曼德拉草', icon: '🗿', description: '存在了數百年的智慧曼德拉草' },
         { name: '閃亮曼德拉草', icon: '✨', description: '表面散發著微弱光芒' },
-        // 🆕 新增的普通系曼德拉草
         { name: '透明曼德拉草', icon: '👻', description: '幾乎看不見的神秘曼德拉草' },
         { name: '糖霜曼德拉草', icon: '🧁', description: '表面覆蓋著甜美糖霜的曼德拉草' },
         { name: '綠茶曼德拉草', icon: '🍵', description: '散發著淡雅茶香的曼德拉草' },
@@ -182,7 +181,6 @@ const EXTENDED_NAME_POOLS = {
             description: '火與土的極致結合',
             prerequisites: ['火曼德拉草', '土曼德拉草'] // 需要火+土
         },
-        // 🆕 新增的元素系曼德拉草
         { name: '燈泡曼德拉草', icon: '💡', description: '會發光的電系曼德拉草，照亮周圍環境' },
         { name: '鋰曼德拉草', icon: '🔋', description: '充滿電能的高科技曼德拉草，可儲存大量電力' }
     ],
@@ -197,7 +195,6 @@ const EXTENDED_NAME_POOLS = {
         { name: '狐狸曼德拉草', icon: '🦊', description: '狡猾機智的橘色曼德拉草' },
         { name: '鳥曼德拉草', icon: '🐦', description: '喜歡在枝頭歌唱的曼德拉草' },
         { name: '魚曼德拉草', icon: '🐠', description: '需要生長在水中的奇特品種' },
-        // 🆕 新增的動物系曼德拉草
         { name: '幽靈曼德拉草', icon: '👻', description: '來自異世界的神秘生物，只在夜晚現身' },
         { name: '浣熊曼德拉草', icon: '🦝', description: '喜歡洗東西的可愛曼德拉草，有著標誌性的黑眼圈' },
         { 
@@ -374,19 +371,19 @@ const RARITY_CONFIG = {
 // ========== 獎勵系統配置 ==========
 
 const REWARD_TEMPLATES = {
-    // 💪 強力檔 - 流派導向
+    // 💪 強力檔 - 大幅削弱數值
     harvest_burst: {
         name: '收穫爆發',
         description: function(tier) {
-            return `立即獲得你擁有最多曼德拉草${tier.hours}小時的產量`;
+            return `立即獲得你擁有最多曼德拉草${tier.minutes}分鐘的產量`;  // 🔧 改為分鐘
         },
         icon: '💥',
         category: 'instant',
         tiers: {
-            common: { hours: 2 },
-            rare: { hours: 4 },
-            epic: { hours: 8 },
-            legendary: { hours: 16 }
+            common: { minutes: 15 },      // 🔧 從2小時降至15分鐘
+            rare: { minutes: 30 },        // 🔧 從4小時降至30分鐘  
+            epic: { minutes: 60 },        // 🔧 從8小時降至1小時
+            legendary: { minutes: 120 }   // 🔧 從16小時降至2小時
         }
     },
     
@@ -398,76 +395,76 @@ const REWARD_TEMPLATES = {
         icon: '💰',
         category: 'boost',
         tiers: {
-            common: { count: 3, discount: 20 },
-            rare: { count: 5, discount: 30 },
-            epic: { count: 8, discount: 40 },
-            legendary: { count: 10, discount: 50 }
+            common: { count: 3, discount: 15 },    // 🔧 從20%降至15%
+            rare: { count: 5, discount: 20 },      // 🔧 從30%降至20%
+            epic: { count: 8, discount: 25 },      // 🔧 從40%降至25%
+            legendary: { count: 10, discount: 30 } // 🔧 從50%降至30%
         }
     },
 
-    // 💪 中強檔 - 平衡發展
+    // 💪 中強檔 - 降低持續時間或效果
     production_boost: {
         name: '生產力提升',
         description: function(tier) {
-            return `1小時內所有產量 +${tier.bonus}%`;
+            return `${tier.duration/60000}分鐘內所有產量 +${tier.bonus}%`;  // 🔧 改為分鐘顯示
         },
         icon: '⚡',
         category: 'boost',
         tiers: {
-            common: { bonus: 10, duration: 3600000 },
-            rare: { bonus: 15, duration: 3600000 },
-            epic: { bonus: 25, duration: 3600000 },
-            legendary: { bonus: 50, duration: 3600000 }
+            common: { bonus: 15, duration: 1800000 },   // 🔧 30分鐘，+15%
+            rare: { bonus: 25, duration: 1800000 },     // 🔧 30分鐘，+25%
+            epic: { bonus: 35, duration: 2400000 },     // 🔧 40分鐘，+35%
+            legendary: { bonus: 50, duration: 3000000 } // 🔧 50分鐘，+50%
         }
     },
     
-    // 🎯 中等檔 - 系別特化
+    // 🎯 中等檔 - 三系平衡，相同強度
     element_boost: {
         name: '元素共鳴',
         description: function(tier) {
-            return `1小時內元素系產量 +${tier.bonus}%`;
+            return `${Math.floor(tier.duration/60000)}分鐘內元素系產量 +${tier.bonus}%`;
         },
         icon: '🔥',
         category: 'boost',
         tiers: {
-            common: { bonus: 20, duration: 3600000 },
-            rare: { bonus: 35, duration: 3600000 },
-            epic: { bonus: 60, duration: 3600000 },
-            legendary: { bonus: 100, duration: 3600000 }
+            common: { bonus: 25, duration: 1800000 },   // 30分鐘
+            rare: { bonus: 40, duration: 1800000 },     // 30分鐘
+            epic: { bonus: 60, duration: 2400000 },     // 40分鐘
+            legendary: { bonus: 80, duration: 3000000 } // 50分鐘
         }
     },
     
     animal_boost: {
         name: '野性爆發',
         description: function(tier) {
-            return `1小時內動物系產量 +${tier.bonus}%`;
+            return `${Math.floor(tier.duration/60000)}分鐘內動物系產量 +${tier.bonus}%`;
         },
         icon: '🐾',
         category: 'boost',
         tiers: {
-            common: { bonus: 20, duration: 3600000 },
-            rare: { bonus: 35, duration: 3600000 },
-            epic: { bonus: 60, duration: 3600000 },
-            legendary: { bonus: 100, duration: 3600000 }
+            common: { bonus: 25, duration: 1800000 },   // 🔧 統一數值
+            rare: { bonus: 40, duration: 1800000 },     // 🔧 統一數值
+            epic: { bonus: 60, duration: 2400000 },     // 🔧 統一數值
+            legendary: { bonus: 80, duration: 3000000 } // 🔧 統一數值
         }
     },
     
     normal_boost: {
         name: '返璞歸真',
         description: function(tier) {
-            return `1小時內普通系產量 +${tier.bonus}%`;
+            return `${Math.floor(tier.duration/60000)}分鐘內普通系產量 +${tier.bonus}%`;
         },
         icon: '🌿',
         category: 'boost',
         tiers: {
-            common: { bonus: 20, duration: 3600000 },
-            rare: { bonus: 35, duration: 3600000 },
-            epic: { bonus: 60, duration: 3600000 },
-            legendary: { bonus: 100, duration: 3600000 }
+            common: { bonus: 25, duration: 1800000 },   // 🔧 統一數值
+            rare: { bonus: 40, duration: 1800000 },     // 🔧 統一數值
+            epic: { bonus: 60, duration: 2400000 },     // 🔧 統一數值
+            legendary: { bonus: 80, duration: 3000000 } // 🔧 統一數值
         }
     },
 
-    // 🍀 輕度檔 - 即時滿足與趣味
+    // 🍀 輕度檔 - 保持現狀或小幅提升
     instant_fruit: {
         name: '即時果實',
         description: function(tier) {
@@ -476,25 +473,41 @@ const REWARD_TEMPLATES = {
         icon: '🍎',
         category: 'instant',
         tiers: {
-            common: { minutes: 10 },
-            rare: { minutes: 20 },
-            epic: { minutes: 40 },
-            legendary: { minutes: 60 }
+            common: { minutes: 15 },      // 🔧 從10分鐘提升至15分鐘
+            rare: { minutes: 25 },        // 🔧 從20分鐘提升至25分鐘
+            epic: { minutes: 40 },        // 🔧 維持40分鐘
+            legendary: { minutes: 60 }    // 🔧 維持60分鐘
         }
     },
     
-    lucky_streak: {
-        name: '幸運連擊',
+    // 🆕 新增：更平衡的獎勵類型
+    click_power: {
+        name: '點擊狂熱',
         description: function(tier) {
-            return `接下來${tier.count}次產量結算，有${tier.chance}%機率獲得雙倍產量`;
+            return `${tier.duration/60000}分鐘內點擊獎勵 +${tier.bonus}%，暴擊率 +${tier.critBonus}%`;
         },
-        icon: '🍀',
-        category: 'special',
+        icon: '👆',
+        category: 'boost',
         tiers: {
-            common: { count: 10, chance: 30 },
-            rare: { count: 15, chance: 35 },
-            epic: { count: 20, chance: 40 },
-            legendary: { count: 30, chance: 50 }
+            common: { bonus: 100, critBonus: 5, duration: 600000 },   // 10分鐘
+            rare: { bonus: 200, critBonus: 10, duration: 900000 },    // 15分鐘
+            epic: { bonus: 300, critBonus: 15, duration: 1200000 },   // 20分鐘
+            legendary: { bonus: 500, critBonus: 25, duration: 1800000 } // 30分鐘
+        }
+    },
+
+    tier_boost: {
+        name: '階層共鳴',
+        description: function(tier) {
+            return `${tier.duration/60000}分鐘內第${tier.targetTier}階及以下曼德拉草產量 +${tier.bonus}%`;
+        },
+        icon: '🎯',
+        category: 'boost',
+        tiers: {
+            common: { targetTier: 3, bonus: 30, duration: 1800000 },
+            rare: { targetTier: 5, bonus: 40, duration: 1800000 },
+            epic: { targetTier: 7, bonus: 50, duration: 2400000 },
+            legendary: { targetTier: 10, bonus: 60, duration: 3000000 }
         }
     }
 };
@@ -511,30 +524,26 @@ const TYPE_COLORS = {
 // 強化數值配置
 const ENHANCEMENT_VALUES = {
     stable: {
-        global_production: 0.10,    // 全體生產 +10%
-        global_cost: 0.08,          // 全體成本 -8%
-        type_production: 0.20,      // 特定系生產 +20%
-        type_cost: 0.15             // 特定系成本 -15%
+        global_production: 0.15,    // 🔧 從 0.2 降至 0.15 (每級+15%)
+        global_cost: 0.08,          // 🔧 從 0.1 降至 0.08 (每級-8%)
+        type_production: 0.25       // 🔧 從 0.2 提升至 0.25 (讓專精更有價值)
     },
     luck: {
-        production_variance: 0.30,   // 產量波動 ±30%
-        production_boost: 0.15,      // 期望值 +15%
-        perfect_weather_chance: 0.30, // 完美天氣機率 30%
-        lucky_moment_chance: 0.05,   // 幸運時刻機率 5%
-        purchase_crit_chance: 0.10,  // 購買暴擊機率 10%
-        cost_variance_min: -0.20,    // 成本波動最小 -20%
-        cost_variance_max: 0.10      // 成本波動最大 +10%
+        production_variance: 0.3,   // 維持 ±30%
+        production_boost: 0.15,     // 🔧 從 0.1 提升至 0.15 (期望值更好)
+        cost_variance_min: -0.4,    // 🔧 從 -0.3 提升至 -0.4 (更大折扣可能)
+        cost_variance_max: 0.2,     // 🔧 從 0.3 降至 0.2 (減少懲罰)
+        purchase_crit_chance: 0.15  // 🔧 從 0.1 提升至 0.15 (15%暴擊率)
     },
     reward: {
-        cd_reduction: 0.25,         // CD減少 -25%
-        capacity_increase: 1,       // 累積上限 +1
-        rarity_boost: 0.50         // 稀有度提升 +50%
+        cd_reduction: 0.15,         // 🔧 從 0.1 提升至 0.15 (更有價值)
+        capacity_increase: 2,       // 🔧 從 1 提升至 2 (每級+2容量)
+        rarity_boost: 0.3          // 🔧 從 0.2 提升至 0.3 (更明顯效果)
     },
     combo: {
-        per_10_bonus: 0.03,        // 每10株 +3%
-        same_type_bonus: 0.05,     // 同類型每株額外 +5%
-        three_type_bonus: 0.25,    // 三系全有 +25%
-        first_type_bonus: 0.50     // 每系第1株 +50%
+        per_10_bonus: 0.08,        // 🔧 從 0.1 降至 0.08 (每10株+8%)
+        same_type_bonus: 0.03,     // 🔧 從 0.05 大幅降至 0.03 (防止爆炸)
+        three_type_bonus: 0.5      // 🔧 從 0.3 大幅提升至 0.5 (獎勵多樣化)
     }
 };
 

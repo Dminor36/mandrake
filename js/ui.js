@@ -29,6 +29,29 @@ class UI {
 
     // ========== 資源和顯示更新 ==========
 
+     static updateProductionDisplay(productionValue) {
+        const productionElement = document.getElementById('production-rate');
+        if (productionElement && typeof productionValue === 'number') {
+            const formattedValue = this.formatNumber(productionValue);
+            
+            // 如果數值有變化，添加動畫效果
+            if (productionElement.textContent !== formattedValue) {
+                productionElement.textContent = formattedValue;
+                this.addProductionChangeAnimation(productionElement);
+            }
+        }
+    }
+
+    // 🔧 新增：產量變化動畫
+    static addProductionChangeAnimation(element) {
+        element.style.animation = '';
+        element.style.animation = 'productionUpdate 0.5s ease-out';
+        
+        setTimeout(() => {
+            element.style.animation = '';
+        }, 500);
+    }
+    
     /**
      * 🔧 優化：更新資源顯示 - 增加進度條更新
      */
