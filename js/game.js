@@ -635,7 +635,6 @@ class Game {
         if (this.data.purchaseBoost && 
             this.data.purchaseBoost.remainingPurchases > 0 && 
             Date.now() < this.data.purchaseBoost.endTime) {
-            const originalCost = cost;
             cost *= (1 - this.data.purchaseBoost.discount);
         }
         return Math.floor(Math.max(1, cost)); // 最低成本為1

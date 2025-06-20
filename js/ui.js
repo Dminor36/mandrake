@@ -25,6 +25,7 @@ class UI {
         this.updateRebirthInfo();
         this.updateRewardStatus(); 
         this.updateEnhancementStatus();
+        this.updatePurchaseBoostStatus();
     }
 
     // ========== 資源和顯示更新 ==========
@@ -51,7 +52,7 @@ class UI {
             element.style.animation = '';
         }, 500);
     }
-    
+
     /**
      * 🔧 優化：更新資源顯示 - 增加進度條更新
      */
@@ -358,6 +359,14 @@ class UI {
         
         // 🔧 修正：工具提示顯示詳細的產量分解
         let tooltipContent = `總產量增加: +${formattedIncrease}/秒\n`;
+
+        if (game.data.purchaseBoost && 
+            game.data.purchaseBoost.remainingPurchases > 0 && 
+            Date.now() < game.data.purchaseBoost.endTime) {
+            const discount = (game.data.purchaseBoost.discount * 100).toFixed(0);
+            const remaining = game.data.purchaseBoost.remainingPurchases;
+            tooltipContent += `🎉 購買狂潮：${discount}% 折扣 (剩餘${remaining}次)\n`;
+        }
         
         if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
             tooltipContent += `├ 基礎提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒\n`;
@@ -374,6 +383,24 @@ class UI {
 
         // 🔧 修改：整個行添加 title 屬性來顯示提示信息
         row.title = tooltipContent;
+
+        // 🔧 新增：如果有購買狂潮，為成本顯示添加特殊樣式
+        let costStyle = `cursor: pointer; font-size: 1.5em; font-weight: bold; text-align: center;`;
+        let costColor = canAfford ? '#27ae60' : '#e74c3c';
+        
+        if (game.data.purchaseBoost && 
+            game.data.purchaseBoost.remainingPurchases > 0 && 
+            Date.now() < game.data.purchaseBoost.endTime) {
+            // 購買狂潮期間使用特殊顏色（金色）
+            costColor = canAfford ? '#f39c12' : '#e74c3c';
+            costStyle += ` text-shadow: 0 0 5px rgba(243, 156, 18, 0.5);`;
+        }
+        
+        costStyle += ` color: ${costColor};`;
+        if (!canAfford) {
+            costStyle += ` opacity: 0.6;`;
+        }
+
 
         // 🔧 保持原有的佈局
         row.innerHTML = `
@@ -677,12 +704,21 @@ class UI {
         for (let i = 0; i < amount; i++) {
             // 模擬逐一購買計算成本
             game.data.ownedMandrakes[id] = originalCount + i;
-            totalCost += game.getCurrentCost(id);
+            let singleCost = game.getCurrentCost(id);
+            
+            // 🔧 確保在這裡也應用購買狂潮折扣
+            if (game.data.purchaseBoost && 
+                game.data.purchaseBoost.remainingPurchases > 0 && 
+                Date.now() < game.data.purchaseBoost.endTime) {
+                singleCost *= (1 - game.data.purchaseBoost.discount);
+            }
+            
+            totalCost += singleCost;
         }
 
         // 還原原始持有數量
         game.data.ownedMandrakes[id] = originalCount;
-        return totalCost;
+        return Math.floor(totalCost);
     }
 
     /**
@@ -991,6 +1027,52 @@ class UI {
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             countdownElement.parentElement.style.animation = '';
             countdownElement.style.color = '#666'; // 正常顏色
+        }
+    }
+
+    static updatePurchaseBoostStatus() {
+        if (!game || !game.data) return;
+        
+        // 查找或創建購買狂潮狀態顯示元素
+        let boostStatus = document.getElementById('purchase-boost-status');
+        
+        if (game.data.purchaseBoost && 
+            game.data.purchaseBoost.remainingPurchases > 0 && 
+            Date.now() < game.data.purchaseBoost.endTime) {
+            
+            // 顯示購買狂潮狀態
+            if (!boostStatus) {
+                boostStatus = document.createElement('div');
+                boostStatus.id = 'purchase-boost-status';
+                boostStatus.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background: linear-gradient(45deg, #f39c12, #e67e22);
+                    color: white;
+                    padding: 10px 15px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                    z-index: 1000;
+                    animation: pulse 2s infinite;
+                    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+                `;
+                document.body.appendChild(boostStatus);
+            }
+            
+            const discount = (game.data.purchaseBoost.discount * 100).toFixed(0);
+            const remaining = game.data.purchaseBoost.remainingPurchases;
+            boostStatus.innerHTML = `
+                🎉 購買狂潮<br>
+                ${discount}% 折扣<br>
+                剩餘 ${remaining} 次
+            `;
+            
+        } else {
+            // 隱藏購買狂潮狀態
+            if (boostStatus) {
+                boostStatus.remove();
+            }
         }
     }
 

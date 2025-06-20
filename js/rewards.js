@@ -209,12 +209,12 @@ static applyRewardEffect(selectedOption) {
             
             if (maxType && maxCount > 0) {
                 const singleProduction = game.calculateSingleMandrakeProduction(maxType, 1);
-                const burstAmount = singleProduction * maxCount * 3600 * tier.hours;
+                const burstAmount = singleProduction * maxCount * 3600 * tier.minutes;
                 game.data.fruit += burstAmount;
                 
                 const config = MANDRAKE_CONFIG[maxType];
                 const formattedAmount = UI.formatNumber(burstAmount);
-                UI.showNotification(`${config.name} 收穫爆發！獲得 ${tier.hours} 小時產量！(${formattedAmount})`, 'success');
+                UI.showNotification(`${config.name} 收穫爆發！獲得 ${tier.minutes} 分鐘產量！(${formattedAmount})`, 'success');
             } else {
                 UI.showNotification('沒有曼德拉草可以爆發收穫', 'warning');
             }
@@ -226,6 +226,17 @@ static applyRewardEffect(selectedOption) {
                 discount: tier.discount / 100,
                 endTime: Date.now() + 3600000
             };
+            
+            // 🔧 修復：立即強制更新UI顯示新的折扣價格
+            if (typeof UI !== 'undefined') {
+                // 強制重新計算所有曼德拉草的成本並更新顯示
+                UI.updateMandrakeList();
+                // 更新按鈕狀態以反映新的可負擔性
+                UI.updateButtonStates();
+                // 更新進度條以反映新的成本
+                UI.updateProgressBars();
+            }
+            
             UI.showNotification(`購買狂潮啟動！接下來 ${tier.count} 次購買享 ${tier.discount}% 折扣！`, 'success');
             break;
             
