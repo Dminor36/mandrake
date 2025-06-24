@@ -26,6 +26,7 @@ class UI {
         this.updateRewardStatus(); 
         this.updateEnhancementStatus();
         this.updatePurchaseBoostStatus();
+        this.updateCarouselProgressBg();
     }
 
     // ========== 資源和顯示更新 ==========
@@ -1599,6 +1600,20 @@ class UI {
                 this.showNotification(`獲得了 ${template.name}，但效果尚未實作`, 'warning');
         }
     }
+
+    // ========== 進度條更新 ==========
+    static updateCarouselProgressBg() {
+        const nextMilestone = EnhancementSystem.getNextMilestone();
+        if (!nextMilestone) return;
+        
+        const carousel = document.querySelector('.carousel-text-section');
+        if (carousel) {
+            const percentage = nextMilestone.progress * 100;
+            carousel.style.setProperty('--progress', percentage + '%');
+        }
+    }
+
+
 }
 
 // ========== 全局函數（供HTML onclick調用）==========

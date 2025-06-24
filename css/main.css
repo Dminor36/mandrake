@@ -177,6 +177,15 @@ body {
     justify-content: center;
     align-items: center;
     margin: 0 10px; /* 🔧 調整邊距 */
+    position: relative;
+    border-radius: 20px;
+    background: linear-gradient(90deg, 
+        rgba(99, 101, 241) 0%, 
+        rgb(99, 101, 241) var(--progress, 0%), 
+        transparent var(--progress, 0%), 
+        transparent 100%
+    );
+
 }
 
 .carousel-text-container {
@@ -751,6 +760,9 @@ body {
     }
 }
 
+
+/*進度條*/
+
 @media (max-width: 480px) {
     .carousel-text-container {
         padding: 12px 15px;
@@ -771,4 +783,23 @@ body {
         padding: 6px 10px; /* 🔧 縮小系統按鈕 */
         font-size: 0.85em;
     }
+}
+
+.carousel-progress-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        rgba(99, 102, 241, 0.1) 0%, 
+        rgba(139, 92, 246, 0.15) 50%, 
+        rgba(168, 85, 247, 0.1) 100%
+    );
+    transition: width 1.2s ease;
+    z-index: 1;
+}
+
+.carousel-text-container {
+    position: relative;
+    z-index: 10;
 }

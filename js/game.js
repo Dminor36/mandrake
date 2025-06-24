@@ -1451,7 +1451,7 @@ getSlotDisplayInfo(slotId) {
     /**
      * 🔧 修復：驗證遊戲數據完整性
      */
-    validateGameData() {
+        validateGameData() {
         if (Array.isArray(this.data.usedMandrakeNames)) {
             this.data.usedMandrakeNames = new Set(this.data.usedMandrakeNames);
         }
@@ -1549,13 +1549,9 @@ getSlotDisplayInfo(slotId) {
             this.data.enhancements.obtained = {};
         }
 
-        if (!this.data.enhancements.mandrakeProgress) {
-            this.data.enhancements.mandrakeProgress = {};
-        }
-
         // 🔧 新增：確保lastChecked字段存在
-        if (!this.data.enhancements.lastChecked) {
-            this.data.enhancements.lastChecked = {};
+        if (!this.data.enhancements.lastCheckedTotalCount) {
+            this.data.enhancements.lastCheckedTotalCount = 0;
         }
 
         // 🔧 新增：確保計數字段正確
@@ -1581,22 +1577,22 @@ getSlotDisplayInfo(slotId) {
 
         // 🔧 新增：檢查並修復lastChecked數據
         // 如果lastChecked為空，但已經有曼德拉草，需要初始化
-        for (const [mandrakeId, count] of Object.entries(this.data.ownedMandrakes)) {
-            if (count > 0 && !this.data.enhancements.lastChecked[mandrakeId]) {
-                // 根據當前數量推算應該已經達到的里程碑
-                const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
-                let lastMilestone = 0;
-                
-                for (const milestone of milestones) {
-                    if (count >= milestone) {
-                        lastMilestone = milestone;
-                    } else {
-                        break;
-                    }
+        if (this.data.enhancements.lastCheckedTotalCount === 0) {
+            // 根據當前總株數推算應該已經達到的里程碑
+            const currentTotal = Game.getTotalMandrakeCount();
+            const milestones = [25, 60, 120, 200, 300, 420, 560, 720, 900, 1100, 1320, 1560, 1850, 2200, 2600, 3100, 3700, 4400, 5300, 6500];
+            
+            let lastMilestone = 0;
+            for (const milestone of milestones) {
+                if (currentTotal >= milestone) {
+                    lastMilestone = milestone;
+                } else {
+                    break;
                 }
-                
-                this.data.enhancements.lastChecked[mandrakeId] = lastMilestone;
             }
+            
+            this.data.enhancements.lastCheckedTotalCount = lastMilestone;
+            console.log(`🔧 初始化總株數檢查點: ${lastMilestone} (當前總數: ${currentTotal})`);
         }
 
         // 確保 mandrakeProgress 存在

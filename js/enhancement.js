@@ -1,8 +1,8 @@
-// ========== 強化系統 ==========
+// ========== 強化系統 - 修改為總株數解鎖條件 ==========
 
 console.log('🔮 enhancement.js 開始載入...');
 
-// 強化定義
+// 強化定義保持不變
 const ENHANCEMENTS = {
     // 穩穩強化類
     stable_global_production: {
@@ -234,36 +234,34 @@ const ENHANCEMENTS = {
 
 class EnhancementSystem {
     /**
-     * 檢查是否達到強化解鎖條件
+     * 🔧 修改：檢查總株數解鎖條件
      */
     static checkUnlockConditions() {
         // 確保數據結構存在
-        if (!game.data.enhancements.lastChecked) {
-            game.data.enhancements.lastChecked = {};
+        if (!game.data.enhancements.lastCheckedTotalCount) {
+            game.data.enhancements.lastCheckedTotalCount = 0;
         }
         
-        let hasNewMilestone = false;
-        const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
+        const currentTotalCount = Game.getTotalMandrakeCount();
+        const lastCheckedCount = game.data.enhancements.lastCheckedTotalCount;
         
-        for (const [mandrakeId, currentCount] of Object.entries(game.data.ownedMandrakes)) {
-            if (currentCount === 0) continue;
-            
-            // 記錄每個品種上次檢查的最高里程碑
-            const lastMilestone = game.data.enhancements.lastChecked[mandrakeId] || 0;
-            
-            // 找出這次新跨越的里程碑
-            for (const milestone of milestones) {
-                if (milestone > lastMilestone && currentCount >= milestone) {
-                    // 真正的新里程碑！
-                    game.data.enhancements.lastChecked[mandrakeId] = milestone;
-                    hasNewMilestone = true;
-                    
-                    console.log(`🎉 ${mandrakeId} 達到 ${milestone} 株里程碑！`);
-                    
-                    // 每個里程碑只觸發一次強化
-                    this.addPendingEnhancement();
-                    break; // 一次只處理一個里程碑
-                }
+        // 🔧 直接從 config.js 讀取里程碑數據
+        const totalCountMilestones = ENHANCEMENT_UNLOCK_CONDITIONS.map(condition => condition.threshold);
+        
+        let hasNewMilestone = false;
+        
+        // 檢查新跨越的里程碑
+        for (const milestone of totalCountMilestones) {
+            if (milestone > lastCheckedCount && currentTotalCount >= milestone) {
+                // 真正的新里程碑！
+                game.data.enhancements.lastCheckedTotalCount = milestone;
+                hasNewMilestone = true;
+                
+                console.log(`🎉 總曼德拉草數量達到 ${milestone} 株里程碑！`);
+                
+                // 每個里程碑只觸發一次強化
+                this.addPendingEnhancement();
+                break; // 一次只處理一個里程碑
             }
         }
         
@@ -496,7 +494,7 @@ class EnhancementSystem {
     }
     
     /**
-     * 應用強化效果
+     * 應用強化效果（不變）
      */
     static applyEnhancement(enhancementId) {
         const enhancement = ENHANCEMENTS[enhancementId];
@@ -605,33 +603,34 @@ class EnhancementSystem {
     }
 
     /**
-     * 獲取下個里程碑信息
+     * 🔧 修改：獲取下個里程碑信息 - 改為總株數
      */
     static getNextMilestone() {
-        const milestones = [1, 10, 50, 100, 200, 500, 1000, 2000, 5000];
+        // 🔧 直接從 config.js 讀取里程碑數據
+        const totalCountMilestones = ENHANCEMENT_UNLOCK_CONDITIONS.map(condition => condition.threshold);
         
-        for (const [mandrakeId, currentCount] of Object.entries(game.data.ownedMandrakes)) {
-            const config = MANDRAKE_CONFIG[mandrakeId];
-            if (!config) continue;
-            
-            const lastMilestone = game.data.enhancements.lastChecked[mandrakeId] || 0;
-            
-            // 找到下一個里程碑
-            for (const milestone of milestones) {
-                if (milestone > lastMilestone) {
-                    return {
-                        mandrakeId: mandrakeId,
-                        mandrakeName: config.name,
-                        currentCount: currentCount,
-                        targetMilestone: milestone,
-                        progress: currentCount / milestone,
-                        remaining: milestone - currentCount
-                    };
-                }
+        const currentTotalCount = Game.getTotalMandrakeCount();
+        const lastCheckedCount = game.data.enhancements.lastCheckedTotalCount || 0;
+        
+        for (let i = 0; i < totalCountMilestones.length; i++) {
+            const milestone = totalCountMilestones[i];
+            if (milestone > lastCheckedCount) {
+                const previousMilestone = i > 0 ? totalCountMilestones[i - 1] : 0;
+                
+                return {
+                    type: 'total_count',
+                    currentCount: currentTotalCount,
+                    targetMilestone: milestone,
+                    previousMilestone: previousMilestone,
+                    // 🔧 階段內進度 (0-1)
+                    progress: Math.max(0, Math.min(1, (currentTotalCount - previousMilestone) / (milestone - previousMilestone))),
+                    remaining: milestone - currentTotalCount,
+                    description: `總曼德拉草數量達到 ${milestone} 株`
+                };
             }
         }
         
-        return null; // 已達到所有里程碑
+        return null;
     }
 
     /**
@@ -688,6 +687,59 @@ class EnhancementSystem {
             return b.level - a.level;
         });
     }
+
+    /**
+     * 🔧 新增：獲取強化進度信息（用於UI顯示）
+     */
+    static getEnhancementProgress() {
+        const nextMilestone = this.getNextMilestone();
+        
+        if (!nextMilestone) {
+            return {
+                hasNext: false,
+                message: '已達到所有強化里程碑！'
+            };
+        }
+        
+        const progressPercent = Math.min(nextMilestone.progress * 100, 100);
+        
+        return {
+            hasNext: true,
+            currentCount: nextMilestone.currentCount,
+            targetCount: nextMilestone.targetMilestone,
+            remaining: nextMilestone.remaining,
+            progressPercent: progressPercent,
+            description: nextMilestone.description,
+            message: `${nextMilestone.currentCount}/${nextMilestone.targetMilestone} 株 (${progressPercent.toFixed(1)}%)`
+        };
+    }
+
+    /**
+     * 🔧 新增：調試功能 - 手動觸發強化
+     */
+    static debugTriggerEnhancement() {
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            this.addPendingEnhancement();
+            console.log('🔧 調試：手動觸發強化');
+        }
+    }
+
+    /**
+     * 🔧 新增：獲取里程碑列表（用於顯示進度）
+     */
+    static getAllMilestones() {
+        const totalCountMilestones = [25, 60, 120, 200, 300, 420, 560, 720, 900, 1100, 1320, 1560, 1850, 2200, 2600, 3100, 3700, 4400, 5300, 6500];
+        const currentTotalCount = Game.getTotalMandrakeCount();
+        const lastCheckedCount = game.data.enhancements.lastCheckedTotalCount || 0;
+        
+        return totalCountMilestones.map(milestone => ({
+            threshold: milestone,
+            isCompleted: lastCheckedCount >= milestone,
+            isCurrent: currentTotalCount >= milestone && lastCheckedCount < milestone,
+            progress: Math.min(currentTotalCount / milestone, 1.0),
+            description: `總數達到 ${milestone} 株`
+        }));
+    }
 }
 
 // 暴露到全局
@@ -695,5 +747,5 @@ window.EnhancementSystem = EnhancementSystem;
 window.ENHANCEMENTS = ENHANCEMENTS;
 
 console.log('✅ ENHANCEMENTS 載入:', Object.keys(ENHANCEMENTS).length, '個強化');
-console.log('✅ EnhancementSystem 完整版載入完成');
+console.log('✅ EnhancementSystem 總株數版本載入完成');
 console.log('🔮 enhancement.js 載入完成！');

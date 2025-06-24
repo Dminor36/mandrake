@@ -61,49 +61,49 @@ const TIER_STATS = {
     },
     3: { 
         baseCost: TIER_BASE_COSTS[3], 
-        baseProduction: 10, 
+        baseProduction: 9, 
         costGrowth: 1.12, 
         prodGrowth: 1 
     },
     4: { 
         baseCost: TIER_BASE_COSTS[4], 
-        baseProduction: 100, 
+        baseProduction: 81, 
         costGrowth: 1.12, 
         prodGrowth: 1 
     },
     5: { 
         baseCost: TIER_BASE_COSTS[5], 
-        baseProduction: 1000, 
+        baseProduction: 648, 
         costGrowth: 1.12, 
         prodGrowth: 1 
     },
     6: { 
         baseCost: TIER_BASE_COSTS[6], 
-        baseProduction: 10000, 
+        baseProduction: 5184, 
         costGrowth: 1.12, 
         prodGrowth: 1 
     },
     7: { 
         baseCost: TIER_BASE_COSTS[7], 
-        baseProduction: 100000, 
+        baseProduction: 41472, 
         costGrowth: 1.12, 
         prodGrowth: 1 
     },
     8: { 
         baseCost: TIER_BASE_COSTS[8], 
-        baseProduction: 1000000, 
+        baseProduction: 331776, 
         costGrowth: 1.12,
         prodGrowth: 1 
     },
     9: { 
         baseCost: TIER_BASE_COSTS[9], 
-        baseProduction: 10000000, 
+        baseProduction: 2621440, 
         costGrowth: 1.12,
         prodGrowth: 1 
     },
     10: { 
         baseCost: TIER_BASE_COSTS[10], 
-        baseProduction: 100000000, 
+        baseProduction: 20971520, 
         costGrowth: 1.12,
         prodGrowth: 1 
     }
@@ -473,10 +473,10 @@ const REWARD_TEMPLATES = {
         icon: '🍎',
         category: 'instant',
         tiers: {
-            common: { minutes: 15 },      // 🔧 從10分鐘提升至15分鐘
-            rare: { minutes: 25 },        // 🔧 從20分鐘提升至25分鐘
-            epic: { minutes: 40 },        // 🔧 維持40分鐘
-            legendary: { minutes: 60 }    // 🔧 維持60分鐘
+            common: { minutes: 5 },      // 🔧 從10分鐘提升至15分鐘
+            rare: { minutes: 7 },        // 🔧 從20分鐘提升至25分鐘
+            epic: { minutes: 10 },        // 🔧 維持40分鐘
+            legendary: { minutes: 15 }    // 🔧 維持60分鐘
         }
     },
     
@@ -541,19 +541,34 @@ const ENHANCEMENT_VALUES = {
         rarity_boost: 0.3          // 🔧 從 0.2 提升至 0.3 (更明顯效果)
     },
     combo: {
-        per_10_bonus: 0.08,        // 🔧 從 0.1 降至 0.08 (每10株+8%)
-        same_type_bonus: 0.03,     // 🔧 從 0.05 大幅降至 0.03 (防止爆炸)
+        per_10_bonus: 0.001,        // 🔧 從 0.1 降至 0.08 (每10株+8%)
+        same_type_bonus: 0.002,     // 🔧 從 0.05 大幅降至 0.03 (防止爆炸)
         three_type_bonus: 0.5      // 🔧 從 0.3 大幅提升至 0.5 (獎勵多樣化)
     }
 };
 
 // 強化解鎖條件
 const ENHANCEMENT_UNLOCK_CONDITIONS = [
-    { threshold: 1, description: '任意曼德拉草達到 1 株' },
-    { threshold: 10, description: '任意曼德拉草達到 10 株' },
-    { threshold: 50, description: '任意曼德拉草達到 50 株' },
-    { threshold: 100, description: '任意曼德拉草達到 100 株' },
-    { threshold: 200, description: '任意曼德拉草達到 200 株' }
+    { threshold: 25, description: '總曼德拉草數量達到 25 株' },
+    { threshold: 60, description: '總曼德拉草數量達到 60 株' },
+    { threshold: 120, description: '總曼德拉草數量達到 120 株' },
+    { threshold: 200, description: '總曼德拉草數量達到 200 株' },
+    { threshold: 300, description: '總曼德拉草數量達到 300 株' },
+    { threshold: 420, description: '總曼德拉草數量達到 420 株' },
+    { threshold: 560, description: '總曼德拉草數量達到 560 株' },
+    { threshold: 720, description: '總曼德拉草數量達到 720 株' },
+    { threshold: 900, description: '總曼德拉草數量達到 900 株' },
+    { threshold: 1100, description: '總曼德拉草數量達到 1100 株' },
+    { threshold: 1320, description: '總曼德拉草數量達到 1320 株' },
+    { threshold: 1560, description: '總曼德拉草數量達到 1560 株' },
+    { threshold: 1850, description: '總曼德拉草數量達到 1850 株' },
+    { threshold: 2200, description: '總曼德拉草數量達到 2200 株' },
+    { threshold: 2600, description: '總曼德拉草數量達到 2600 株' },
+    { threshold: 3100, description: '總曼德拉草數量達到 3100 株' },
+    { threshold: 3700, description: '總曼德拉草數量達到 3700 株' },
+    { threshold: 4400, description: '總曼德拉草數量達到 4400 株' },
+    { threshold: 5300, description: '總曼德拉草數量達到 5300 株' },
+    { threshold: 6500, description: '總曼德拉草數量達到 6500 株' }
 ];
 
 /* 🔧 隨機選擇曼德拉草的函數
