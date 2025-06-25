@@ -708,7 +708,7 @@
 /* ========== 通知系統 ========== */
 .notification-container {
     position: fixed;
-    top: 120px;
+    top: 150px;
     right: 20px;
     z-index: 3000;
     pointer-events: none;
@@ -1270,3 +1270,599 @@
     border-radius: 5px;
     font-weight: bold;
 }
+
+/* ========== 簡潔強化展示系統 ========== */
+.enhancement-summary {
+    margin: 0px 20px;
+    position: relative;
+    z-index: 15;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 主要切換按鈕 */
+.enhancement-toggle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.enhancement-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.enhancement-toggle:hover::before {
+    left: 100%;
+}
+
+.enhancement-toggle:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.enhancement-icon-main {
+    font-size: 1.1em;
+    margin-bottom: -2px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.enhancement-count {
+    font-size: 0.45em;
+    font-weight: bold;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 5px;
+    border: 0px solid rgba(255, 255, 255, 0.3);
+    min-width: 10px;
+    text-align: center;
+}
+
+/* 展開的強化網格 */
+.enhancement-expanded {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: expandIn 0.3s ease-out;
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+.enhancement-grid {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* 強化方塊樣式 */
+.enhancement-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+    font-size: 1em;
+    padding-top: 10px; /* 🔧 調整圖標位置 */
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(75, 85, 99, 0.15));
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    overflow: visible;
+}
+
+.enhancement-item:hover {
+    transform: translateY(-2px) scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+}
+
+/* 強化類別顏色 */
+.enhancement-item.stable {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3));
+    border-color: rgba(34, 197, 94, 0.6);
+    color: #059669;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+}
+
+.enhancement-item.luck {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #dc2626;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.enhancement-item.reward {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+    border-color: rgba(59, 130, 246, 0.6);
+    color: #2563eb;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.enhancement-item.combo {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(147, 51, 234, 0.3));
+    border-color: rgba(168, 85, 247, 0.6);
+    color: #7c3aed;
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+}
+
+/* 等級徽章 */
+.enhancement-level {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    font-size: 0.35em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 1px solid white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+/* 高級強化特效 */
+.enhancement-item.high-level {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    animation: goldenGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes goldenGlow {
+    from {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(255, 215, 0, 1);
+    }
+}
+
+/* 🔧 修復：工具提示樣式 - 簡單的絕對定位 */
+.enhancement-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.95));
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.7em;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 9999;
+    width: 160px;
+    text-align: left;
+    line-height: 1.3;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    white-space: normal;
+    backdrop-filter: blur(10px);
+    /* 🔧 預設在右側 */
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+}
+
+/* 🔧 當工具提示在左側時 */
+.enhancement-tooltip.left {
+    left: auto;
+    right: 100%;
+    margin-left: 0;
+    margin-right: 8px;
+}
+
+/* 🔧 當工具提示在上方時 */
+.enhancement-tooltip.top {
+    left: 50%;
+    top: auto;
+    bottom: 100%;
+    transform: translateX(-50%);
+    margin-left: 0;
+    margin-bottom: 8px;
+    width: 140px;
+}
+
+.enhancement-item:hover .enhancement-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip-title {
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 4px;
+}
+
+.tooltip-level {
+    color: #22d3ee;
+    font-size: 0.9em;
+    margin-bottom: 6px;
+}
+
+.tooltip-description {
+    color: #e5e5e5;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* 空狀態 */
+.no-enhancements {
+    color: #6b7280;
+    font-style: italic;
+    font-size: 0.7em;
+    opacity: 0.6;
+    white-space: nowrap;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .enhancement-summary {
+        margin: 10px 15px;
+    }
+    
+    .enhancement-toggle {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .enhancement-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 12px;
+    }
+    
+    .enhancement-item {
+        width: 70px;
+        height: 70px;
+        font-size: 1.8em;
+    }
+    
+    .enhancement-tooltip {
+        width: 180px;
+        font-size: 0.75em;
+    }
+}
+
+/* ========== 公告系統 CSS（添加到 components.css 最後面） ========== */
+
+/* 公告按鈕特殊樣式 */
+.announcement-btn {
+    background: #16a085 !important;
+    position: relative;
+}
+
+.announcement-btn:hover {
+    background: #138d75 !important;
+}
+
+.announcement-btn.has-new {
+    background: #e53e3e !important;
+    animation: pulse 2s infinite;
+}
+
+.announcement-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff3838;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+/* 公告模態框樣式 */
+.announcement-modal {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.announcement-header {
+    background: linear-gradient(45deg, #16a085, #138d75);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.announcement-header h3 {
+    margin: 0;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.announcement-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.8em;
+    cursor: pointer;
+    padding: 0;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.announcement-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.announcement-content {
+    padding: 0;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* 版本更新列表 */
+.version-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.version-item {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.version-item:hover {
+    background-color: #f7fafc;
+}
+
+.version-item:last-child {
+    border-bottom: none;
+}
+
+.version-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.version-header:hover {
+    background-color: #f1f5f9;
+}
+
+.version-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.version-number {
+    font-weight: bold;
+    color: #16a085;
+    font-size: 1.2em;
+}
+
+.version-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.version-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.version-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.version-badge.new {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.version-badge.current {
+    background: #c6f6d5;
+    color: #2d7d32;
+}
+
+.version-badge.old {
+    background: #e2e8f0;
+    color: #718096;
+}
+
+.expand-icon {
+    transition: transform 0.2s ease;
+    color: #666;
+    font-size: 0.8em;
+}
+
+.version-item.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.version-details {
+    display: none;
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid #f1f5f9;
+    background-color: #fafafa;
+}
+
+.version-item.expanded .version-details {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
+.update-section {
+    margin-bottom: 15px;
+}
+
+.update-section:last-child {
+    margin-bottom: 0;
+}
+
+.update-section-title {
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1em;
+}
+
+.update-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.update-list li {
+    padding: 4px 0;
+    color: #4a5568;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+}
+
+.update-list li:before {
+    content: "•";
+    color: #16a085;
+    font-weight: bold;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* 滾動條樣式 */
+.announcement-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.announcement-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.announcement-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #16a085, #138d75);
+    border-radius: 4px;
+}
+
+.announcement-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #138d75, #117a65);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .announcement-modal {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .version-header {
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .version-title {
+        gap: 10px;
+    }
+
+    .version-status {
+        align-self: flex-end;
+    }
+
+    .version-details {
+        padding: 0 15px 15px 15px;
+    }
+
+    .version-number {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .announcement-header {
+        padding: 15px;
+    }
+
+    .announcement-header h3 {
+        font-size: 1.2em;
+    }
+
+    .update-section-title {
+        font-size: 0.95em;
+    }
+
+    .update-list li {
+        font-size: 0.9em;
+    }
+}
+

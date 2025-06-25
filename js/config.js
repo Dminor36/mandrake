@@ -5,9 +5,9 @@ console.log('📋 config.js 開始載入...');
 // 遊戲基本設定
 const GAME_CONFIG = {
     // 時間設定 (毫秒)
-    REWARD_INTERVAL: 3600000,        // 獎勵間隔 (測試用30秒，正式版3600000)
+    REWARD_INTERVAL: 3600000,        // 獎勵間隔 
     AUTOSAVE_INTERVAL: 30000,      // 自動存檔間隔
-    WEATHER_CHANGE_INTERVAL: 300000, // 天氣變化間隔 (5分鐘)
+    WEATHER_CHANGE_INTERVAL: 900000, // 天氣變化間隔 (15分鐘)
     
     // 獎勵累計系統
     MAX_PENDING_REWARDS: 2,       // 預設上限2次
@@ -20,7 +20,7 @@ const GAME_CONFIG = {
     ANIMATION_SPEED: 300,          // 動畫速度
     
     // 版本信息
-    VERSION: "1.1.0",              // 🔧 更新版本號
+    VERSION: "1.3.0",              // 🔧 更新版本號
     SAVE_KEY: "mandrakeGameSave_v1_1", // 🔧 新存檔KEY，強制重置
 
     // 點擊系統配置
@@ -320,8 +320,8 @@ const WEATHER_CONFIG = {
     stormy: { 
         name: '暴風', 
         icon: '⛈️',
-        effect: '動物系暫停, 普通系 +30%', 
-        getMultiplier: (type) => type === 'animal' ? 0 : type === 'normal' ? 1.3 : 1 
+        effect: '動物系-50%, 普通系 +30%', 
+        getMultiplier: (type) => type === 'animal' ? 0.5 : type === 'normal' ? 1.3 : 1 
     },
     misty: { 
         name: '迷霧', 

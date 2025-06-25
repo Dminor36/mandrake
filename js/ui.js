@@ -10,6 +10,11 @@ class UI {
     static init() {
         this.notificationContainer = document.getElementById('notification-container');
         this.setupBulkBuyControls(); 
+
+        if (typeof EnhancementDisplay !== 'undefined') {
+            EnhancementDisplay.init();
+        }
+
         console.log('UI系統初始化完成');
     }
 
@@ -27,6 +32,10 @@ class UI {
         this.updateEnhancementStatus();
         this.updatePurchaseBoostStatus();
         this.updateCarouselProgressBg();
+        //更新強化展示
+        if (typeof EnhancementDisplay !== 'undefined') {
+            EnhancementDisplay.updateDisplay();
+        }
     }
 
     // ========== 資源和顯示更新 ==========
@@ -1615,6 +1624,8 @@ class UI {
 
 
 }
+
+
 
 // ========== 全局函數（供HTML onclick調用）==========
 

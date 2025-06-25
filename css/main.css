@@ -342,10 +342,22 @@ body {
 /* ========== 系統按鈕區 ========== */
 .system-buttons {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center; /* 🔧 垂直居中對齊 */
-    min-width: 160px; /* 🔧 設定最小寬度 */
+    flex-direction: column;  /* 改成垂直排列 */
+    gap: 8px;
+    align-items: center;
+    min-width: 160px;
+}
+
+/* 新增按鈕行樣式 */
+.button-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.button-row .system-btn {
+    flex: 1;
+    min-width: 70px;
 }
 
 .system-btn {
@@ -803,3 +815,4 @@ body {
     position: relative;
     z-index: 10;
 }
+
