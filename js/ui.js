@@ -735,26 +735,36 @@ class UI {
      * 🔧 新增：更新行工具提示內容
      */
     static updateRowTooltip(row, mandrakeId) {
-        const tooltip = row.querySelector('.hover-tooltip');
-        if (!tooltip) return;
-        
         const currentCount = game.data.ownedMandrakes[mandrakeId] || 0;
-        const productionIncrease = this.calculateProductionIncrease(mandrakeId, currentCount, this.currentBulkAmount);
-        const detailedIncrease = this.getDetailedProductionIncrease(mandrakeId, currentCount, this.currentBulkAmount);
-        const bulkCost = this.calculateBulkCost(mandrakeId, this.currentBulkAmount);
-        
+        const productionIncrease = this.calculateProductionIncrease(
+            mandrakeId,
+            currentCount,
+            this.currentBulkAmount
+        );
+        const detailedIncrease = this.getDetailedProductionIncrease(
+            mandrakeId,
+            currentCount,
+            this.currentBulkAmount
+        );
+
         const formattedIncrease = this.formatNumber(productionIncrease);
-        
-        let tooltipContent = `<div>總產量增加: +${formattedIncrease}/秒</div>`;
-        
-        if (detailedIncrease && detailedIncrease.secondaryBenefit > 0.001) {
-            tooltipContent += `<div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                <div>├ 本項提升: +${this.formatNumber(detailedIncrease.primaryBenefit)}/秒</div>
-                <div>└ 其它效益: +${this.formatNumber(detailedIncrease.secondaryBenefit)}/秒</div>
-            </div>`;
+
+        let tooltipContent = `總產量增加: +${formattedIncrease}/秒\n`;
+
+        if (
+            detailedIncrease &&
+            detailedIncrease.secondaryBenefit > 0.001
+        ) {
+            tooltipContent += `├ 本項提升: +${this.formatNumber(
+                detailedIncrease.primaryBenefit
+            )}/秒\n`;
+            tooltipContent += `└ 其它效益: +${this.formatNumber(
+                detailedIncrease.secondaryBenefit
+            )}/秒\n`;
         }
-             
-        tooltip.innerHTML = tooltipContent;
+
+        // 直接更新 title 屬性，確保提示內容正確
+        row.title = tooltipContent;
     }
 
     // ========== 用戶交互處理 ==========
