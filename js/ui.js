@@ -391,7 +391,7 @@ class UI {
             row.classList.add('high-progress');
         }
 
-        // 🔧 修改：整個行添加 title 屬性來顯示提示信息
+        // 🔧 修改：整個行添加 title 屬性並加入自訂提示元素
         row.title = tooltipContent;
 
         // 🔧 新增：如果有購買狂潮，為成本顯示添加特殊樣式
@@ -431,6 +431,7 @@ class UI {
                     ${formattedCost}
                 </div>
             </div>
+            <div class="hover-tooltip"></div>
         `;
 
         // 設置進度條寬度
@@ -479,6 +480,7 @@ class UI {
                     ${formattedCost}
                 </div>
             </div>
+            <div class="hover-tooltip"></div>
         `;
 
         // 🔧 修改文字顏色為灰色
@@ -763,8 +765,15 @@ class UI {
             )}/秒\n`;
         }
 
-        // 直接更新 title 屬性，確保提示內容正確
+        // 直接更新 title 屬性，並更新自訂提示元素內容
         row.title = tooltipContent;
+        let tooltip = row.querySelector('.hover-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.className = 'hover-tooltip';
+            row.appendChild(tooltip);
+        }
+        tooltip.innerHTML = tooltipContent.replace(/\n/g, '<br>');
     }
 
     // ========== 用戶交互處理 ==========
