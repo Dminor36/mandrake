@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>曼德拉草農場</title>
+    
+    <!-- 台北黑體字體 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Light/TaipeiSansTCBeta-Light.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Regular/TaipeiSansTCBeta-Regular.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/taipei-sans-tc@1.0.0/dist/Bold/TaipeiSansTCBeta-Bold.css">
+    
+    <!-- CSS檔案 -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+</head>
+<body>
+    <div class="game-container">
+        <!-- 左側面板 -->
+        <div class="left-panel">
+            <!-- 遊戲標題 -->
+            <h1 class="game-title">🌱 曼德拉草農場 🌱</h1>
+            
+            <!-- 主要資源顯示 -->
+            <div class="main-resources">
+                <div class="resource-combined">
+                    <div class="fruit-section">
+                        <div class="resource-label">當前果實</div>
+                        <div class="resource-value" id="fruit">100</div>
+                        <div class="production-label">每秒產量</div>
+                        <div class="production-value" id="production-rate">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 購買區域 -->
+            <div class="purchase-section">
+                <!-- 批量購買控制 -->
+                <div class="bulk-buy-controls">
+                    <span class="bulk-label">批量購買：</span>
+                    <div class="bulk-buttons">
+                        <button class="bulk-btn active" data-amount="1">1個</button>
+                        <button class="bulk-btn" data-amount="10">10個</button>
+                        <button class="bulk-btn" data-amount="100">100個</button>
+                        <button class="store-btn" onclick="openStore()">🛒 商店</button>
+                    </div>
+                </div>
+                
+                <div class="mandrake-list" id="mandrake-list">
+                    <!-- 曼德拉草項目會動態生成 -->
+                </div>
+            </div>
+            
+            <!-- 底部系統區域 -->
+            <div class="bottom-systems">
+                <!-- 天賦點顯示 -->
+                <div class="talent-points-section">
+                    <h4>⭐ 天賦點數</h4>
+                    <div>
+                        <span class="resource-value" id="talent-points">0</span>
+                        <div class="resource-label">累積天賦點數</div>
+                    </div>
+                </div>
+                
+                <!-- 重生系統 -->
+                <div class="rebirth-section">
+                    <h4>🔄 重生系統</h4>
+                    <p>重生可獲得天賦點，用於永久提升！</p>
+                    <div class="rebirth-info">
+                        預計獲得：<span class="rebirth-points" id="rebirth-points">0</span> 天賦點
+                    </div>
+                    <button class="rebirth-btn" onclick="rebirth()">重生</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右側面板 -->
+        <div class="right-panel">
+            <!-- 上方橫幅 -->
+            <div class="top-bar">
+                <!-- 獎勵領取區 -->
+                <div class="reward-section reward-info-container">
+                    <!-- 🔧 新增：獎勵數量行 -->
+                    <div class="reward-count-row">
+                        <div class="reward-count">
+                            🎁 可領取獎勵：<span class="pending-count" id="pending-rewards">0</span>/<span id="max-rewards">2</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 🔧 新增：按鈕和倒數行 -->
+                    <div class="reward-button-row">
+                        <button class="claim-reward-btn" id="claim-reward-btn" onclick="openRewardSelection()">
+                            領取獎勵
+                        </button>
+                        <div class="reward-timer">
+                            下次獎勵：<span class="countdown" id="reward-countdown">30:00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 中間輪播區 -->
+                <div class="carousel-text-section">
+                    <div class="carousel-text-container">
+                        <span id="carousel-text">歡迎來到曼德拉草農場！</span>
+                    </div>
+                </div>
+                
+                <!-- 系統按鈕區 -->
+                <div class="system-buttons">
+                    <div class="button-row">
+                        <button class="system-btn" onclick="showStats()">📊 統計</button>
+                        <button class="system-btn" onclick="showEncyclopedia()">📖 圖鑑</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="system-btn enhancement-btn" id="enhancement-btn" onclick="openEnhancementSelection()" disabled>
+                            🔮 強化
+                        </button>
+                        <button class="system-btn announcement-btn" id="announcement-btn" onclick="showAnnouncement()">
+                            📢 公告
+                            <span class="announcement-badge" id="announcement-badge" style="display: none;">0</span>
+                            
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 主要遊戲區域 -->
+            <div class="main-game-area">
+                <!-- 天氣顯示 -->
+                <div class="weather-display-container">
+                    <div class="weather-name-diamond">
+                        <span id="current-weather-name">暴雨</span>
+                    </div>
+                    <div class="weather-right-section">
+                        <div class="weather-timer-section">
+                            下次刷新：<span id="weather-refresh-timer">04:23</span>
+                        </div>
+                        <div class="weather-effect-box">
+                            <div class="weather-effect-content">
+                                <div class="weather-effect-text">
+                                    <span id="weather-effect-desc">動物系暫停, 普通系 +30%</span>
+                                </div>
+                                <button class="weather-reroll-btn" onclick="rerollWeather()">
+                                    重骰 <span id="weather-cost">100</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 強化展示區域 (添加到天氣顯示下方) -->
+                <div class="enhancement-summary" id="enhancementSummary">
+                    <div class="enhancement-toggle" onclick="toggleEnhancementDisplay()">
+                        <div class="enhancement-icon-main">🔮</div>
+                        <div class="enhancement-count" id="enhancementTotalCount">0</div>
+                    </div>
+                    
+                    <div class="enhancement-expanded" id="enhancementExpanded" style="display: none;">
+                        <div class="enhancement-grid" id="enhancementDetailGrid">
+                            <!-- 個別強化方塊會動態生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 曼德拉草圖片 -->
+                <div class="mandrake-display">
+                    <img src="images/mandrake_himself.png" alt="曼德拉草" class="mandrake-image" id="main-mandrake" onmousedown="clickMandrake()" ontouchstart="clickMandrake()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 統計模態框 -->
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-content stats-modal">
+            <div class="modal-header">
+                <h3>📊 遊戲統計</h3>
+                <button onclick="hideStats()" class="stats-close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="stats-content">
+                    <!-- 統計內容將由 JavaScript 生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖鑑模態框 -->
+    <div id="encyclopedia-modal" class="modal-overlay">
+        <div class="modal-content encyclopedia-modal">
+            <div class="modal-header">
+                <h3>📖 曼德拉草圖鑑</h3>
+                <button onclick="hideEncyclopedia()" class="encyclopedia-close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="encyclopedia-content" class="encyclopedia-content">
+                    <!-- 圖鑑內容將由 JavaScript 生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 獎勵選擇彈窗 -->
+    <div class="modal-overlay" id="reward-modal">
+        <div class="modal-content reward-modal-content">
+            <div class="modal-header">
+                <h3>🎁 選擇你的獎勵！</h3>
+            </div>
+            <div class="reward-options" id="reward-options">
+                <!-- 獎勵選項會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 商店模態框 -->
+    <div class="modal-overlay" id="store-modal">
+        <div class="modal-content store-modal-content">
+            <div class="modal-header">
+                <h3>🛒 商店</h3>
+                <button onclick="closeStore()" class="stats-close-btn">×</button>
+            </div>
+            <div class="modal-body" id="store-content">
+                <!-- 商店內容會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 強化選擇彈窗 -->
+    <div class="modal-overlay" id="enhancement-modal">
+        <div class="modal-content enhancement-modal-content">
+            <div class="modal-header">
+                <h3>🔮 選擇你的強化！</h3>
+                <p class="enhancement-milestone" id="enhancement-milestone">達成里程碑：任意曼德拉草達到 100 株</p>
+            </div>
+            <div class="enhancement-options" id="enhancement-options">
+                <!-- 強化選項會動態生成 -->
+            </div>
+        </div>
+    </div>
+
+     <!-- 公告模態框 -->
+    <div id="announcement-modal" class="modal-overlay">
+        <div class="announcement-modal">
+            <div class="announcement-header">
+                <h3>📢 更新公告</h3>
+                <button onclick="hideAnnouncement()" class="announcement-close-btn">×</button>
+            </div>
+            <div class="announcement-content">
+                <div class="version-list" id="announcement-version-list">
+                    <!-- 版本更新列表會由 JavaScript 動態生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知訊息容器 -->
+    <div class="notification-container" id="notification-container">
+        <!-- 通知訊息會動態生成 -->
+    </div>
+
+    <!-- JavaScript 檔案 -->
+    <script src="js/config.js"></script>
+    <script src="js/imageManager.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/rewards.js"></script>
+    <script src="js/enhancement.js"></script>
+    <script src="js/enhancementDisplay.js"></script>
+    <script src="js/store.js"></script> 
+    <script src="js/ui.js"></script>
+    <script src="js/carousel.js"></script>  
+    <script src="js/main.js"></script>
+    <script src="js/encyclopedia.js"></script>
+    <script src="js/announcement.js"></script>
+    <script>
+        console.log('HTML 已載入');
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM 載入完成');
+            
+            // 檢查各個 JS 文件是否載入
+            console.log('GAME_CONFIG 存在:', typeof GAME_CONFIG !== 'undefined');
+            console.log('game 物件存在:', typeof game !== 'undefined');
+            console.log('UI 類存在:', typeof UI !== 'undefined');
+            
+            // 檢查 HTML 元素
+            console.log('mandrake-list 元素存在:', !!document.getElementById('mandrake-list'));
+            console.log('carousel-text 元素存在:', !!document.getElementById('carousel-text'));
+            
+            // 初始化輪播系統（使用原有的 carousel.js）
+            if (typeof initCarousel === 'function') {
+                console.log('🚀 初始化輪播系統');
+                initCarousel();
+            } else {
+                console.log('⚠️ initCarousel 函數不存在，等待載入...');
+                // 延遲初始化，等待 carousel.js 載入
+                setTimeout(() => {
+                    if (typeof initCarousel === 'function') {
+                        console.log('🚀 延遲初始化輪播系統');
+                        initCarousel();
+                    }
+                }, 1000);
+            }
+                   
+            // 啟動優化的遊戲循環
+            setTimeout(() => {
+                if (window.optimizedGameLoop) {
+                    console.log('🚀 啟動優化遊戲循環');
+                    requestAnimationFrame(window.optimizedGameLoop);
+                }
+            }, 1000);
+        });
+
+        // 強化選擇函數
+        window.openEnhancementSelection = function() {
+            if (!game.data.enhancements.pendingEnhancement || game.data.enhancements.pendingCount <= 0) {
+                UI.showNotification('目前沒有可用的強化', 'warning');
+                return;
+            }
+            
+            if (typeof EnhancementSystem !== 'undefined') {
+                if (!game.data.enhancements.currentChoices || game.data.enhancements.currentChoices.length === 0) {
+                    EnhancementSystem.triggerEnhancementChoice();
+                } else {
+                    UI.showEnhancementChoice();
+                }
+            }
+        };
+
+        // 點擊曼德拉草功能
+        function clickMandrake() {
+            // 呼叫遊戲的點擊方法
+            if (game && game.clickMandrake) {
+                game.clickMandrake();
+            }
+            
+            // 🔧 新增：點擊時土壤震動效果
+            const mandrakeDisplay = document.querySelector('.mandrake-display');
+            if (mandrakeDisplay) {
+                mandrakeDisplay.classList.add('clicked');
+                setTimeout(() => {
+                    mandrakeDisplay.classList.remove('clicked');
+                }, 600);
+            }
+        }
+
+        // 🔧 新增：公告模態框事件處理
+        // 點擊模態框外部關閉
+        const announcementModal = document.getElementById('announcement-modal');
+        if (announcementModal) {
+            announcementModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAnnouncement();
+                }
+            });
+        }
+        
+        // ESC 鍵關閉公告
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('announcement-modal');
+                if (modal && modal.classList.contains('show')) {
+                    hideAnnouncement();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
