@@ -511,20 +511,23 @@ class UI {
         
         // 保存原始遊戲狀態
         const originalOwnedMandrakes = JSON.parse(JSON.stringify(game.data.ownedMandrakes));
-        const originalTotalProduction = game.getTotalProduction();
+        const originalProductions = JSON.parse(JSON.stringify(game.individualProductions || {}));
+
+        const originalTotalProduction = game.calculateFreshProduction();
         
         try {
             // 模擬購買後的狀態
             game.data.ownedMandrakes[id] = (game.data.ownedMandrakes[id] || 0) + purchaseAmount;
             
             // 計算購買後的總產量
-            const newTotalProduction = game.getTotalProduction();
+            const newTotalProduction = game.calculateFreshProduction();
             
             // 產量增加 = 新總產量 - 原總產量
             const productionIncrease = newTotalProduction - originalTotalProduction;
             
             // 還原原始狀態
             game.data.ownedMandrakes = originalOwnedMandrakes;
+            game.individualProductions = originalProductions;
             
             return productionIncrease;
             
@@ -533,6 +536,7 @@ class UI {
             
             // 還原原始狀態
             game.data.ownedMandrakes = originalOwnedMandrakes;
+            game.individualProductions = originalProductions;
             
             // 備用簡單計算
             return this.fallbackProductionCalculation(id, currentCount, purchaseAmount);
@@ -562,7 +566,7 @@ class UI {
             
             // 計算購買後各品種的產量
             const afterProductions = {};
-            game.getTotalProduction(); // 重新計算
+            game.calculateFreshProduction();
             for (const [mandrakeId, production] of Object.entries(game.individualProductions || {})) {
                 afterProductions[mandrakeId] = production;
             }

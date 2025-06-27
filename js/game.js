@@ -1774,6 +1774,9 @@ getSlotDisplayInfo(slotId) {
             // 重置所有效果到默認值
             const defaultEffects = this.getDefaultGameData().enhancementEffects;
             this.data.enhancementEffects = JSON.parse(JSON.stringify(defaultEffects));
+
+            // 重置依賴於強化的基礎數值
+            this.data.maxPendingRewards = this.getDefaultGameData().maxPendingRewards;
             
             // 恢復保存的隨機值
             this.data.enhancementEffects.savedProductionVariance = savedProductionVariance;

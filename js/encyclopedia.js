@@ -150,12 +150,12 @@ class EncyclopediaSystem {
     static getEncyclopediaDisplayData() {
         this.initializeEncyclopedia();
         
-        const encyclopediaData = { types: {} };
+        const encyclopediaData = { list: [] };
         
         // 建立擁有的曼德拉草映射
         const ownedMap = this.buildOwnedMandrakeMap();
         
-        // 處理每個類型的品種
+        // 遍歷所有類型的品種並統一加入列表
         for (const [typeName, species] of Object.entries(EXTENDED_NAME_POOLS)) {
             const filteredSpecies = [];
             
@@ -182,8 +182,8 @@ class EncyclopediaSystem {
                 if (speciesData.prerequisites) {
                     const conditions = speciesData.prerequisites.map(prereqName => {
                         const isPrereqDiscovered = game.data.encyclopedia.discoveredSpecies.has(prereqName);
-                        // 如果當前品種未發現，前置條件也顯示為 ???
-                        return (isDiscovered && isPrereqDiscovered) ? prereqName : '???';
+                        // 前置品種只要曾經擁有過就顯示名稱
+                        return isPrereqDiscovered ? prereqName : '???';
                     });
                     unlockCondition = `需要同時擁有：${conditions.join(', ')}`;
                 }
@@ -215,19 +215,15 @@ class EncyclopediaSystem {
                 return a.originalName.localeCompare(b.originalName);
             });
             
-            // 只有當該類型有內容時才添加
+            // 將結果加入統一列表
             if (filteredSpecies.length > 0) {
-                encyclopediaData.types[typeName] = filteredSpecies;
+                encyclopediaData.list.push(...filteredSpecies);
             }
         }
         
-        // 特殊處理初始曼德拉草
-        if (!encyclopediaData.types.normal) {
-            encyclopediaData.types.normal = [];
-        }
         
         // 檢查初始曼德拉草是否已經在列表中
-        const hasOriginal = encyclopediaData.types.normal.some(species => 
+        const hasOriginal = encyclopediaData.list.some(species =>
             species.originalName === '曼德拉草' || species.name === '曼德拉草'
         );
         
@@ -246,8 +242,18 @@ class EncyclopediaSystem {
                 ownedCount: originalCount,
                 originalName: '曼德拉草'
             };
-            encyclopediaData.types.normal.unshift(originalMandrake);
+            encyclopediaData.list.unshift(originalMandrake);
+        } else {
+            const index = encyclopediaData.list.findIndex(s =>
+                s.originalName === '曼德拉草' || s.name === '曼德拉草'
+            );
+            if (index > 0) {
+                const [item] = encyclopediaData.list.splice(index, 1);
+                encyclopediaData.list.unshift(item);
+            }
         }
+
+        
         
         return encyclopediaData;
     }
@@ -286,33 +292,17 @@ class EncyclopediaSystem {
         // 獲取圖鑑數據
         const encyclopediaData = this.getEncyclopediaDisplayData();
         
-        // 創建類型區塊
-        Object.entries(encyclopediaData.types).forEach(([typeName, species]) => {
-            const typeSection = document.createElement('div');
-            typeSection.className = 'encyclopedia-type-section';
-            
-            const typeHeader = document.createElement('h3');
-            typeHeader.textContent = {
-                normal: `🌿 普通系 (${species.length})`,
-                element: `🔥 元素系 (${species.length})`, 
-                animal: `🐾 動物系 (${species.length})`
-            }[typeName];
-            typeHeader.className = `type-header ${typeName}`;
-            typeSection.appendChild(typeHeader);
-            
-            // 創建物種網格
-            const speciesGrid = document.createElement('div');
-            speciesGrid.className = 'encyclopedia-species-grid';
-            
-            species.forEach(speciesInfo => {
-                const speciesCard = this.createSpeciesCard(speciesInfo);
-                speciesGrid.appendChild(speciesCard);
-            });
-            
-            typeSection.appendChild(speciesGrid);
-            container.appendChild(typeSection);
+        // 建立統一的物種網格
+        const speciesGrid = document.createElement('div');
+        speciesGrid.className = 'encyclopedia-species-grid';
+
+        encyclopediaData.list.forEach((speciesInfo, index) => {
+            const speciesCard = this.createSpeciesCard(speciesInfo, index + 1);
+            speciesGrid.appendChild(speciesCard);
         });
         
+        container.appendChild(speciesGrid);
+
         // 顯示模態框
         modal.classList.add('show');
         modal.style.display = 'flex';
@@ -326,17 +316,18 @@ class EncyclopediaSystem {
     /**
      * 創建物種卡片
      */
-    static createSpeciesCard(speciesInfo) {
+    static createSpeciesCard(speciesInfo, index = 0)  {
         const card = document.createElement('div');
         card.className = `encyclopedia-species-card ${speciesInfo.status}`;
         
         // 基本圖標
         card.innerHTML = `
             <div class="species-icon">${speciesInfo.icon}</div>
+            <div class="species-index">${index}</div>
         `;
         
         // 工具提示內容
-        let tooltipContent = `${speciesInfo.name}\n${speciesInfo.description}`;
+        let tooltipContent = `${index} - ${speciesInfo.name}\n${speciesInfo.description}`;
         
         if (speciesInfo.unlockCondition) {
             tooltipContent += `\n${speciesInfo.unlockCondition}`;

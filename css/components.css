@@ -961,58 +961,13 @@
 
 
 /* 類型區塊 */
-.encyclopedia-type-section {
-    margin-bottom: 0px;
-    background: white;
-    border-radius: 0px;
-    padding: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.encyclopedia-type-section,
+.encyclopedia-type-section h3,
+.type-header.normal,
+.type-header.element,
+.type-header.animal {    display: none;
 }
 
-.encyclopedia-type-section h3 {
-    margin: 0;
-    color: #333;
-    font-size: 1.4em;
-    border-bottom: 3px solid #667eea;
-    padding-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 0px;
-}
-
-/* 類型標題顏色 */
-.type-header.normal {
-    background: linear-gradient(45deg, #28a745, #20c997);
-    color: white;
-    padding: 10px;
-    border-radius: 15px;
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 15px;
-    border: none;
-}
-
-.type-header.element {
-    background: linear-gradient(45deg, #dc3545, #fd7e14);
-    color: white;
-    padding: 10px;
-    border-radius: 15px;
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 15px;
-    border: none;
-}
-
-.type-header.animal {
-    background: linear-gradient(45deg, #ffc107, #fd7e14);
-    color: white;
-    padding: 10px;
-    border-radius: 15px;
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 15px;
-    border: none;
-}
 
 /* 物種網格 */
 .encyclopedia-species-grid {
@@ -1070,6 +1025,16 @@
 .species-icon {
     font-size: 2.5em;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 卡片編號 */
+.species-index {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.7em;
+    color: #fff;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
 /* 自定義工具提示 (可選，用於更豐富的懸停效果) */
@@ -1175,39 +1140,9 @@
 }
 
 /* 狀態指示器 */
-.encyclopedia-species-card.owned::after {
-    content: "✓";
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #28a745;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8em;
-    font-weight: bold;
-    border: 2px solid white;
-}
-
+.encyclopedia-species-card.owned::after,
 .encyclopedia-species-card.discovered::after {
-    content: "👁";
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #17a2b8;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7em;
-    border: 2px solid white;
+    display: none;
 }
 
 /* 動畫效果 */

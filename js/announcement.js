@@ -4,7 +4,7 @@ console.log('📢 公告系統載入中...');
 
 class AnnouncementSystem {
     constructor() {
-        this.currentVersion = "1.3.0"; // 🔧 修改這裡來更新當前版本
+        this.currentVersion = "1.3.1"; // 🔧 修改這裡來更新當前版本
         this.lastReadVersion = this.getLastReadVersion();
         this.announcements = this.getAnnouncementData();
     }
@@ -21,12 +21,28 @@ class AnnouncementSystem {
      * 獲取公告數據（你可以在這裡添加新的更新內容）
      */
     getAnnouncementData() {
+
         return [
+            {
+                version: "1.3.1",
+                date: "2025/06/27",
+                status: "new", // new, current, old
+                updates: {
+                    improvements: [
+                        "圖鑑樣式調整 - 刪除分類改使用編號顯示, 刪除右上角標籤<br>解鎖條件只要曾經擁有就可見",
+                    ],
+                    fixes: [
+                        "購買區懸停工具顯示正常",
+                        "修復獎勵上限重複取得問題"
+                    ]
+                }
+            },
+
 
             {
                 version: "1.3.0",
                 date: "2025/06/25",
-                status: "new", // new, current, old
+                status: "current", // new, current, old
                 updates: {
                     features: [
                         "新增公告系統，方便查看更新內容",
@@ -108,7 +124,7 @@ class AnnouncementSystem {
         // 狀態標籤
         const statusText = {
             'new': 'NEW',
-            'current': '目前版本', 
+            'current': '  ', 
             'old': '舊版本'
         };
 
@@ -127,7 +143,8 @@ class AnnouncementSystem {
             features: { title: '✨ 新功能', order: 1 },
             improvements: { title: '🔧 改進', order: 3 },
             fixes: { title: '🐛 修復', order: 2 },    
-            bugs: { title: '⚠️ 待處理BUG', order: 10 }
+            bugs: { title: '⚠️ 待處理BUG', order: 10 },
+            balance: { title: '⚖️ 平衡調整', order: 4 },
 
         };
 
