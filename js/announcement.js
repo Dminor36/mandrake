@@ -23,10 +23,24 @@ class AnnouncementSystem {
     getAnnouncementData() {
 
         return [
+                        {
+                version: "1.3.2",
+                date: "2025/06/30",
+                status: "new", // new, current, old
+                updates: {
+                    features: [
+                        "商店功能建構中, 可於批量購買右方找到",
+                    ],  
+                    improvements: [
+                        "左側區域調整, 資源區位置永遠固定在頂端",
+                    ],
+                }
+            },
+
             {
                 version: "1.3.1",
                 date: "2025/06/27",
-                status: "new", // new, current, old
+                status: "current", // new, current, old
                 updates: {
                     improvements: [
                         "圖鑑樣式調整 - 刪除分類改使用編號顯示, 刪除右上角標籤<br>解鎖條件只要曾經擁有就可見",

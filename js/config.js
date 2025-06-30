@@ -571,61 +571,22 @@ const ENHANCEMENT_UNLOCK_CONDITIONS = [
     { threshold: 6500, description: '總曼德拉草數量達到 6500 株' }
 ];
 
-/* 🔧 隨機選擇曼德拉草的函數
-function selectRandomMandrake(tier, usedNames = new Set()) {
-    const types = ['normal', 'element', 'animal'];
-    
-    // 隨機打亂屬性順序，避免總是優先選擇 normal
-    const shuffledTypes = types.sort(() => Math.random() - 0.5);
-    
-    for (const type of shuffledTypes) {
-        // 篩選該屬性中未使用的名稱
-        const availableNames = NAME_POOLS[type].filter(
-            nameData => !usedNames.has(nameData.name)
-        );
-        
-        if (availableNames.length > 0) {
-            // 隨機選擇一個可用名稱
-            const selectedName = availableNames[Math.floor(Math.random() * availableNames.length)];
-            
-            // 🔧 修正：生成真正穩定的ID（基於名稱內容）
-            const nameMapping = {
-                '曼德拉草': 'original',
-                '胖曼德拉草': 'fat', '枯乾曼德拉草': 'dried', '迷你曼德拉草': 'mini',
-                '恐懼曼德拉草': 'fear', '白曼德拉草': 'white', '苗條曼德拉草': 'slim',
-                '古老曼德拉草': 'ancient', '閃亮曼德拉草': 'shiny', '神秘曼德拉草': 'mystery',
-                
-                '火曼德拉草': 'fire', '水曼德拉草': 'water', '風曼德拉草': 'wind',
-                '電曼德拉草': 'electric', '冰曼德拉草': 'ice', '土曼德拉草': 'earth',
-                '光曼德拉草': 'light', '暗曼德拉草': 'dark', '毒曼德拉草': 'poison',
-                '雷曼德拉草': 'thunder',
-                
-                '貓曼德拉草': 'cat', '兔曼德拉草': 'rabbit', '鼠曼德拉草': 'mouse',
-                '熊曼德拉草': 'bear', '蝙蝠曼德拉草': 'bat', '狗曼德拉草': 'dog',
-                '狐狸曼德拉草': 'fox', '龍曼德拉草': 'dragon', '鳥曼德拉草': 'bird',
-                '魚曼德拉草': 'fish'
-            };
-            
-            const nameKey = nameMapping[selectedName.name] || selectedName.name.replace(/[^a-zA-Z0-9]/g, '');
-            const uniqueId = `${type}_t${tier}_${nameKey}`;
-            
-            return {
-                id: uniqueId,
-                tier: tier,
-                type: type,
-                name: selectedName.name,
-                icon: selectedName.icon,
-                description: selectedName.description,
-                ...TIER_STATS[tier]
-            };
-        }
+// ========== 商店系統配置 ==========
+const STORE_CONFIG = {
+    unlockStep: 50,            // 每購買多少株解鎖一層
+    levels: 8,                 // 總層數
+    productionBonus: 0.05,     // 每層產量提升比例
+    costMultiplier: 1000,       // 升級成本倍率
+    levelNames: ['I','II','III','IV','V','VI','VII','VIII'],
+    // 自訂各品種每級名稱，可自行填入
+    // 例： customNames: { original: ['幼苗','茁壯','盛開'] }
+    customNames: {
+        original: ['土壤', '陽光', '空氣', '水', '礦物質', '魔法', '巫術', '仙術']
     }
-    
-    // 如果所有屬性都沒有可用名稱，返回null
-    console.warn(`第${tier}階無法找到未使用的名稱！`);
-    return null;
-}
-*/
+};
+
+
+
 
 // 🔧 程序生成備用名稱的函數（當名稱池用完時）
 function generateBackupName(tier, type, index) {

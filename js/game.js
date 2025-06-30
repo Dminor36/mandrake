@@ -124,6 +124,12 @@ class Game {
             // 點擊統計數據
             totalClicks: 0,             // 總點擊次數
             clickFruitEarned: 0,        // 通過點擊獲得的總果實
+
+            // 商店系統
+            store: {
+                upgrades: {},         // 已購買的升級等級
+                notifiedLevels: {}    // 已提醒的解鎖層級
+            },
             
             // 版本控制
             version: GAME_CONFIG.VERSION,
@@ -309,6 +315,19 @@ class Game {
         
         let production = count * config.baseProduction;
         const breakdown = [];
+        const storeLevel = this.data.store?.upgrades?.[id] || 0;
+        if (storeLevel > 0) {
+            const bonusMultiplier = 1 + storeLevel * STORE_CONFIG.productionBonus;
+            const oldProduction = production;
+            production *= bonusMultiplier;
+            if (showDetails) {
+                breakdown.push({
+                    name: '商店強化',
+                    value: production - oldProduction,
+                    detail: `×${bonusMultiplier.toFixed(2)}`
+                });
+            }
+        }
         const effects = [];
         
         if (showDetails) {
@@ -685,6 +704,11 @@ class Game {
 
             // 應用購買數量
             this.data.ownedMandrakes[id] = (this.data.ownedMandrakes[id] || 0) + purchaseAmount;
+
+            // 檢查商店解鎖
+            if (typeof StoreSystem !== 'undefined') {
+                StoreSystem.checkUnlock(id);
+            }
 
             // 🔧 新增：購買後立即更新產量顯示（1行）
             this.forceProductionUpdate('purchase');
@@ -1538,6 +1562,15 @@ getSlotDisplayInfo(slotId) {
         if (typeof this.data.tempBoosts !== 'object') {
             this.data.tempBoosts = {};
         }
+
+        // 驗證商店數據結構
+        if (!this.data.store || typeof this.data.store !== 'object') {
+            this.data.store = { upgrades: {}, notifiedLevels: {} };
+        } else {
+            if (!this.data.store.upgrades) this.data.store.upgrades = {};
+            if (!this.data.store.notifiedLevels) this.data.store.notifiedLevels = {};
+        }
+
 
         // 驗證強化系統數據
         if (!this.data.enhancements || typeof this.data.enhancements !== 'object') {
