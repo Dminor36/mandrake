@@ -373,6 +373,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.5); /* 內部高光 */
     user-select: none; /* 防止文字選取 */
     transform: translateY(0);
+    white-space: nowrap; /* 🔧 防止文字換行 */
 }
 
 .bulk-btn:hover {
@@ -1582,6 +1583,53 @@
     overflow-y: auto;
 }
 
+/* ========== 商店模態框 ==========
+*/
+.store-modal-content {
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.store-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.store-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.store-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.store-desc {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.store-price {
+    align-self: flex-end;
+    margin-top: 6px;
+    font-size: 0.9em;
+    color: #333;
+}
+
+
+
 /* 版本更新列表 */
 .version-list {
     display: flex;
@@ -1800,4 +1848,5 @@
         font-size: 0.9em;
     }
 }
+
 

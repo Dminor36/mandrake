@@ -62,6 +62,11 @@ async function initGame() {
         if (typeof EncyclopediaSystem !== 'undefined') {
             EncyclopediaSystem.initializeEncyclopedia();
         }
+
+        // 7. 商店系統初始化
+        if (typeof StoreSystem !== 'undefined') {
+            StoreSystem.init();
+        }
         
         console.log('🎉 遊戲啟動成功！');
         

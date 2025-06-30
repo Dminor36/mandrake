@@ -19,23 +19,22 @@
     <div class="game-container">
         <!-- 左側面板 -->
         <div class="left-panel">
-            <!-- 遊戲標題 -->
-            <h1 class="game-title">🌱 曼德拉草農場 🌱</h1>
-            
-            <!-- 主要資源顯示 -->
-            <div class="main-resources">
-                <div class="resource-combined">
-                    <div class="fruit-section">
-                        <div class="resource-label">當前果實</div>
-                        <div class="resource-value" id="fruit">100</div>
-                        <div class="production-label">每秒產量</div>
-                        <div class="production-value" id="production-rate">0</div>
+            <div class="left-sticky">
+                <!-- 遊戲標題 -->
+                <h1 class="game-title">🌱 曼德拉草農場 🌱</h1>
+
+                <!-- 主要資源顯示 -->
+                <div class="main-resources">
+                    <div class="resource-combined">
+                        <div class="fruit-section">
+                            <div class="resource-label">當前果實</div>
+                            <div class="resource-value" id="fruit">100</div>
+                            <div class="production-label">每秒產量</div>
+                            <div class="production-value" id="production-rate">0</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- 購買區域 -->
-            <div class="purchase-section">
+
                 <!-- 批量購買控制 -->
                 <div class="bulk-buy-controls">
                     <span class="bulk-label">批量購買：</span>
@@ -45,7 +44,10 @@
                         <button class="bulk-btn" data-amount="100">100個</button>
                     </div>
                 </div>
-                
+            </div>
+
+            <!-- 購買區域 -->
+            <div class="purchase-section">
                 <div class="mandrake-list" id="mandrake-list">
                     <!-- 曼德拉草項目會動態生成 -->
                 </div>
@@ -211,6 +213,19 @@
         </div>
     </div>
 
+    <!-- 商店模態框 -->
+    <div class="modal-overlay" id="store-modal">
+        <div class="modal-content store-modal-content">
+            <div class="modal-header">
+                <h3>🛒 商店</h3>
+                <button onclick="closeStore()" class="stats-close-btn">×</button>
+            </div>
+            <div class="modal-body" id="store-content">
+                <!-- 商店內容會動態生成 -->
+            </div>
+        </div>
+    </div>
+
     <!-- 強化選擇彈窗 -->
     <div class="modal-overlay" id="enhancement-modal">
         <div class="modal-content enhancement-modal-content">
@@ -250,7 +265,8 @@
     <script src="js/game.js"></script>
     <script src="js/rewards.js"></script>
     <script src="js/enhancement.js"></script>
-    <script src="js/enhancementDisplay.js"></script> 
+    <script src="js/enhancementDisplay.js"></script>
+    <script src="js/store.js"></script> 
     <script src="js/ui.js"></script>
     <script src="js/carousel.js"></script>  
     <script src="js/main.js"></script>
