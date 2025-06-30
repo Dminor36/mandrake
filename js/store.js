@@ -77,7 +77,7 @@ class StoreSystem {
             btn.onclick = () => StoreSystem.buyUpgrade(id);
             btn.innerHTML = `
                 <div class="store-name">${mandrake.icon} ${name}</div>
-                <div class="store-desc">產量 +${STORE_CONFIG.productionBonus*100}%</div>
+                <div class="store-desc">${mandrake.name}產量 +${STORE_CONFIG.productionBonus*100}%</div>
                 <div class="store-price">${unlocked ? UI.formatNumber(cost) : '未解鎖'}</div>
             `;
             container.appendChild(btn);

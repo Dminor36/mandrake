@@ -1614,6 +1614,7 @@
 .store-name {
     font-weight: bold;
     margin-bottom: 4px;
+    font-size: 2em;
 }
 
 .store-desc {
@@ -1623,7 +1624,7 @@
 
 .store-price {
     align-self: flex-end;
-    margin-top: 6px;
+    margin-top: 0px;
     font-size: 0.9em;
     color: #333;
 }
