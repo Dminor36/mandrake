@@ -373,6 +373,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.5); /* 內部高光 */
     user-select: none; /* 防止文字選取 */
     transform: translateY(0);
+    white-space: nowrap; /* 🔧 防止文字換行 */
 }
 
 .bulk-btn:hover {
@@ -1582,6 +1583,79 @@
     overflow-y: auto;
 }
 
+/* ========== 商店模態框 ==========
+*/
+.store-modal-content {
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #fffdf5;
+    border: 2px solid #f1c40f;
+    border-radius: 12px;
+}
+
+.store-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff8e1;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.store-item.locked {
+    background-color: #e0e0e0;
+    color: #888;
+}
+.store-item.locked .store-price {
+    color: #888;
+}
+
+.store-item:hover:not(.disabled):not(.locked) {
+    background-color: #f5f5f5;
+    transform: translateY(-2px);
+}
+
+.store-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f0f0f0;
+}
+
+.store-name {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 1.9em;
+    color: #333;
+}
+
+.store-desc {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.store-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.store-price {
+    margin-left: 12px;
+    font-size: 1.5em;
+    color: #333;
+}
+
+
+
 /* 版本更新列表 */
 .version-list {
     display: flex;
@@ -1800,4 +1874,5 @@
         font-size: 0.9em;
     }
 }
+
 

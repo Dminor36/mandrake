@@ -25,21 +25,43 @@ body {
 
 /* ========== 左側面板 ========== */
 .left-panel {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255);
     border-right: 2px solid rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 0px;
     display: flex;
     flex-direction: column;
     gap: 0px;
-    overflow-y: auto;
     overflow-x: hidden; /* 🔧 防止橫向滾動 */
 }
+
+/* 左側可滾動內容 */
+.left-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* 讓左側標題與資源區塊保持在頂端 */
+.left-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 10px;
+}
+
 
 .game-title {
     text-align: center;
     color: #4a5568;
     font-size: 1.4em;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
+    margin-top: 15px;
 }
 
 /* ========== 資源顯示區 ========== */
@@ -51,6 +73,10 @@ body {
     text-align: center;
     margin-left: -20px; /* 向外擴展，填滿整個左側面板 */
     margin-right: -20px; /* 向外擴展，填滿整個左側面板 */
+    position: sticky; /* 讓資源面板在捲動時固定 */
+    top: 0;
+    z-index: 10;
+    
 }
 
 .resource-combined {
@@ -92,7 +118,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    margin: 0 -20px; /* 向外擴展，填滿整個左側面板 */
+    margin: 0 0px; 
 }
 
 /* ========== 底部系統區域 ========== */
@@ -378,6 +404,25 @@ body {
     background: #5a67d8;
     transform: translateY(-1px);
 }
+
+.store-btn {
+    margin-left: 8px;
+    background: #f39c12;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 1px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: all 0.2s;
+    min-width: 80px; /* 🔧 設定最小寬度 */
+}
+
+.store-btn:hover {
+    background: #d68910;
+}
+
 
 .system-btn:disabled {
     background: #9ca3af;
