@@ -28,12 +28,12 @@ class AnnouncementSystem {
                 date: "2025/06/30",
                 status: "new", // new, current, old
                 updates: {
+                    features: [
+                        "商店功能建構中, 可於批量購買右方找到",
+                    ],  
                     improvements: [
                         "左側區域調整, 資源區位置永遠固定在頂端",
                     ],
-                    fixes: [
-
-                    ]
                 }
             },
 

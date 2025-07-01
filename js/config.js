@@ -576,11 +576,13 @@ const STORE_CONFIG = {
     unlockStep: 50,            // 每購買多少株解鎖一層
     levels: 8,                 // 總層數
     productionBonus: 0.05,     // 每層產量提升比例
-    costMultiplier: 100,       // 升級成本倍率
+    costMultiplier: 1000,       // 升級成本倍率
     levelNames: ['I','II','III','IV','V','VI','VII','VIII'],
     // 自訂各品種每級名稱，可自行填入
     // 例： customNames: { original: ['幼苗','茁壯','盛開'] }
-    customNames: {}
+    customNames: {
+        original: ['土壤', '陽光', '空氣', '水', '礦物質', '魔法', '巫術', '仙術']
+    }
 };
 
 

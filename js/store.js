@@ -72,7 +72,7 @@ class StoreSystem {
             const unlocked = this.isUnlocked(id);
             const name = this.getUpgradeName(id, level);
             const btn = document.createElement('button');
-            btn.className = 'store-item';
+            btn.className = 'store-item' + (unlocked ? '' : ' locked');
             btn.disabled = !unlocked || game.data.fruit < cost;
             btn.onclick = () => StoreSystem.buyUpgrade(id);
             btn.innerHTML = `
