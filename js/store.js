@@ -73,7 +73,10 @@ class StoreSystem {
             const name = this.getUpgradeName(id, level);
             const btn = document.createElement('button');
             btn.className = 'store-item';
-            btn.disabled = game.data.fruit < cost;
+            const notEnough = game.data.fruit < cost;
+            btn.disabled = notEnough;
+            if (notEnough) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
             btn.onclick = () => StoreSystem.buyUpgrade(id);
             btn.innerHTML = `
                 <div class="store-name">${mandrake.icon} ${name}</div>
@@ -83,6 +86,7 @@ class StoreSystem {
             `;
             container.appendChild(btn);
         }
+        this.updatePurchasedDisplay();
     }
 
     static getUpgradeName(id, index) {
@@ -92,6 +96,25 @@ class StoreSystem {
         const suffix = STORE_CONFIG.levelNames[index] || `Lv.${index+1}`;
         return `${base} ${suffix}`;
     }
+
+    static updatePurchasedDisplay() {
+        const container = document.getElementById('purchased-container');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const id in game.data.store.upgrades) {
+            const level = game.data.store.upgrades[id];
+            if (level <= 0) continue;
+            const mandrake = MANDRAKE_CONFIG[id];
+            const div = document.createElement('div');
+            div.className = 'purchased-item';
+            div.innerHTML = `
+                <span class="purchased-icon">${mandrake.icon}</span>
+                <span class="level-badge">${level}</span>
+            `;
+            container.appendChild(div);
+        }
+    }
+
 
 
     static openStore() {
