@@ -68,19 +68,18 @@ class StoreSystem {
             const mandrake = MANDRAKE_CONFIG[id];
             const level = this.getLevel(id);
             if (level >= STORE_CONFIG.levels) continue;
+            if (!this.isUnlocked(id)) continue;
             const cost = this.getUpgradeCost(id);
-            const unlocked = this.isUnlocked(id);
             const name = this.getUpgradeName(id, level);
             const btn = document.createElement('button');
-            btn.className = 'store-item' + (unlocked ? '' : ' locked');
-            btn.disabled = !unlocked || game.data.fruit < cost;
+            btn.className = 'store-item';
+            btn.disabled = game.data.fruit < cost;
             btn.onclick = () => StoreSystem.buyUpgrade(id);
             btn.innerHTML = `
                 <div class="store-name">${mandrake.icon} ${name}</div>
                 <div class="store-info">
                     <span class="store-desc">${mandrake.name}產量 +${STORE_CONFIG.productionBonus*100}%</span>
-                    <span class="store-price">${unlocked ? UI.formatNumber(cost) : '未解鎖'}</span>
-                </div>
+                    <span class="store-price">${UI.formatNumber(cost)}</span>
             `;
             container.appendChild(btn);
         }
