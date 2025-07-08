@@ -105,14 +105,33 @@ class StoreSystem {
             const level = game.data.store.upgrades[id];
             if (level <= 0) continue;
             const mandrake = MANDRAKE_CONFIG[id];
-            const div = document.createElement('div');
-            div.className = 'purchased-item';
-            div.innerHTML = `
-                <span class="purchased-icon">${mandrake.icon}</span>
-                <span class="level-badge">${level}</span>
-            `;
-            container.appendChild(div);
+            for (let i = 1; i <= level; i++) {
+                const div = document.createElement('div');
+                div.className = 'purchased-item';
+                const name = this.getUpgradeName(id, i - 1);
+                div.innerHTML = `
+                    <span class="purchased-icon">${mandrake.icon}</span>
+                    <span class="level-badge">${StoreSystem.toRoman(i)}</span>
+                    <div class="hover-tooltip">${name}<br>${mandrake.name}產量 +${STORE_CONFIG.productionBonus * 100}%</div>
+                `;
+                container.appendChild(div);
+            }
         }
+    }
+
+    static toRoman(num) {
+        const map = [
+            [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'],
+            [5, 'V'], [4, 'IV'], [1, 'I']
+        ];
+        let result = '';
+        for (const [value, roman] of map) {
+            while (num >= value) {
+                result += roman;
+                num -= value;
+            }
+        }
+        return result;
     }
 
 
