@@ -1654,6 +1654,55 @@
     color: #333;
 }
 
+/* 已購買項目展示 */
+.purchased-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.purchased-item {
+    width: 40px;
+    height: 40px;
+    background: #fff8e1;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 1.3em;
+}
+
+.purchased-item .level-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    font-size: 0.7em;
+    color: #333;
+}
+
+.purchased-item .hover-tooltip {
+    top: auto;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
+.purchased-item .hover-tooltip::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-color: rgba(53, 53, 53, 0.95) transparent transparent transparent;
+}
+
+.purchased-item:hover .hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
 
 
 /* 版本更新列表 */

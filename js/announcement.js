@@ -4,7 +4,7 @@ console.log('📢 公告系統載入中...');
 
 class AnnouncementSystem {
     constructor() {
-        this.currentVersion = "1.3.1"; // 🔧 修改這裡來更新當前版本
+        this.currentVersion = "1.3.3"; // 🔧 修改這裡來更新當前版本
         this.lastReadVersion = this.getLastReadVersion();
         this.announcements = this.getAnnouncementData();
     }
@@ -23,10 +23,20 @@ class AnnouncementSystem {
     getAnnouncementData() {
 
         return [
-                        {
+
+            {version: "1.3.3",
+                date: "2025/07/08",
+                status: "new", // new, current, old
+                updates: {
+                    improvements: [
+                        "持續增進商店功能：<br>未解鎖的商品看不到<br>已購買的商品會顯示在下方<br>商品名稱皆已客製化(部分ai生成)",
+                    ],
+                }
+            },
+            {
                 version: "1.3.2",
                 date: "2025/06/30",
-                status: "new", // new, current, old
+                status: "current", // new, current, old
                 updates: {
                     features: [
                         "商店功能建構中, 可於批量購買右方找到",

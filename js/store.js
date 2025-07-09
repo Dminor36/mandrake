@@ -68,22 +68,25 @@ class StoreSystem {
             const mandrake = MANDRAKE_CONFIG[id];
             const level = this.getLevel(id);
             if (level >= STORE_CONFIG.levels) continue;
+            if (!this.isUnlocked(id)) continue;
             const cost = this.getUpgradeCost(id);
-            const unlocked = this.isUnlocked(id);
             const name = this.getUpgradeName(id, level);
             const btn = document.createElement('button');
-            btn.className = 'store-item' + (unlocked ? '' : ' locked');
-            btn.disabled = !unlocked || game.data.fruit < cost;
+            btn.className = 'store-item';
+            const notEnough = game.data.fruit < cost;
+            btn.disabled = notEnough;
+            if (notEnough) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
             btn.onclick = () => StoreSystem.buyUpgrade(id);
             btn.innerHTML = `
                 <div class="store-name">${mandrake.icon} ${name}</div>
                 <div class="store-info">
                     <span class="store-desc">${mandrake.name}產量 +${STORE_CONFIG.productionBonus*100}%</span>
-                    <span class="store-price">${unlocked ? UI.formatNumber(cost) : '未解鎖'}</span>
-                </div>
+                    <span class="store-price">${UI.formatNumber(cost)}</span>
             `;
             container.appendChild(btn);
         }
+        this.updatePurchasedDisplay();
     }
 
     static getUpgradeName(id, index) {
@@ -93,6 +96,44 @@ class StoreSystem {
         const suffix = STORE_CONFIG.levelNames[index] || `Lv.${index+1}`;
         return `${base} ${suffix}`;
     }
+
+    static updatePurchasedDisplay() {
+        const container = document.getElementById('purchased-container');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const id in game.data.store.upgrades) {
+            const level = game.data.store.upgrades[id];
+            if (level <= 0) continue;
+            const mandrake = MANDRAKE_CONFIG[id];
+            for (let i = 1; i <= level; i++) {
+                const div = document.createElement('div');
+                div.className = 'purchased-item';
+                const name = this.getUpgradeName(id, i - 1);
+                div.innerHTML = `
+                    <span class="purchased-icon">${mandrake.icon}</span>
+                    <span class="level-badge">${StoreSystem.toRoman(i)}</span>
+                    <div class="hover-tooltip">${name}<br>${mandrake.name}產量 +${STORE_CONFIG.productionBonus * 100}%</div>
+                `;
+                container.appendChild(div);
+            }
+        }
+    }
+
+    static toRoman(num) {
+        const map = [
+            [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'],
+            [5, 'V'], [4, 'IV'], [1, 'I']
+        ];
+        let result = '';
+        for (const [value, roman] of map) {
+            while (num >= value) {
+                result += roman;
+                num -= value;
+            }
+        }
+        return result;
+    }
+
 
 
     static openStore() {
